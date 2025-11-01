@@ -1,0 +1,32 @@
+# Snyk (https://snyk.io) policy file, patches or ignores known vulnerabilities.
+version: v1.25.0
+
+# Specify default language settings
+language-settings:
+  node: 18
+
+# Patch settings
+patch: {}
+
+# Ignore specific vulnerabilities (add as needed)
+ignore: {}
+
+# Exclude directories from scanning
+exclude:
+  - node_modules
+  - dist
+  - build
+  - coverage
+  - .git
+  - uploads
+
+# Monitor dependencies
+monitor: true
+
+# Fail build on high severity vulnerabilities
+failOnIssues:
+  - critical
+  - high
+
+# Organization settings (update with your Snyk org)
+# org: your-snyk-organization-name

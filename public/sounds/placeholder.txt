@@ -1,0 +1,7 @@
+# Placeholder sound files - replace with actual audio files
+# These are text placeholders. Replace with actual .mp3 files for production:
+# - new-order.mp3: Alert sound for new orders
+# - notification.mp3: General notification sound  
+# - success.mp3: Success confirmation sound
+# - error.mp3: Error alert sound
+# - urgent.mp3: Urgent notification sound

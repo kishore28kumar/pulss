@@ -1,0 +1,22 @@
+name,brand,category,price,mrp,image_url,requires_rx,description,pack_size,manufacturer,variant_strength,variant_strength_price,variant_strength_mrp,variant_pack_size,variant_pack_size_price,variant_pack_size_mrp
+Paracetamol,Cipla,Medicines,50,60,https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=300,false,Effective pain relief and fever reducer,Strip of 10 tablets,Cipla Ltd,500mg,50,60,10 tablets,50,60
+Paracetamol,Cipla,Medicines,75,90,https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=300,false,Effective pain relief and fever reducer,Strip of 15 tablets,Cipla Ltd,650mg,75,90,15 tablets,75,90
+Paracetamol,Cipla,Medicines,95,110,https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=300,false,Effective pain relief and fever reducer,Strip of 20 tablets,Cipla Ltd,1000mg,95,110,20 tablets,95,110
+Azithromycin,Zydus,Medicines,180,200,https://images.unsplash.com/photo-1587854692152-cbe660dbde88?w=300,true,Antibiotic for bacterial infections,Strip of 3 tablets,Zydus Cadila,250mg,140,160,3 tablets,180,200
+Azithromycin,Zydus,Medicines,280,320,https://images.unsplash.com/photo-1587854692152-cbe660dbde88?w=300,true,Antibiotic for bacterial infections,Strip of 6 tablets,Zydus Cadila,500mg,280,320,6 tablets,280,320
+Vitamin D3,HealthKart,Health Supplements,200,250,https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=300,false,Vitamin D supplement,4 capsules,HealthKart,60000 IU,200,250,4 capsules,200,250
+Vitamin D3,HealthKart,Health Supplements,380,450,https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=300,false,Vitamin D supplement,8 capsules,HealthKart,60000 IU,380,450,8 capsules,380,450
+Protein Powder,MuscleBlaze,Health Supplements,1200,1400,https://images.unsplash.com/photo-1593095948071-474c5cc2989d?w=300,false,Whey protein for muscle building,500g,MuscleBlaze,,,Chocolate,1200,1400,500g,1200,1400
+Protein Powder,MuscleBlaze,Health Supplements,2500,2800,https://images.unsplash.com/photo-1593095948071-474c5cc2989d?w=300,false,Whey protein for muscle building,1kg,MuscleBlaze,,,Chocolate,2500,2800,1kg,2500,2800
+Protein Powder,MuscleBlaze,Health Supplements,1250,1450,https://images.unsplash.com/photo-1593095948071-474c5cc2989d?w=300,false,Whey protein for muscle building,500g,MuscleBlaze,,,Vanilla,1250,1450,500g,1250,1450
+Protein Powder,MuscleBlaze,Health Supplements,2550,2850,https://images.unsplash.com/photo-1593095948071-474c5cc2989d?w=300,false,Whey protein for muscle building,1kg,MuscleBlaze,,,Vanilla,2550,2850,1kg,2550,2850
+Hand Sanitizer,Dettol,Personal Care,120,140,https://images.unsplash.com/photo-1584744982491-665216d95f8b?w=300,false,Alcohol based sanitizer,200ml,Reckitt Benckiser,,,,,200ml,120,140
+Hand Sanitizer,Dettol,Personal Care,200,230,https://images.unsplash.com/photo-1584744982491-665216d95f8b?w=300,false,Alcohol based sanitizer,500ml,Reckitt Benckiser,,,,,500ml,200,230
+Hand Sanitizer,Dettol,Personal Care,350,400,https://images.unsplash.com/photo-1584744982491-665216d95f8b?w=300,false,Alcohol based sanitizer,1L,Reckitt Benckiser,,,,,1L,350,400
+Baby Lotion,Johnson's,Baby Care,180,200,https://images.unsplash.com/photo-1515488764276-beab7607c1e6?w=300,false,Gentle moisturizing lotion,200ml,Johnson & Johnson,,,,,200ml,180,200
+Baby Lotion,Johnson's,Baby Care,300,340,https://images.unsplash.com/photo-1515488764276-beab7607c1e6?w=300,false,Gentle moisturizing lotion,400ml,Johnson & Johnson,,,,,400ml,300,340
+Diaper,Pampers,Baby Care,699,799,https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300,false,Super soft and absorbent,Pack of 40,Procter & Gamble,,,Small,699,799,40 pieces,699,799
+Diaper,Pampers,Baby Care,899,999,https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300,false,Super soft and absorbent,Pack of 56,Procter & Gamble,,,Medium,899,999,56 pieces,899,999
+Diaper,Pampers,Baby Care,1099,1199,https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300,false,Super soft and absorbent,Pack of 64,Procter & Gamble,,,Large,1099,1199,64 pieces,1099,1199
+Omega 3 Fish Oil,Now Foods,Health Supplements,800,950,https://images.unsplash.com/photo-1559757175-0eb30cd8c063?w=300,false,Essential fatty acids supplement,60 softgels,Now Foods,,,,,60 softgels,800,950
+Omega 3 Fish Oil,Now Foods,Health Supplements,1400,1650,https://images.unsplash.com/photo-1559757175-0eb30cd8c063?w=300,false,Essential fatty acids supplement,120 softgels,Now Foods,,,,,120 softgels,1400,1650

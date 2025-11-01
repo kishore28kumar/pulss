@@ -1,0 +1,9 @@
+Product Name,Price,MRP,Category,Brand,Pack Size,Description,Image URL,Requires RX
+Paracetamol 500mg,50,60,Pain Relief,Crocin,10 tablets,For fever and pain relief,https://example.com/paracetamol.jpg,false
+Amoxicillin 250mg,120,150,Antibiotics,Novamox,10 capsules,Antibiotic for infections,https://example.com/amoxicillin.jpg,true
+Vitamin D3 60000 IU,200,250,Vitamins,Calcirol,4 sachets,Vitamin D supplement,https://example.com/vitamind3.jpg,false
+Cough Syrup 100ml,85,95,Cold & Flu,Benadryl,100ml bottle,Relief from cough and cold,https://example.com/coughsyrup.jpg,false
+Omeprazole 20mg,45,55,Gastric,Omez,10 capsules,For acidity and heartburn,https://example.com/omeprazole.jpg,false
+Blood Pressure Monitor,2500,3000,Medical Devices,Omron,1 piece,Digital BP monitor,https://example.com/bpmonitor.jpg,false
+Antiseptic Cream,120,140,First Aid,Soframycin,30g tube,Antiseptic skin cream,https://example.com/antiseptic.jpg,false
+Multivitamin Tablets,350,400,Vitamins,Revital,30 tablets,Daily multivitamin supplement,https://example.com/multivitamin.jpg,false

@@ -1,0 +1,4 @@
+email,role,name,phone
+john.doe@example.com,customer,John Doe,+1234567890
+jane.smith@example.com,customer,Jane Smith,+0987654321
+admin.user@example.com,admin,Admin User,+1122334455
