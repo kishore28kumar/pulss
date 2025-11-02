@@ -25,7 +25,7 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
-      <div className="container mx-auto">
+      <div className="mx-auto">
         {/* Top Bar */}
         <div className="py-2 px-4 bg-blue-600 text-white text-sm text-center">
           🎉 Free shipping on orders over $50!
