@@ -2,102 +2,109 @@ version: '3.8'
 
 services:
   # PostgreSQL Database
-  db:
+  postgres:
     image: postgres:16-alpine
-    container_name: pulss-db
+    container_name: pulss-postgres
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres123
-      POSTGRES_DB: pulssdb
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: pulss_db
     ports:
-      - "5432:5432"
+      - '5432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./backend/migrations:/docker-entrypoint-initdb.d:ro
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+    networks:
+      - pulss-network
 
-  # Node.js Backend API
-  api:
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: pulss-redis
+    restart: unless-stopped
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+    networks:
+      - pulss-network
+
+  # Backend API
+  backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: pulss-api
+      context: .
+      dockerfile: apps/backend/Dockerfile
+    container_name: pulss-backend
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - '5000:5000'
     environment:
-      DB_HOST: db
-      DB_PORT: 5432
-      DB_USER: postgres
-      DB_PASSWORD: postgres123
-      DB_NAME: pulssdb
-      PORT: 3000
-      NODE_ENV: production
-      JWT_SECRET: change_this_jwt_secret_in_production
-      JWT_EXPIRES_IN: 7d
-      CORS_ORIGIN: http://localhost:5173
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/pulss_db?schema=public
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key}
+      - BACKEND_PORT=5000
     depends_on:
-      db:
-        condition: service_healthy
+      - postgres
+      - redis
     volumes:
-      - ./backend/uploads:/app/uploads
-    healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+      - ./apps/backend:/app
+      - /app/node_modules
+    networks:
+      - pulss-network
+    command: npm run dev
 
-  # pgAdmin (Optional - for database management)
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    container_name: pulss-pgadmin
+  # Admin Dashboard
+  admin:
+    build:
+      context: .
+      dockerfile: apps/admin-dashboard/Dockerfile
+    container_name: pulss-admin
     restart: unless-stopped
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@pulss.app
-      PGADMIN_DEFAULT_PASSWORD: admin123
     ports:
-      - "5050:80"
+      - '3001:3001'
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://localhost:5000/api
     depends_on:
-      - db
+      - backend
     volumes:
-      - pgadmin_data:/var/lib/pgadmin
+      - ./apps/admin-dashboard:/app
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - pulss-network
+    command: npm run dev
 
-  # n8n Workflow Automation (Optional)
-  n8n:
-    image: n8nio/n8n:latest
-    container_name: pulss-n8n
+  # Storefront
+  storefront:
+    build:
+      context: .
+      dockerfile: apps/storefront/Dockerfile
+    container_name: pulss-storefront
     restart: unless-stopped
     ports:
-      - "5678:5678"
+      - '3000:3000'
     environment:
-      - N8N_BASIC_AUTH_ACTIVE=true
-      - N8N_BASIC_AUTH_USER=admin
-      - N8N_BASIC_AUTH_PASSWORD=admin123
-      - N8N_HOST=localhost
-      - N8N_PORT=5678
-      - N8N_PROTOCOL=http
-      - WEBHOOK_URL=http://localhost:5678/
-      - GENERIC_TIMEZONE=Asia/Kolkata
-    volumes:
-      - n8n_data:/home/node/.n8n
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://localhost:5000/api
     depends_on:
-      - db
-      - api
+      - backend
+    volumes:
+      - ./apps/storefront:/app
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - pulss-network
+    command: npm run dev
 
 volumes:
   postgres_data:
     driver: local
-  pgadmin_data:
-    driver: local
-  n8n_data:
+  redis_data:
     driver: local
 
 networks:
-  default:
-    name: pulss-network
+  pulss-network:
+    driver: bridge
+

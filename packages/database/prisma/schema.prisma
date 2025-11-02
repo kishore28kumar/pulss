@@ -1,0 +1,503 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model addresses {
+  id         String    @id
+  customerId String
+  type       String
+  name       String
+  phone      String
+  line1      String
+  line2      String?
+  city       String
+  state      String
+  country    String    @default("India")
+  pincode    String
+  isDefault  Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime
+  customers  customers @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([customerId])
+}
+
+model analytics {
+  id                 String   @id
+  tenantId           String
+  date               DateTime @db.Date
+  revenue            Float    @default(0)
+  orders             Int      @default(0)
+  averageOrderValue  Float    @default(0)
+  newCustomers       Int      @default(0)
+  returningCustomers Int      @default(0)
+  productViews       Int      @default(0)
+  productsAdded      Int      @default(0)
+  visitors           Int      @default(0)
+  pageViews          Int      @default(0)
+  conversionRate     Float    @default(0)
+  metadata           Json?
+  createdAt          DateTime @default(now())
+  tenants            tenants  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, date])
+  @@index([date])
+  @@index([tenantId])
+}
+
+model audit_logs {
+  id        String   @id
+  tenantId  String
+  userId    String
+  action    String
+  entity    String
+  entityId  String?
+  changes   Json?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  tenants   tenants  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  users     users    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([action])
+  @@index([tenantId])
+  @@index([userId])
+}
+
+model cart_items {
+  id              String    @id
+  customerId      String
+  productId       String
+  quantity        Int       @default(1)
+  variantOptions  Json?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime
+  customers       customers @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  products        products  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([customerId, productId])
+  @@index([customerId])
+  @@index([productId])
+}
+
+model categories {
+  id               String       @id
+  name             String
+  slug             String
+  description      String?
+  icon             String?
+  image            String?
+  parentId         String?
+  tenantId         String
+  metaTitle        String?
+  metaDescription  String?
+  isActive         Boolean      @default(true)
+  displayOrder     Int          @default(0)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime
+  categories       categories?  @relation("categoriesTocategories", fields: [parentId], references: [id])
+  other_categories categories[] @relation("categoriesTocategories")
+  tenants          tenants      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  products         products[]
+
+  @@unique([tenantId, slug])
+  @@index([tenantId])
+}
+
+model coupons {
+  id                String   @id
+  code              String   @unique
+  tenantId          String
+  type              String
+  value             Float
+  minOrderAmount    Float?
+  maxDiscountAmount Float?
+  usageLimit        Int?
+  usageCount        Int      @default(0)
+  perUserLimit      Int?
+  startsAt          DateTime
+  expiresAt         DateTime
+  isActive          Boolean  @default(true)
+  applicableTo      Json?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime
+  tenants           tenants  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  orders            orders[]
+
+  @@index([code])
+  @@index([tenantId])
+}
+
+model customers {
+  id            String       @id
+  userId        String       @unique
+  tenantId      String
+  phone         String?
+  dateOfBirth   DateTime?
+  gender        String?
+  segment       String?
+  lifetimeValue Float        @default(0)
+  totalOrders   Int          @default(0)
+  metadata      Json?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime
+  addresses     addresses[]
+  cart_items    cart_items[]
+  tenants       tenants      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  users         users        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders        orders[]
+
+  @@index([segment])
+  @@index([tenantId])
+}
+
+model invoices {
+  id            String    @id
+  invoiceNumber String    @unique
+  tenantId      String
+  amount        Float
+  tax           Float     @default(0)
+  total         Float
+  currency      String    @default("INR")
+  status        String
+  paidAt        DateTime?
+  paymentId     String?
+  paymentMethod String?
+  periodStart   DateTime
+  periodEnd     DateTime
+  gstAmount     Float?
+  gstNumber     String?
+  invoiceUrl    String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime
+  tenants       tenants   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceNumber])
+  @@index([tenantId])
+}
+
+model notifications {
+  id        String           @id
+  tenantId  String
+  type      NotificationType
+  title     String
+  message   String
+  data      Json?
+  userId    String?
+  role      UserRole?
+  isRead    Boolean          @default(false)
+  readAt    DateTime?
+  channels  String[]
+  sentAt    DateTime?
+  createdAt DateTime         @default(now())
+  tenants   tenants          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([isRead])
+  @@index([tenantId])
+  @@index([userId])
+}
+
+model order_items {
+  id              String   @id
+  orderId         String
+  productId       String
+  name            String
+  sku             String?
+  quantity        Int
+  price           Float
+  total           Float
+  productSnapshot Json?
+  orders          orders   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  products        products @relation(fields: [productId], references: [id])
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+model orders {
+  id              String         @id
+  orderNumber     String         @unique
+  tenantId        String
+  customerId      String?
+  userId          String?
+  guestEmail      String?
+  guestPhone      String?
+  guestName       String?
+  status          OrderStatus    @default(PENDING)
+  subtotal        Float
+  tax             Float          @default(0)
+  shipping        Float          @default(0)
+  discount        Float          @default(0)
+  total           Float
+  paymentStatus   PaymentStatus  @default(PENDING)
+  paymentMethod   PaymentMethod?
+  paymentId       String?
+  couponId        String?
+  shippingAddress Json?
+  billingAddress  Json?
+  prescriptionUrl String?
+  customerNotes   String?
+  adminNotes      String?
+  trackingNumber  String?
+  shippedAt       DateTime?
+  deliveredAt     DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime
+  order_items     order_items[]
+  coupons         coupons?       @relation(fields: [couponId], references: [id])
+  customers       customers?     @relation(fields: [customerId], references: [id])
+  tenants         tenants        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  users           users?         @relation(fields: [userId], references: [id])
+
+  @@index([customerId])
+  @@index([orderNumber])
+  @@index([status])
+  @@index([tenantId])
+}
+
+model product_variants {
+  id         String   @id
+  productId  String
+  name       String
+  sku        String?
+  price      Float
+  stock      Int      @default(0)
+  attributes Json?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime
+  products   products @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+}
+
+model products {
+  id                   String             @id
+  name                 String
+  slug                 String
+  description          String?
+  tenantId             String
+  categoryId           String?
+  price                Float
+  comparePrice         Float?
+  costPrice            Float?
+  sku                  String?
+  barcode              String?
+  stock                Int                @default(0)
+  lowStockThreshold    Int                @default(10)
+  trackInventory       Boolean            @default(true)
+  images               String[]
+  thumbnail            String?
+  requiresPrescription Boolean            @default(false)
+  genericName          String?
+  manufacturer         String?
+  expiryDate           DateTime?
+  tags                 String[]
+  metaTitle            String?
+  metaDescription      String?
+  isActive             Boolean            @default(true)
+  isFeatured           Boolean            @default(false)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime
+  cart_items           cart_items[]
+  order_items          order_items[]
+  product_variants     product_variants[]
+  categories           categories?        @relation(fields: [categoryId], references: [id])
+  tenants              tenants            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, slug])
+  @@index([categoryId])
+  @@index([isActive])
+  @@index([tenantId])
+}
+
+model refresh_tokens {
+  id        String   @id
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  users     users    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+}
+
+model subscriptions {
+  id                    String           @id
+  tenantId              String
+  plan                  SubscriptionPlan
+  status                String
+  amount                Float
+  currency              String           @default("INR")
+  billingCycle          String
+  startDate             DateTime
+  endDate               DateTime
+  nextBillingDate       DateTime?
+  cancelledAt           DateTime?
+  paymentGateway        String?
+  gatewaySubscriptionId String?
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime
+  tenants               tenants          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+}
+
+model tenants {
+  id                 String           @id
+  name               String
+  slug               String           @unique
+  domain             String?          @unique
+  subdomain          String?          @unique
+  status             TenantStatus     @default(TRIAL)
+  subscriptionPlan   SubscriptionPlan @default(FREE)
+  trialEndsAt        DateTime?
+  subscriptionEndsAt DateTime?
+  email              String?
+  phone              String?
+  address            String?
+  city               String?
+  state              String?
+  country            String?          @default("India")
+  pincode            String?
+  gstNumber          String?
+  panNumber          String?
+  logoUrl            String?
+  faviconUrl         String?
+  primaryColor       String?          @default("#3B82F6")
+  secondaryColor     String?          @default("#8B5CF6")
+  features           Json?
+  metadata           Json?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime
+  analytics          analytics[]
+  audit_logs         audit_logs[]
+  categories         categories[]
+  coupons            coupons[]
+  customers          customers[]
+  invoices           invoices[]
+  notifications      notifications[]
+  orders             orders[]
+  products           products[]
+  subscriptions      subscriptions[]
+  users              users[]
+
+  @@index([slug])
+  @@index([status])
+}
+
+model users {
+  id                  String           @id
+  email               String           @unique
+  password            String
+  role                UserRole         @default(CUSTOMER)
+  firstName           String?
+  lastName            String?
+  phone               String?
+  avatar              String?
+  twoFactorEnabled    Boolean          @default(false)
+  twoFactorSecret     String?
+  backupCodes         String[]
+  tenantId            String?
+  isActive            Boolean          @default(true)
+  emailVerified       Boolean          @default(false)
+  lastLoginAt         DateTime?
+  consentGiven        Boolean          @default(false)
+  consentDate         DateTime?
+  dataExportRequested Boolean          @default(false)
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime
+  audit_logs          audit_logs[]
+  customers           customers?
+  orders              orders[]
+  refresh_tokens      refresh_tokens[]
+  tenants             tenants?         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([email])
+  @@index([role])
+  @@index([tenantId])
+}
+
+enum TenantStatus {
+  ACTIVE
+  SUSPENDED
+  TRIAL
+  EXPIRED
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  CUSTOMER
+  STAFF
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum CustomerStatus {
+  ACTIVE
+  INACTIVE
+  BLOCKED
+}
+
+enum AddressType {
+  SHIPPING
+  BILLING
+  BOTH
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum FulfillmentStatus {
+  UNFULFILLED
+  PARTIALLY_FULFILLED
+  FULFILLED
+}
+
+enum NotificationType {
+  ORDER
+  PAYMENT
+  PRODUCT
+  SYSTEM
+  MARKETING
+}
+
+enum PaymentMethod {
+  UPI
+  CARD
+  NET_BANKING
+  COD
+  WALLET
+}
+
+enum SubscriptionPlan {
+  FREE
+  STARTER
+  PROFESSIONAL
+  ENTERPRISE
+  CUSTOM
+}

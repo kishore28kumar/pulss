@@ -1,46 +1,48 @@
-# Logs
-logs
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Testing
+coverage/
 *.log
+
+# Next.js
+.next/
+out/
+build/
+dist/
+
+# Environment files
+.env
+.env*.local
+.env.production
+
+# Debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
+.pnpm-debug.log*
 
-node_modules
-dist
-dist-ssr
-*-dist
-*.local
-
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
+# OS
 .DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+*.pem
 
-.env
-**/agent-eval-report*
-packages
-pids
-.file-manifest
-.devcontainer/
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 
-.spark-workbench-id
+# Turbo
+.turbo/
 
-# Security scan results
-npm-audit*.json
-snyk-*.json
+# Database
+*.db
+*.db-journal
 
-# Uploads directory (user files)
-backend/uploads/*
-!backend/uploads/.gitkeep
+# Uploads
+uploads/
+temp/
 
-# SQLite database files
-backend/*.sqlite
-backend/**/*.sqlite

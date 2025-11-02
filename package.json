@@ -1,75 +1,34 @@
 {
-  "name": "pulss-white-label-ch",
+  "name": "pulss-white-label-platform",
   "version": "1.0.0",
-  "description": "Pulss Platform - White label (backend + frontend)",
-  "main": "server.js",
-  "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js",
-    "migrate": "psql $DATABASE_URL -f migrations/01_init_schema.sql && psql $DATABASE_URL -f migrations/02_advanced_features.sql",
-    "seed": "psql $DATABASE_URL -f seed/seed_data.sql",
-    "migrate:local": "psql -h localhost -U postgres -d pulssdb -f migrations/01_init_schema.sql && psql -h localhost -U postgres -d pulssdb -f migrations/02_advanced_features.sql",
-    "seed:local": "psql -h localhost -U postgres -d pulssdb -f seed/seed_data.sql",
-    "test": "jest --coverage",
-    "lint": "eslint . --no-ignore --ignore-pattern 'node_modules/**'",
-    "lint:fix": "eslint . --no-ignore --ignore-pattern 'node_modules/**' --fix",
-    "format": "prettier --write \"**/*.{js,json,md}\" --ignore-path .gitignore",
-    "format:check": "prettier --check \"**/*.{js,json,md}\" --ignore-path .gitignore",
-    "validate": "npm run lint && npm run format:check",
-    "security:audit": "npm audit --audit-level=moderate",
-    "security:fix": "npm audit fix",
-    "security:check": "npm run security:audit && echo 'Run npm run security:snyk for Snyk scanning'"
-  },
-  "keywords": [
-    "pulss",
-    "pharmacy",
-    "ecommerce",
-    "multi-tenant",
-    "loyalty"
+  "private": true,
+  "description": "Multi-tenant white-label e-commerce platform for pharmacies, groceries, and local businesses",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
   ],
-  "author": "Pulss Team",
-  "license": "MIT",
-  "dependencies": {
-    "@sendgrid/mail": "^8.1.6",
-    "axios": "^1.12.2",
-    "bcrypt": "^5.1.1",
-    "cors": "^2.8.5",
-    "date-fns": "^4.1.0",
-    "dotenv": "^16.4.5",
-    "express": "^4.19.2",
-    "express-rate-limit": "^8.1.0",
-    "express-slow-down": "^3.0.0",
-    "helmet": "^7.1.0",
-    "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.19.1",
-    "morgan": "^1.10.0",
-    "multer": "^2.0.2",
-    "nodemailer": "^6.10.1",
-    "papaparse": "^5.5.3",
-    "pg": "^8.12.0",
-    "qrcode": "^1.5.4",
-    "sharp": "^0.34.4",
-    "sqlite3": "^5.1.7",
-    "uuid": "^10.0.0",
-    "xlsx": "^0.18.5"
+  "scripts": {
+    "dev": "turbo run dev --parallel",
+    "build": "turbo run build",
+    "start": "turbo run start",
+    "lint": "turbo run lint",
+    "clean": "turbo run clean",
+    "test": "turbo run test",
+    "db:generate": "cd packages/database && npm run generate",
+    "db:push": "cd packages/database && npm run push",
+    "db:migrate": "cd packages/database && npm run migrate",
+    "db:studio": "cd packages/database && npm run studio",
+    "backend:dev": "npm run dev --workspace=@pulss/backend",
+    "admin:dev": "npm run dev --workspace=@pulss/admin-dashboard",
+    "storefront:dev": "npm run dev --workspace=@pulss/storefront"
   },
   "devDependencies": {
-    "@axe-core/react": "^4.10.2",
-    "@eslint/js": "^9.21.0",
-    "@tailwindcss/postcss": "^4.1.14",
-    "@types/react": "^19.2.2",
-    "@types/react-dom": "^19.1.9",
-    "@types/papaparse": "^5.3.16",
-    "@vitejs/plugin-react": "^4.3.4",
-    "eslint": "^8.57.0",
-    "eslint-config-prettier": "^9.1.2",
-    "jest": "^29.7.0",
-    "nodemon": "^3.1.4",
-    "prettier": "^3.6.2",
-    "supertest": "^7.0.0"
+    "turbo": "^1.11.2",
+    "typescript": "^5.3.3"
   },
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=9.0.0"
   }
 }
+
