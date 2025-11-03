@@ -14,8 +14,9 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 
-export default function ContactPage() {
+function ContactPageContent() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -441,6 +442,14 @@ export default function ContactPage() {
         </div>
       </section>
     </div>
+  );
+}
+
+export default function ContactPage() {
+  return (
+    <ProtectedRoute>
+      <ContactPageContent />
+    </ProtectedRoute>
   );
 }
 

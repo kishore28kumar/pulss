@@ -5,8 +5,9 @@ import { useQuery } from '@tanstack/react-query';
 import { Filter } from 'lucide-react';
 import api from '@/lib/api';
 import ProductCard from '@/components/products/ProductCard';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 
-export default function ProductsPage() {
+function ProductsPageContent() {
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState({
     search: '',
@@ -177,6 +178,14 @@ export default function ProductsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ProductsPage() {
+  return (
+    <ProtectedRoute>
+      <ProductsPageContent />
+    </ProtectedRoute>
   );
 }
 

@@ -14,9 +14,12 @@ export const api = axios.create({
 // Request interceptor
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('customerToken');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    // Only access localStorage on client side
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('customerToken');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
     return config;
   },
@@ -28,8 +31,13 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('customerToken');
-      window.location.href = '/login';
+      // Only access localStorage and window on client side
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('customerToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('customer');
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }

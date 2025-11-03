@@ -1,14 +1,16 @@
 'use client';
 
 import Link from 'next/link';
-import { ShoppingCart, User, Search, Menu, Heart, Store } from 'lucide-react';
+import { ShoppingCart, User, Search, Menu, Heart, Store, LogOut } from 'lucide-react';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const { customer, isAuthenticated, logout } = useAuth();
 
   const { data: cartData } = useQuery({
     queryKey: ['cart'],
@@ -20,7 +22,8 @@ export default function Header() {
         return { itemCount: 0 };
       }
     },
-    enabled: typeof window !== 'undefined' && !!localStorage.getItem('customerToken'),
+    enabled: isAuthenticated && typeof window !== 'undefined',
+    retry: false,
   });
 
   return (
@@ -80,12 +83,32 @@ export default function Header() {
                 )}
               </Link>
 
-              <Link
-                href="/account"
-                className="hidden md:flex items-center text-gray-700 hover:text-blue-600 transition"
-              >
-                <User className="w-6 h-6" />
-              </Link>
+              {isAuthenticated ? (
+                <div className="hidden md:flex items-center space-x-2">
+                  <Link
+                    href="/account"
+                    className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition"
+                  >
+                    <User className="w-6 h-6" />
+                    <span className="text-sm font-medium">{customer?.firstName}</span>
+                  </Link>
+                  <button
+                    onClick={logout}
+                    className="text-gray-500 hover:text-red-600 transition"
+                    title="Logout"
+                  >
+                    <LogOut className="w-5 h-5" />
+                  </button>
+                </div>
+              ) : (
+                <Link
+                  href="/login"
+                  className="hidden md:flex items-center space-x-1 text-gray-700 hover:text-blue-600 transition"
+                >
+                  <User className="w-6 h-6" />
+                  <span className="text-sm font-medium">Login</span>
+                </Link>
+              )}
 
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -136,9 +159,23 @@ export default function Header() {
               <Link href="/categories" className="block py-2 text-gray-700 hover:text-blue-600">
                 Categories
               </Link>
-              <Link href="/account" className="block py-2 text-gray-700 hover:text-blue-600">
-                Account
-              </Link>
+              {isAuthenticated ? (
+                <>
+                  <Link href="/account" className="block py-2 text-gray-700 hover:text-blue-600">
+                    Account
+                  </Link>
+                  <button
+                    onClick={logout}
+                    className="block w-full text-left py-2 text-red-600 hover:text-red-700"
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <Link href="/login" className="block py-2 text-gray-700 hover:text-blue-600">
+                  Login
+                </Link>
+              )}
             </nav>
           </div>
         </div>

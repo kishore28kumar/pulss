@@ -12,6 +12,7 @@ import {
   TrendingUp
 } from 'lucide-react';
 import api from '@/lib/api';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 
 // Category configuration with custom icons and colors
 const categoryConfig = {
@@ -49,7 +50,7 @@ const categoryConfig = {
   }
 };
 
-export default function CategoriesPage() {
+function CategoriesPageContent() {
   const { data: categories, isLoading } = useQuery({
     queryKey: ['categories'],
     queryFn: async () => {
@@ -211,6 +212,14 @@ export default function CategoriesPage() {
         </div>
       </section>
     </div>
+  );
+}
+
+export default function CategoriesPage() {
+  return (
+    <ProtectedRoute>
+      <CategoriesPageContent />
+    </ProtectedRoute>
   );
 }
 

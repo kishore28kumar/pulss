@@ -13,8 +13,9 @@ import {
   CheckCircle,
   ArrowRight
 } from 'lucide-react';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 
-export default function AboutPage() {
+function AboutPageContent() {
   const values = [
     {
       icon: Heart,
@@ -331,6 +332,14 @@ export default function AboutPage() {
         </div>
       </section>
     </div>
+  );
+}
+
+export default function AboutPage() {
+  return (
+    <ProtectedRoute>
+      <AboutPageContent />
+    </ProtectedRoute>
   );
 }
 

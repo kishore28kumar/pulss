@@ -61,13 +61,15 @@ export const authenticateCustomer = (req: Request, _res: Response, next: NextFun
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
 
-    if (decoded.type !== 'customer') {
-      throw new AppError('Invalid token type', 401);
+    // Check if the token is for a customer (by role, not type)
+    if (decoded.role !== 'CUSTOMER') {
+      throw new AppError('Invalid token - not a customer token', 401);
     }
 
-    req.customerId = decoded.customerId;
+    // The token contains userId (which is the customer ID for customer tokens)
+    req.customerId = decoded.userId;
     req.user = {
-      userId: decoded.customerId,
+      userId: decoded.userId,
       email: decoded.email,
       role: 'CUSTOMER',
       tenantId: decoded.tenantId,

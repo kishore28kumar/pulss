@@ -2,11 +2,13 @@
 
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
-import { ShoppingBag, TrendingUp, Shield, Truck } from 'lucide-react';
+import { ShoppingBag, TrendingUp, Shield, Truck, Store, LogIn, UserPlus } from 'lucide-react';
 import api from '@/lib/api';
 import ProductCard from '@/components/products/ProductCard';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function HomePage() {
+  const { isAuthenticated, customer } = useAuth();
   const { data: featuredProducts, isLoading } = useQuery({
     queryKey: ['featured-products'],
     queryFn: async () => {
@@ -15,7 +17,100 @@ export default function HomePage() {
       });
       return response.data.data.data;
     },
+    enabled: isAuthenticated && typeof window !== 'undefined',
+    retry: false,
   });
+
+  // Redirect to login if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50">
+        <div className="max-w-4xl w-full mx-4">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center justify-center w-24 h-24 bg-blue-600 rounded-3xl mb-6 shadow-2xl">
+              <Store className="w-14 h-14 text-white" />
+            </div>
+            <h1 className="text-5xl font-bold text-gray-900 mb-4">
+              Welcome to Pulss Store
+            </h1>
+            <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+              Discover quality products for your everyday needs. Sign in to start shopping with confidence!
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+            {/* Sign In Card */}
+            <Link
+              href="/login"
+              className="group bg-white rounded-2xl shadow-xl p-8 hover:shadow-2xl transition-all duration-300 border-2 border-transparent hover:border-blue-500"
+            >
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-6 group-hover:bg-blue-600 transition-colors">
+                <LogIn className="w-8 h-8 text-blue-600 group-hover:text-white transition-colors" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-3">Sign In</h2>
+              <p className="text-gray-600 mb-6">
+                Already have an account? Sign in to continue shopping and access your orders.
+              </p>
+              <div className="flex items-center text-blue-600 font-semibold group-hover:text-blue-700">
+                <span>Sign In Now</span>
+                <span className="ml-2 transform group-hover:translate-x-2 transition-transform">→</span>
+              </div>
+            </Link>
+
+            {/* Create Account Card */}
+            <Link
+              href="/login"
+              className="group bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl shadow-xl p-8 hover:shadow-2xl transition-all duration-300 text-white"
+            >
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full mb-6 group-hover:bg-white/30 transition-colors">
+                <UserPlus className="w-8 h-8 text-white" />
+              </div>
+              <h2 className="text-2xl font-bold mb-3">Create Account</h2>
+              <p className="text-blue-100 mb-6">
+                New to Pulss Store? Create an account to start shopping and enjoy exclusive benefits.
+              </p>
+              <div className="flex items-center font-semibold group-hover:text-blue-50">
+                <span>Get Started</span>
+                <span className="ml-2 transform group-hover:translate-x-2 transition-transform">→</span>
+              </div>
+            </Link>
+          </div>
+
+          {/* Features */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-16 max-w-4xl mx-auto">
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full mb-3">
+                <Truck className="w-6 h-6 text-blue-600" />
+              </div>
+              <h3 className="font-semibold text-gray-900 text-sm mb-1">Free Shipping</h3>
+              <p className="text-xs text-gray-600">On orders over $50</p>
+            </div>
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center w-12 h-12 bg-green-100 rounded-full mb-3">
+                <Shield className="w-6 h-6 text-green-600" />
+              </div>
+              <h3 className="font-semibold text-gray-900 text-sm mb-1">Secure Payment</h3>
+              <p className="text-xs text-gray-600">100% secure</p>
+            </div>
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center w-12 h-12 bg-purple-100 rounded-full mb-3">
+                <TrendingUp className="w-6 h-6 text-purple-600" />
+              </div>
+              <h3 className="font-semibold text-gray-900 text-sm mb-1">Quality Products</h3>
+              <p className="text-xs text-gray-600">Curated selection</p>
+            </div>
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center w-12 h-12 bg-orange-100 rounded-full mb-3">
+                <ShoppingBag className="w-6 h-6 text-orange-600" />
+              </div>
+              <h3 className="font-semibold text-gray-900 text-sm mb-1">Easy Returns</h3>
+              <p className="text-xs text-gray-600">30-day policy</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -24,7 +119,7 @@ export default function HomePage() {
         <div className="container mx-auto px-4 py-20">
           <div className="max-w-2xl">
             <h1 className="text-5xl font-bold mb-6">
-              Welcome to Pulss Store
+              Welcome back, {customer?.firstName}!
             </h1>
             <p className="text-xl mb-8 text-blue-100">
               Discover quality products for your everyday needs. Shop with confidence!
