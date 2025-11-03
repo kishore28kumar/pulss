@@ -6,11 +6,13 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
+import { useWishlist } from '@/hooks/useWishlist';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const { customer, isAuthenticated, logout } = useAuth();
+  const { wishlistCount } = useWishlist();
 
   const { data: cartData } = useQuery({
     queryKey: ['cart'],
@@ -66,9 +68,14 @@ export default function Header() {
             <div className="flex items-center space-x-4">
               <Link
                 href="/wishlist"
-                className="hidden md:flex items-center text-gray-700 hover:text-blue-600 transition"
+                className="hidden md:flex items-center relative text-gray-700 hover:text-blue-600 transition"
               >
                 <Heart className="w-6 h-6" />
+                {wishlistCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-pink-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                    {wishlistCount}
+                  </span>
+                )}
               </Link>
 
               <Link

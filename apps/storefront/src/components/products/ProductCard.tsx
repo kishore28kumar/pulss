@@ -3,23 +3,40 @@
 import Link from 'next/link';
 import { ShoppingCart, Heart } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
-import { toast } from 'sonner';
+import { useCart } from '@/hooks/useCart';
+import { useWishlist } from '@/hooks/useWishlist';
 
 interface ProductCardProps {
   product: any;
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
+  const { addToCart, isAddingToCart } = useCart();
+  const { addToWishlist, isInWishlist, removeFromWishlist } = useWishlist();
+  const isWishlisted = isInWishlist(product.id);
+
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
-    toast.success('Product added to cart!');
-    // Implement add to cart logic
+    e.stopPropagation();
+    addToCart({ productId: product.id, quantity: 1 });
   };
 
-  const handleAddToWishlist = async (e: React.MouseEvent) => {
+  const handleToggleWishlist = async (e: React.MouseEvent) => {
     e.preventDefault();
-    toast.success('Added to wishlist!');
-    // Implement add to wishlist logic
+    e.stopPropagation();
+    
+    if (isWishlisted) {
+      removeFromWishlist(product.id);
+    } else {
+      addToWishlist({
+        id: product.id,
+        productId: product.id,
+        name: product.name,
+        slug: product.slug,
+        price: product.price,
+        thumbnail: product.thumbnail,
+      });
+    }
   };
 
   return (
@@ -34,12 +51,22 @@ export default function ProductCard({ product }: ProductCardProps) {
           />
           
           {/* Quick Actions */}
-          <div className="absolute top-3 right-3 flex flex-col space-y-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="absolute top-3 right-3 flex flex-col space-y-2">
             <button
-              onClick={handleAddToWishlist}
-              className="p-2 bg-white rounded-full shadow-md hover:bg-red-50 transition"
+              onClick={handleToggleWishlist}
+              className={`p-2 rounded-full shadow-md transition ${
+                isWishlisted 
+                  ? 'bg-red-50' 
+                  : 'bg-white opacity-0 group-hover:opacity-100'
+              }`}
             >
-              <Heart className="w-5 h-5 text-gray-700 hover:text-red-600" />
+              <Heart 
+                className={`w-5 h-5 transition ${
+                  isWishlisted 
+                    ? 'text-red-600 fill-red-600' 
+                    : 'text-gray-700 hover:text-red-600'
+                }`} 
+              />
             </button>
           </div>
 
@@ -85,9 +112,9 @@ export default function ProductCard({ product }: ProductCardProps) {
 
           {/* Stock Status */}
           <div className="mb-3">
-            {product.stockQuantity > 0 ? (
+            {product.stock > 0 ? (
               <span className="text-xs text-green-600 font-medium">
-                In Stock ({product.stockQuantity} available)
+                In Stock {product.stock < 10 ? `(${product.stock} left)` : ''}
               </span>
             ) : (
               <span className="text-xs text-red-600 font-medium">Out of Stock</span>
@@ -97,11 +124,11 @@ export default function ProductCard({ product }: ProductCardProps) {
           {/* Add to Cart Button */}
           <button
             onClick={handleAddToCart}
-            disabled={product.stockQuantity === 0}
+            disabled={product.stock === 0 || isAddingToCart}
             className="w-full py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
           >
             <ShoppingCart className="w-4 h-4" />
-            <span>Add to Cart</span>
+            <span>{isAddingToCart ? 'Adding...' : 'Add to Cart'}</span>
           </button>
         </div>
       </div>
