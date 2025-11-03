@@ -1,9 +1,6 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
 import { Package, ShoppingCart, Users, DollarSign, TrendingUp, TrendingDown } from 'lucide-react';
-import { formatCurrency } from '@/lib/utils';
-import api from '@/lib/api';
 
 export default function DashboardPage() {
   // Mock stats - replace with actual API calls

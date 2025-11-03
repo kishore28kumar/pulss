@@ -35,7 +35,7 @@ COPY . .
 
 WORKDIR /app/apps/admin-dashboard
 
-RUN npm run build
+RUN NODE_TLS_REJECT_UNAUTHORIZED=0 npm run build
 
 # Production stage
 FROM base AS production

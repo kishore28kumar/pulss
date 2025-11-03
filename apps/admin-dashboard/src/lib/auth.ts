@@ -26,11 +26,13 @@ export const authService = {
   },
 
   getStoredUser(): AuthUser | null {
+    if (typeof window === 'undefined') return null;
     const userStr = localStorage.getItem('user');
     return userStr ? JSON.parse(userStr) : null;
   },
 
   isAuthenticated(): boolean {
+    if (typeof window === 'undefined') return false;
     return !!localStorage.getItem('accessToken');
   },
 };

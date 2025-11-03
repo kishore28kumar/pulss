@@ -189,7 +189,7 @@ export const createOrder = asyncHandler(
     // Calculate order totals
     let subtotal = 0;
     const orderItems = data.items.map(item => {
-      const product = products.find(p => p.id === item.productId);
+      const product = products.find((p: any) => p.id === item.productId);
       if (!product) {
         throw new AppError(`Product ${item.productId} not found`, 400);
       }
@@ -272,7 +272,7 @@ export const createOrder = asyncHandler(
 
     // Update product inventory
     for (const item of data.items) {
-      const product = products.find(p => p.id === item.productId);
+      const product = products.find((p: any) => p.id === item.productId);
       if (product && product.trackInventory) {
         await prisma.products.update({
           where: { id: item.productId },
