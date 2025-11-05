@@ -16,6 +16,20 @@ Built for Pharmacies • Grocery Stores • Local Businesses • Retail Chains
 
 ---
 
+## ⚡ Quick Start
+
+**Want to get started immediately?** Just run:
+
+```bash
+npm start
+```
+
+This single command will set up everything automatically! 
+
+**📖 See [QUICKSTART.md](QUICKSTART.md) for the simplified guide.**
+
+---
+
 ## 📋 Table of Contents
 
 - [Overview](#-overview)
