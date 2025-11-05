@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Bell, LogOut, User } from 'lucide-react';
 import { authService } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
@@ -8,7 +8,14 @@ import { useRouter } from 'next/navigation';
 export default function Header() {
   const router = useRouter();
   const [showMenu, setShowMenu] = useState(false);
-  const user = authService.getStoredUser();
+  const [user, setUser] = useState<any>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    // Only access localStorage on the client side
+    setUser(authService.getStoredUser());
+    setIsLoaded(true);
+  }, []);
 
   const handleLogout = () => {
     authService.logout();
@@ -19,7 +26,7 @@ export default function Header() {
     <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6">
       <div>
         <h2 className="text-xl font-semibold text-gray-900">
-          Welcome back, {user?.firstName}!
+          Welcome back{isLoaded && user?.firstName ? `, ${user.firstName}` : ''}!
         </h2>
         <p className="text-sm text-gray-500">Manage your store efficiently</p>
       </div>

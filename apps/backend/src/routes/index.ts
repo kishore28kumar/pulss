@@ -6,6 +6,7 @@ import categoryRoutes from './categoryRoutes';
 import orderRoutes from './orderRoutes';
 import cartRoutes from './cartRoutes';
 import stripeRoutes from './stripeRoutes';
+import customerRoutes from './customerRoutes';
 
 const router = Router();
 
@@ -15,6 +16,7 @@ router.use('/tenants', tenantRoutes);
 router.use('/products', productRoutes);
 router.use('/categories', categoryRoutes);
 router.use('/orders', orderRoutes);
+router.use('/customers', customerRoutes);
 router.use('/cart', cartRoutes);
 router.use('/stripe', stripeRoutes);
 

@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { config } from 'dotenv';
 import { resolve } from 'path';
+import bcrypt from 'bcryptjs';
 
 // Load environment variables from root .env file
 config({ path: resolve(__dirname, '../../../.env') });
@@ -33,6 +34,29 @@ async function main() {
     });
     console.log('✅ Default tenant created');
   }
+
+  // Create admin user
+  console.log('Creating admin user...');
+  const hashedPassword = await bcrypt.hash('password123', 10);
+
+  await prisma.users.upsert({
+    where: { email: 'admin@example.com' },
+    update: {},
+    create: {
+      id: `user_admin_${Date.now()}`,
+      email: 'admin@example.com',
+      password: hashedPassword,
+      firstName: 'Admin',
+      lastName: 'User',
+      role: 'ADMIN',
+      tenantId: tenant.id,
+      isActive: true,
+      emailVerified: true,
+      updatedAt: new Date(),
+    },
+  });
+
+  console.log('✅ Admin user created (admin@example.com / password123)');
 
   // Create categories
   console.log('Creating categories...');
@@ -419,7 +443,10 @@ async function main() {
 
   console.log('✅ Products created');
   console.log(`\n🎉 Seed completed successfully!`);
-  console.log(`📦 Created ${products.length} products across 4 categories\n`);
+  console.log(`📦 Created ${products.length} products across 4 categories`);
+  console.log(`\n👤 Admin Login Credentials:`);
+  console.log(`   Email: admin@example.com`);
+  console.log(`   Password: password123\n`);
 }
 
 main()
