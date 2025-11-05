@@ -3,7 +3,7 @@ const nextConfig = {
   reactStrictMode: true,
   transpilePackages: ['@pulss/types'],
   images: {
-    domains: ['res.cloudinary.com', 'localhost', 'via.placeholder.com', 'images.unsplash.com'],
+    unoptimized: true,
   },
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api',
