@@ -102,7 +102,7 @@ export const getProducts = asyncHandler(
 );
 
 // ============================================
-// GET SINGLE PRODUCT
+// GET SINGLE PRODUCT (by ID or slug)
 // ============================================
 
 export const getProduct = asyncHandler(
@@ -113,10 +113,13 @@ export const getProduct = asyncHandler(
       throw new AppError('Tenant not found', 400);
     }
 
+    // Try to find by ID first, then by slug
     const product = await prisma.products.findFirst({
       where: {
-        id,
-        tenantId: req.tenantId,
+        OR: [
+          { id, tenantId: req.tenantId },
+          { slug: id, tenantId: req.tenantId },
+        ],
       },
       include: {
         categories: {
