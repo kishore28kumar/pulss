@@ -9,7 +9,6 @@ import {
   ShoppingBag, 
   DollarSign, 
   Package, 
-  TrendingUp,
   Download
 } from 'lucide-react';
 import api from '@/lib/api';

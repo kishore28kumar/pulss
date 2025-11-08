@@ -10,14 +10,13 @@ import {
   ShoppingBag,
   DollarSign,
   Eye,
-  Ban,
   CheckCircle,
   Mail,
   Phone,
   MapPin
 } from 'lucide-react';
 import api from '@/lib/api';
-import { formatCurrency, formatDate, formatDateTime } from '@/lib/utils';
+import { formatCurrency, formatDate } from '@/lib/utils';
 import CustomerDetailsModal from './CustomerDetailsModal';
 
 interface Customer {

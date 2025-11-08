@@ -7,7 +7,6 @@ import {
   Palette, 
   Bell, 
   Shield, 
-  Loader2,
   Save,
   Info
 } from 'lucide-react';
