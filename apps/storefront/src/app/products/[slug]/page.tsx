@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
@@ -26,7 +26,6 @@ import ProductCard from '@/components/products/ProductCard';
 
 function ProductDetailContent() {
   const params = useParams();
-  const router = useRouter();
   const slug = params.slug as string;
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
