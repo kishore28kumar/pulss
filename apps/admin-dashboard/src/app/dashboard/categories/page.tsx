@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Search, Edit, Trash2, FolderTree, MoreVertical } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, FolderTree } from 'lucide-react';
 import api from '@/lib/api';
 import { toast } from 'sonner';
 import CategoryModal from './CategoryModal';
