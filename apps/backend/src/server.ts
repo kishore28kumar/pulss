@@ -26,7 +26,7 @@ app.use(
   cors({
     origin: [
       process.env.ADMIN_URL || 'http://localhost:3001',
-      process.env.STOREFRONT_URL || 'http://localhost:3000',
+      process.env.STOREFRONT_URL || process.env.FRONTEND_URL || 'http://localhost:3000',
     ],
     credentials: true,
   })
