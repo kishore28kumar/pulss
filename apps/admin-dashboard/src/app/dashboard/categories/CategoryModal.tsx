@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { X, Loader2, Image as ImageIcon } from 'lucide-react';
 import { useForm } from 'react-hook-form';
