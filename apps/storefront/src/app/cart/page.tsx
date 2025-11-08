@@ -5,7 +5,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import Image from 'next/image';
 import { 
-  ShoppingBag, 
   Trash2, 
   Plus, 
   Minus, 
