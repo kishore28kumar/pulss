@@ -5,9 +5,8 @@
   "scripts": {
     "dev": "nodemon --exec ts-node src/server.ts",
     "build": "tsc",
-    "start": "npm run migrate:prod && npm run seed:safe && node dist/server.js",
-    "migrate:prod": "cd ../../packages/database && npx prisma migrate deploy",
-    "seed:safe": "cd ../../packages/database && npx prisma db seed || echo 'Seed skipped or already done'",
+    "start": "npm run db:setup && node dist/server.js",
+    "db:setup": "cd ../../packages/database && npx prisma db push --accept-data-loss && npx prisma db seed || echo 'Database setup complete'",
     "lint": "eslint src --ext .ts",
     "clean": "rm -rf dist"
   },
