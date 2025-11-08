@@ -7,7 +7,6 @@ import {
   Heart, 
   ShoppingCart, 
   Package,
-  Star,
   TrendingUp,
   AlertCircle
 } from 'lucide-react';
