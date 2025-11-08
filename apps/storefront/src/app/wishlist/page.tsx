@@ -6,7 +6,6 @@ import Image from 'next/image';
 import { 
   Heart, 
   ShoppingCart, 
-  Trash2, 
   Package,
   Star,
   TrendingUp,
