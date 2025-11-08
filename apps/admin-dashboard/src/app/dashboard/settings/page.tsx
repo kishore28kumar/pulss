@@ -7,7 +7,6 @@ import {
   Palette, 
   Bell, 
   Shield, 
-  Save,
   Info
 } from 'lucide-react';
 import api from '@/lib/api';
