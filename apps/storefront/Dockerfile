@@ -43,11 +43,16 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-COPY --from=builder /app/apps/storefront/.next ./.next
-COPY --from=builder /app/apps/storefront/public ./public
-COPY --from=builder /app/apps/storefront/package*.json ./
-COPY --from=builder /app/apps/storefront/next.config.js ./
-COPY --from=deps /app/node_modules ./node_modules
+# Copy the entire monorepo structure to maintain local package references
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/packages ./packages
+COPY --from=builder /app/apps/storefront/.next ./apps/storefront/.next
+COPY --from=builder /app/apps/storefront/public ./apps/storefront/public
+COPY --from=builder /app/apps/storefront/package*.json ./apps/storefront/
+COPY --from=builder /app/apps/storefront/next.config.js ./apps/storefront/
+
+WORKDIR /app/apps/storefront
 
 EXPOSE 3000
 

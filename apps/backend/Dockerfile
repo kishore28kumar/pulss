@@ -38,8 +38,12 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-WORKDIR /app/apps/backend
+# Generate Prisma client
+WORKDIR /app/packages/database
+RUN npx prisma generate
 
+# Build backend
+WORKDIR /app/apps/backend
 RUN npm run build
 
 # Production stage
@@ -48,9 +52,14 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-COPY --from=builder /app/apps/backend/dist ./dist
-COPY --from=builder /app/apps/backend/package*.json ./
-COPY --from=deps /app/node_modules ./node_modules
+# Copy the entire monorepo structure to maintain local package references
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/packages ./packages
+COPY --from=builder /app/apps/backend/dist ./apps/backend/dist
+COPY --from=builder /app/apps/backend/package*.json ./apps/backend/
+
+WORKDIR /app/apps/backend
 
 EXPOSE 5000
 

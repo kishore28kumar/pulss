@@ -43,11 +43,16 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-COPY --from=builder /app/apps/admin-dashboard/.next ./.next
-COPY --from=builder /app/apps/admin-dashboard/public ./public
-COPY --from=builder /app/apps/admin-dashboard/package*.json ./
-COPY --from=builder /app/apps/admin-dashboard/next.config.js ./
-COPY --from=deps /app/node_modules ./node_modules
+# Copy the entire monorepo structure to maintain local package references
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/packages ./packages
+COPY --from=builder /app/apps/admin-dashboard/.next ./apps/admin-dashboard/.next
+COPY --from=builder /app/apps/admin-dashboard/public ./apps/admin-dashboard/public
+COPY --from=builder /app/apps/admin-dashboard/package*.json ./apps/admin-dashboard/
+COPY --from=builder /app/apps/admin-dashboard/next.config.js ./apps/admin-dashboard/
+
+WORKDIR /app/apps/admin-dashboard
 
 EXPOSE 3001
 
