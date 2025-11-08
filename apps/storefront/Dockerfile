@@ -33,8 +33,12 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-WORKDIR /app/apps/storefront
+# Build shared packages first
+WORKDIR /app/packages/types
+RUN npm run build
 
+# Build storefront
+WORKDIR /app/apps/storefront
 RUN NODE_TLS_REJECT_UNAUTHORIZED=0 npm run build
 
 # Production stage

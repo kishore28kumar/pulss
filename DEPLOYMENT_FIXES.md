@@ -1,17 +1,81 @@
 # Deployment Fixes Summary
 
-## Problem
+## Problems Encountered
+
+### Problem 1: Cannot find module '@pulss/database'
 The application failed to deploy on Render with the error:
 ```
 Error: Cannot find module '@pulss/database'
 ```
 
-## Root Cause
-The Dockerfiles for all three services (backend, storefront, admin-dashboard) were not properly handling the monorepo structure. The production stages were only copying the built application files without including the local workspace packages (`@pulss/database` and `@pulss/types`).
+**Root Cause:** The Dockerfiles were not properly handling the monorepo structure. The production stages were only copying the built application files without including the local workspace packages (`@pulss/database` and `@pulss/types`).
+
+### Problem 2: Cannot use import statement outside a module
+After fixing Problem 1, a new error appeared:
+```
+SyntaxError: Cannot use import statement outside a module
+at /app/packages/database/index.ts:1
+```
+
+**Root Cause:** The shared packages (`@pulss/database` and `@pulss/types`) were configured to use TypeScript source files (`index.ts`) as their entry points. Node.js in production cannot execute TypeScript directly - it needs compiled JavaScript.
 
 ## Changes Made
 
-### 1. Backend Dockerfile (`apps/backend/Dockerfile`)
+### 1. Package Configuration for Production
+
+**Added TypeScript build configuration for shared packages:**
+
+**packages/database/tsconfig.json** (NEW):
+```json
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "commonjs",
+    "outDir": "./dist",
+    "declaration": true
+  }
+}
+```
+
+**packages/types/tsconfig.json** (NEW):
+```json
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "commonjs",
+    "outDir": "./dist",
+    "declaration": true
+  }
+}
+```
+
+**Updated packages/database/package.json:**
+```json
+{
+  "main": "./dist/index.js",  // Changed from "./index.ts"
+  "types": "./dist/index.d.ts",  // Changed from "./index.ts"
+  "scripts": {
+    "build": "tsc"  // Added build script
+  }
+}
+```
+
+**Updated packages/types/package.json:**
+```json
+{
+  "main": "./dist/index.js",  // Changed from "./index.ts"
+  "types": "./dist/index.d.ts",  // Changed from "./index.ts"
+  "scripts": {
+    "build": "tsc"  // Added build script
+  }
+}
+```
+
+**Added .gitignore files:**
+- `packages/database/.gitignore` - Ignores `dist/` folder
+- `packages/types/.gitignore` - Ignores `dist/` folder
+
+### 2. Backend Dockerfile (`apps/backend/Dockerfile`)
 
 **Issues Fixed:**
 - Missing Prisma client generation during build
@@ -20,21 +84,29 @@ The Dockerfiles for all three services (backend, storefront, admin-dashboard) we
 
 **Changes:**
 ```dockerfile
-# Added Prisma client generation
+# Build shared packages first
+WORKDIR /app/packages/types
+RUN npm run build  # <- Build types to JavaScript
+
 WORKDIR /app/packages/database
-RUN npx prisma generate
+RUN npx prisma generate  # <- Generate Prisma client
+RUN npm run build  # <- Build database package to JavaScript
+
+# Build backend
+WORKDIR /app/apps/backend
+RUN npm run build
 
 # Fixed production stage to include packages
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/packages ./packages  # <- Critical addition
+COPY --from=builder /app/packages ./packages  # <- Includes compiled JS
 COPY --from=builder /app/apps/backend/dist ./apps/backend/dist
 COPY --from=builder /app/apps/backend/package*.json ./apps/backend/
 
 WORKDIR /app/apps/backend  # <- Correct working directory
 ```
 
-### 2. Storefront Dockerfile (`apps/storefront/Dockerfile`)
+### 3. Storefront Dockerfile (`apps/storefront/Dockerfile`)
 
 **Issues Fixed:**
 - `@pulss/types` package not included in production image
@@ -42,10 +114,18 @@ WORKDIR /app/apps/backend  # <- Correct working directory
 
 **Changes:**
 ```dockerfile
+# Build shared packages first
+WORKDIR /app/packages/types
+RUN npm run build  # <- Build types to JavaScript
+
+# Build storefront
+WORKDIR /app/apps/storefront
+RUN npm run build
+
 # Changed from flat structure to monorepo structure
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/packages ./packages  # <- Includes @pulss/types
+COPY --from=builder /app/packages ./packages  # <- Includes compiled @pulss/types
 COPY --from=builder /app/apps/storefront/.next ./apps/storefront/.next
 COPY --from=builder /app/apps/storefront/public ./apps/storefront/public
 COPY --from=builder /app/apps/storefront/package*.json ./apps/storefront/
@@ -54,17 +134,25 @@ COPY --from=builder /app/apps/storefront/next.config.js ./apps/storefront/
 WORKDIR /app/apps/storefront
 ```
 
-### 3. Admin Dashboard Dockerfile (`apps/admin-dashboard/Dockerfile`)
+### 4. Admin Dashboard Dockerfile (`apps/admin-dashboard/Dockerfile`)
 
 **Issues Fixed:**
 - Same issues as storefront - missing `@pulss/types` package
 
 **Changes:**
 ```dockerfile
+# Build shared packages first
+WORKDIR /app/packages/types
+RUN npm run build  # <- Build types to JavaScript
+
+# Build admin dashboard
+WORKDIR /app/apps/admin-dashboard
+RUN npm run build
+
 # Same fix as storefront - maintain monorepo structure
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/packages ./packages  # <- Includes @pulss/types
+COPY --from=builder /app/packages ./packages  # <- Includes compiled @pulss/types
 COPY --from=builder /app/apps/admin-dashboard/.next ./apps/admin-dashboard/.next
 COPY --from=builder /app/apps/admin-dashboard/public ./apps/admin-dashboard/public
 COPY --from=builder /app/apps/admin-dashboard/package*.json ./apps/admin-dashboard/
@@ -73,7 +161,7 @@ COPY --from=builder /app/apps/admin-dashboard/next.config.js ./apps/admin-dashbo
 WORKDIR /app/apps/admin-dashboard
 ```
 
-### 4. Created `render.yaml`
+### 5. Created `render.yaml`
 
 **Purpose:** Automated deployment configuration for Render platform
 
@@ -90,7 +178,7 @@ WORKDIR /app/apps/admin-dashboard
 3. **pulss-storefront** - Next.js customer-facing app
 4. **pulss-admin** - Next.js admin dashboard
 
-### 5. Created `DEPLOYMENT.md`
+### 6. Created `DEPLOYMENT.md`
 
 **Purpose:** Comprehensive deployment guide
 
@@ -124,6 +212,11 @@ WORKDIR /app/apps/admin-dashboard
    - The generated code must be present in the final image
    - Without running `prisma generate`, the `@pulss/database` module was incomplete
 
+4. **TypeScript vs JavaScript:**
+   - The package.json files pointed to TypeScript source (`index.ts`)
+   - Node.js production runtime cannot execute TypeScript
+   - The packages needed to be compiled to JavaScript first
+
 ### Why the Fix Works
 
 1. **Preserves Monorepo Structure:**
@@ -138,6 +231,11 @@ WORKDIR /app/apps/admin-dashboard
 3. **Correct Working Directory:**
    - Sets `WORKDIR /app/apps/[service-name]`
    - Makes relative imports work exactly as in development
+
+4. **Compiles Shared Packages:**
+   - Builds `@pulss/types` and `@pulss/database` to JavaScript
+   - Updates package.json to point to compiled `dist/index.js`
+   - Ensures Node.js loads JavaScript, not TypeScript source
 
 ## Testing the Fix
 

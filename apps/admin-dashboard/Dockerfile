@@ -33,8 +33,12 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-WORKDIR /app/apps/admin-dashboard
+# Build shared packages first
+WORKDIR /app/packages/types
+RUN npm run build
 
+# Build admin dashboard
+WORKDIR /app/apps/admin-dashboard
 RUN NODE_TLS_REJECT_UNAUTHORIZED=0 npm run build
 
 # Production stage

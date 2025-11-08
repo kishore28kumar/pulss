@@ -38,9 +38,13 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Generate Prisma client
+# Build shared packages first
+WORKDIR /app/packages/types
+RUN npm run build
+
 WORKDIR /app/packages/database
 RUN npx prisma generate
+RUN npm run build
 
 # Build backend
 WORKDIR /app/apps/backend
