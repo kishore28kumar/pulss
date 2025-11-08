@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { X, User, Mail, Phone, MapPin, ShoppingBag, CheckCircle, Ban, Loader2, Calendar } from 'lucide-react';
 import api from '@/lib/api';
-import { formatCurrency, formatDate, formatDateTime } from '@/lib/utils';
+import { formatCurrency, formatDate } from '@/lib/utils';
 import { toast } from 'sonner';
 
 interface CustomerDetailsModalProps {
