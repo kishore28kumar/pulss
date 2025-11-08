@@ -12,8 +12,7 @@ import {
   Eye,
   CheckCircle,
   Mail,
-  Phone,
-  MapPin
+  Phone
 } from 'lucide-react';
 import api from '@/lib/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
