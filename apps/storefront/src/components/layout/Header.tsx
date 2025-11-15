@@ -11,7 +11,6 @@ import {
   Heart, 
   Store, 
   LogOut,
-  X,
   ChevronDown
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
