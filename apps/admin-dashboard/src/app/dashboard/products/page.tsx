@@ -1,15 +1,19 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Plus, Search, Edit, Trash2, Eye } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Plus, Search, Edit, Trash2, Eye, Upload } from 'lucide-react';
 import api from '@/lib/api';
 import { formatCurrency } from '@/lib/utils';
 import Link from 'next/link';
 import PermissionGuard from '@/components/permissions/PermissionGuard';
 import { Permission } from '@/lib/permissions';
+import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
 
 export default function ProductsPage() {
+  const router = useRouter();
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
 
@@ -23,6 +27,31 @@ export default function ProductsPage() {
     },
   });
 
+  // Delete product mutation
+  const deleteMutation = useMutation({
+    mutationFn: async (productId: string) => {
+      await api.delete(`/products/${productId}`);
+    },
+    onSuccess: () => {
+      toast.success('Product deleted successfully');
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.error || 'Failed to delete product');
+    },
+  });
+
+  const handleDelete = (product: any) => {
+    if (confirm(`Are you sure you want to delete "${product.name}"? This action cannot be undone.`)) {
+      deleteMutation.mutate(product.id);
+    }
+  };
+
+  const handleView = (product: any) => {
+    // Navigate to product detail page or open in new tab
+    router.push(`/dashboard/products/${product.id}`);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -32,13 +61,22 @@ export default function ProductsPage() {
           <p className="text-gray-500 mt-1">Manage your product inventory</p>
         </div>
         <PermissionGuard permission={Permission.PRODUCTS_CREATE}>
-          <Link
-            href="/dashboard/products/new"
-            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-          >
-            <Plus className="w-5 h-5 mr-2" />
-            Add Product
-          </Link>
+          <div className="flex items-center space-x-3">
+            <Link
+              href="/dashboard/products/new"
+              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              Add Product
+            </Link>
+            <Link
+              href="/dashboard/products/bulk-import"
+              className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+            >
+              <Upload className="w-5 h-5 mr-2" />
+              Import Products
+            </Link>
+          </div>
         </PermissionGuard>
       </div>
 
@@ -138,19 +176,29 @@ export default function ProductsPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex items-center justify-end space-x-2">
-                          <button className="p-2 text-gray-400 hover:text-blue-600 transition">
+                          <button
+                            onClick={() => handleView(product)}
+                            className="p-2 text-gray-400 hover:text-blue-600 transition"
+                            title="View Product"
+                          >
                             <Eye className="w-4 h-4" />
                           </button>
                           <PermissionGuard permission={Permission.PRODUCTS_UPDATE}>
                             <Link
                               href={`/dashboard/products/${product.id}/edit`}
                               className="p-2 text-gray-400 hover:text-blue-600 transition"
+                              title="Edit Product"
                             >
                               <Edit className="w-4 h-4" />
                             </Link>
                           </PermissionGuard>
                           <PermissionGuard permission={Permission.PRODUCTS_DELETE}>
-                            <button className="p-2 text-gray-400 hover:text-red-600 transition">
+                            <button
+                              onClick={() => handleDelete(product)}
+                              disabled={deleteMutation.isPending}
+                              className="p-2 text-gray-400 hover:text-red-600 transition disabled:opacity-50"
+                              title="Delete Product"
+                            >
                               <Trash2 className="w-4 h-4" />
                             </button>
                           </PermissionGuard>
