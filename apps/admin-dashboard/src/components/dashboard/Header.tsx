@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Bell, LogOut, User, Store, Menu, X } from 'lucide-react';
+import { Bell, LogOut, User, Store, Menu } from 'lucide-react';
 import { authService } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
 import RoleBadge from '@/components/permissions/RoleBadge';
