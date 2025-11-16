@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Search, Edit, Trash2, UserPlus, Mail, Phone, CheckCircle, XCircle } from 'lucide-react';
+import { Search, Edit, Trash2, UserPlus, Mail, Phone, CheckCircle, XCircle } from 'lucide-react';
 import api from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 import { toast } from 'sonner';
