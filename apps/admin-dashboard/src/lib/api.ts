@@ -1,7 +1,14 @@
 import axios from 'axios';
 import { getApiUrl } from './config/urls';
 
-const API_URL = getApiUrl();
+// Get API URL - this is evaluated at module load time
+// For runtime changes, you'll need to rebuild the app
+let API_URL = getApiUrl();
+
+// Log the API URL being used (for debugging)
+if (typeof window !== 'undefined') {
+  console.log('[API] Initial API URL:', API_URL);
+}
 
 // Helper function to get tenant slug from stored user data
 const getTenantSlug = (): string | null => {

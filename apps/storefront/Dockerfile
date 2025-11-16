@@ -30,6 +30,18 @@ CMD ["npm", "run", "dev"]
 FROM base AS builder
 WORKDIR /app
 
+# Accept build arguments for environment variables
+ARG NEXT_PUBLIC_API_URL
+ARG DEPLOY_ENV
+ARG NEXT_PUBLIC_TENANT_SLUG
+ARG NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+
+# Set as environment variables for the build
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+ENV DEPLOY_ENV=${DEPLOY_ENV}
+ENV NEXT_PUBLIC_TENANT_SLUG=${NEXT_PUBLIC_TENANT_SLUG}
+ENV NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 

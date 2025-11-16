@@ -37,13 +37,31 @@ const env = getEnvironment();
 
 // Export API URL based on environment
 export const getApiUrl = (): string => {
+  // Check for runtime override (useful for debugging)
+  if (typeof window !== 'undefined' && (window as any).__API_URL__) {
+    console.log('[API Config] Using runtime override:', (window as any).__API_URL__);
+    return (window as any).__API_URL__;
+  }
+  
   // NEXT_PUBLIC_API_URL has highest priority - use it if set
-  if (process.env.NEXT_PUBLIC_API_URL) {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL.trim();
+  const envApiUrl = process.env.NEXT_PUBLIC_API_URL;
+  if (envApiUrl) {
+    let apiUrl = envApiUrl.trim();
+    
+    // Handle case where Render's fromService returns just hostname (without protocol)
+    if (!apiUrl.startsWith('http://') && !apiUrl.startsWith('https://')) {
+      apiUrl = `https://${apiUrl}`;
+    }
+    
+    // Ensure /api is appended if not present (Render fromService only gives hostname)
+    if (!apiUrl.endsWith('/api')) {
+      apiUrl = apiUrl.endsWith('/') ? `${apiUrl}api` : `${apiUrl}/api`;
+    }
     
     // Debug logging
     if (typeof window !== 'undefined') {
-      console.log('[API Config] Using NEXT_PUBLIC_API_URL:', apiUrl);
+      console.log('[API Config] NEXT_PUBLIC_API_URL found:', apiUrl);
+      console.log('[API Config] Raw process.env.NEXT_PUBLIC_API_URL:', process.env.NEXT_PUBLIC_API_URL);
     }
     
     return apiUrl;
@@ -54,8 +72,11 @@ export const getApiUrl = (): string => {
   
   // Debug logging
   if (typeof window !== 'undefined') {
-    console.log('[API Config] NEXT_PUBLIC_API_URL not set, using fallback:', apiUrl);
+    console.warn('[API Config] NEXT_PUBLIC_API_URL not set!');
     console.log('[API Config] DEPLOY_ENV:', env);
+    console.log('[API Config] NODE_ENV:', process.env.NODE_ENV);
+    console.log('[API Config] Using fallback:', apiUrl);
+    console.log('[API Config] All NEXT_PUBLIC_ vars:', Object.keys(process.env).filter(k => k.startsWith('NEXT_PUBLIC_')));
   }
   
   return apiUrl;

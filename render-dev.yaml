@@ -75,12 +75,14 @@ services:
       - key: DEPLOY_ENV
         value: development
       - key: NEXT_PUBLIC_API_URL
-        fromService:
-          type: web
-          name: pulss-dev
-          property: host
-          envVarKey: NEXT_PUBLIC_API_URL
-        # Note: The frontend config will automatically append /api if missing
+        value: https://pulss-dev.onrender.com/api
+        # You can also use fromService if you prefer:
+        # fromService:
+        #   type: web
+        #   name: pulss-dev
+        #   property: host
+        #   envVarKey: NEXT_PUBLIC_API_URL
+        # Note: If using fromService, the config will automatically add https:// and /api
       - key: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
         sync: false
 
@@ -99,10 +101,12 @@ services:
       - key: DEPLOY_ENV
         value: development
       - key: NEXT_PUBLIC_API_URL
-        fromService:
-          type: web
-          name: pulss-dev
-          property: host
-          envVarKey: NEXT_PUBLIC_API_URL
-        # Note: The frontend config will automatically append /api if missing
+        value: https://pulss-dev.onrender.com/api
+        # You can also use fromService if you prefer:
+        # fromService:
+        #   type: web
+        #   name: pulss-dev
+        #   property: host
+        #   envVarKey: NEXT_PUBLIC_API_URL
+        # Note: If using fromService, the config will automatically add https:// and /api
 
