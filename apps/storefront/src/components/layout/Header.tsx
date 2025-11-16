@@ -39,7 +39,7 @@ export default function Header() {
       <div className="mx-auto">
         {/* Top Bar */}
         <div className="py-2 px-4 bg-blue-600 text-white text-sm text-center">
-          🎉 Free shipping on orders over $50!
+          🎉 Free shipping on orders over ₹200!
         </div>
 
         {/* Main Header */}
