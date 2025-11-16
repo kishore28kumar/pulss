@@ -1,0 +1,430 @@
+apps/admin-dashboard/src/app/dashboard/settings/AppearanceTab.tsx
+  b087607 60,63,105-107
+apps/admin-dashboard/src/app/dashboard/customers/page.tsx
+  b087607 108,112-113,118
+apps/admin-dashboard/src/app/login/page.tsx
+  b087607 45,48-50,52-53,57-58,97,104,112
+apps/admin-dashboard/src/app/dashboard/analytics/page.tsx
+  b087607 68
+  bc0e089 46,48,50-51,57
+apps/admin-dashboard/src/app/dashboard/products/[id]/page.tsx
+  a0c8b1c 52,54,58,63-64,69,78-79
+apps/admin-dashboard/src/app/dashboard/products/bulk-import/page.tsx
+  a0c8b1c 283,288,293-294
+  b087607 316-317,319,324,333-334,405,414,421
+apps/admin-dashboard/src/app/dashboard/staff/page.tsx
+  bc0e089 80,82,84,87,96
+apps/admin-dashboard/src/app/dashboard/orders/page.tsx
+  b087607 133,135,137-138,141,149,223,231,236
+apps/admin-dashboard/src/app/dashboard/layout.tsx
+  b087607 3,15,23-30,33-37,39-53
+apps/admin-dashboard/src/app/dashboard/products/new/page.tsx
+  a0c8b1c 196,198-199,201
+  b087607 185,190-191,263-264,266,318-319,334,365,395-396,401,421-422,424,435,442,464-465,467,508,560-561,593,596,603
+apps/admin-dashboard/src/app/dashboard/categories/CategoryModal.tsx
+  b087607 119,124,139,141,213
+apps/admin-dashboard/src/app/dashboard/orders/OrderDetailsModal.tsx
+  b087607 110,112,125,127,311,313,364,380,383,391
+apps/admin-dashboard/src/app/dashboard/staff/InviteStaffModal.tsx
+  a0c8b1c 126,128
+  b087607 148,158,167,271,275,282
+apps/admin-dashboard/src/app/dashboard/settings/TenantInfoTab.tsx
+  b087607 162,214-215,217,262-263,276,284,352-353,355,398-399,401
+  a0c8b1c 97,102,114-115,117
+apps/admin-dashboard/src/app/dashboard/settings/StoreInfoTab.tsx
+  b087607 69,92,150
+  bc0e089 82
+apps/admin-dashboard/src/app/dashboard/customers/CustomerDetailsModal.tsx
+  b087607 101,103,134,217
+apps/admin-dashboard/src/app/dashboard/settings/page.tsx
+  b087607 132,136-137,157,174,181,190
+apps/admin-dashboard/src/app/dashboard/products/[id]/edit/page.tsx
+  a0c8b1c 218,224,229-230,235,237-238,240
+  b087607 302-303,305,357-358,373,404,434-435,440,460-461,463,474,481,503-504,506,547,599-600,632,635,642
+apps/admin-dashboard/src/app/dashboard/staff/EditStaffModal.tsx
+  a0c8b1c 96,98
+  b087607 118,129,135,200,204,211
+apps/admin-dashboard/src/app/dashboard/products/bulk-import/preview/page.tsx
+  a0c8b1c 304,309,314-315
+  b087607 319-320,471-472,474,477,482,485,492
+apps/admin-dashboard/src/components/dashboard/Header.tsx
+  b087607 3,9-13,18,26-42,48-55,57-70,72-77,79,82,94,102,105,107,119
+  bc0e089 4,71,80-81,83-90,114
+apps/admin-dashboard/src/app/dashboard/products/page.tsx
+  a0c8b1c 64,74
+  b087607 56,58,60-61,67,85,93,96,115,118,121,124,127,130,138,147-161,165,168,177,180,189,226-227,236,243
+apps/admin-dashboard/src/app/dashboard/categories/page.tsx
+  b087607 95,97,99-100,105,114,182
+apps/admin-dashboard/src/app/dashboard/page.tsx
+  b087607 156,159-160,209
+apps/admin-dashboard/src/app/dashboard/orders/OrderFilters.tsx
+  b087607 51,118
+apps/admin-dashboard/src/components/dashboard/Sidebar.tsx
+  b087607 5,16,48-52,56,63-72,74,76,86-93,97,109,117
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.18",
+  "base_commit_sha": "2b9872a876b891ae35df9cb13d1b7f59a9282c34",
+  "prompts": {
+    "b087607": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "84c5bb51-096a-4de0-94e8-db5e35abe68b",
+        "model": "composer-1"
+      },
+      "human_author": "kishore28kumar <kishore28kks@gmail.com>",
+      "messages": [
+        {
+          "type": "user",
+          "text": "Understand admin-dashboard every line of code",
+          "timestamp": "2025-11-16T13:07:22.759Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Reviewing the admin-dashboard codebase. Starting with configuration and entry files, then components, pages, and utilities.",
+          "timestamp": "2025-11-16T13:07:25.598Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "apps/admin-dashboard/package.json"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "apps/admin-dashboard/next.config.js"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "apps/admin-dashboard/tailwind.config.js"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "apps/admin-dashboard/tsconfig.json"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "apps/admin-dashboard/postcss.config.js"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "apps/admin-dashboard/src/app/layout.tsx"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "apps/admin-dashboard/src/app/globals.css"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "apps/admin-dashboard/src/app/page.tsx"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "apps/admin-dashboard/src/app/login/page.tsx"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "apps/admin-dashboard/src/lib/auth.ts"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "apps/admin-dashboard/src/lib/api.ts"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "apps/admin-dashboard/src/lib/utils.ts"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "apps/admin-dashboard/src/lib/permissions.ts"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "apps/admin-dashboard/src/lib/config/urls.ts"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "apps/admin-dashboard/src/components/providers/Providers.tsx"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "apps/admin-dashboard/src/components/dashboard/Header.tsx"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "apps/admin-dashboard/src/components/dashboard/Sidebar.tsx"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "apps/admin-dashboard/src/components/permissions/PermissionGuard.tsx"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "apps/admin-dashboard/src/components/permissions/RoleBadge.tsx"
+          }
+        },
+        {
+          "type": "assistant",
+          "text": "Reading the dashboard pages:",
+          "timestamp": "2025-11-16T13:07:31.746Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "apps/admin-dashboard/src/app/dashboard/layout.tsx"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "apps/admin-dashboard/src/app/dashboard/page.tsx"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "apps/admin-dashboard/src/app/dashboard/products/page.tsx"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "apps/admin-dashboard/src/app/dashboard/products/new/page.tsx"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "apps/admin-dashboard/src/app/dashboard/products/[id]/page.tsx"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "apps/admin-dashboard/src/app/dashboard/products/[id]/edit/page.tsx"
+          }
+        },
+        {
+          "type": "assistant",
+          "text": "Reading the remaining dashboard pages:",
+          "timestamp": "2025-11-16T13:07:33.869Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "apps/admin-dashboard/src/app/dashboard/categories/page.tsx"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "apps/admin-dashboard/src/app/dashboard/categories/CategoryModal.tsx"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "apps/admin-dashboard/src/app/dashboard/orders/page.tsx"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "apps/admin-dashboard/src/app/dashboard/orders/OrderFilters.tsx"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "apps/admin-dashboard/src/app/dashboard/orders/OrderDetailsModal.tsx"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "apps/admin-dashboard/src/app/dashboard/customers/page.tsx"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "apps/admin-dashboard/src/app/dashboard/customers/CustomerDetailsModal.tsx"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "apps/admin-dashboard/src/app/dashboard/staff/page.tsx"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "apps/admin-dashboard/src/app/dashboard/staff/InviteStaffModal.tsx"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "apps/admin-dashboard/src/app/dashboard/staff/EditStaffModal.tsx"
+          }
+        },
+        {
+          "type": "assistant",
+          "text": "Reading the remaining pages:",
+          "timestamp": "2025-11-16T13:07:37.813Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "apps/admin-dashboard/src/app/dashboard/analytics/page.tsx"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "apps/admin-dashboard/src/app/dashboard/settings/page.tsx"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "apps/admin-dashboard/src/app/dashboard/settings/StoreInfoTab.tsx"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "apps/admin-dashboard/src/app/dashboard/settings/TenantInfoTab.tsx"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "apps/admin-dashboard/src/app/dashboard/settings/AppearanceTab.tsx"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "apps/admin-dashboard/src/app/dashboard/settings/NotificationsTab.tsx"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "apps/admin-dashboard/src/app/dashboard/products/bulk-import/page.tsx"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "apps/admin-dashboard/src/app/dashboard/products/bulk-import/preview/page.tsx"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "apps/admin-dashboard/scripts/verify-env.sh"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "apps/admin-dashboard/Dockerfile"
+          }
+        },
+        {
+          "type": "assistant",
+          "text": "## **Admin Dashboard - Complete Code Analysis**\n\n### **1. Project Configuration**\n\n**`package.json`**\n- Next.js 14 app on port 3001\n- Dependencies: React Query, React Table, Axios, Zustand, React Hook Form, Zod, Tailwind CSS, Recharts, Sonner\n- Scripts: dev (port 3001), build (with env verification), start, lint, clean\n\n**`next.config.js`**\n- Transpiles `@pulss/types`\n- Disables font optimization (SSL issues)\n- Allows images from Cloudinary and localhost\n- Sets API URL from environment variables\n\n**`tailwind.config.js`**\n- Tailwind CSS with custom primary color palette (blue shades)\n- CSS variables for theming\n\n**`tsconfig.json`**\n- Extends root tsconfig\n- Path alias `@/*` → `./src/*`\n- Next.js plugin enabled\n\n### **2. Core Application Structure**\n\n**`src/app/layout.tsx`** (Root Layout)\n- Sets metadata (title, description)\n- Uses Inter font\n- Wraps app with `Providers` (React Query)\n- Adds Sonner toast notifications\n\n**`src/app/page.tsx`** (Root Page)\n- Redirects to `/login`\n\n**`src/app/globals.css`**\n- Tailwind directives\n- CSS variables for theming\n- Custom scrollbar styling\n\n**`src/app/login/page.tsx`**\n- Login form with email/password\n- Uses React Hook Form + Zod validation\n- Calls `authService.login()`\n- Shows demo credentials\n- Redirects to `/dashboard` on success\n\n### **3. Library Files**\n\n**`src/lib/config/urls.ts`**\n- Environment-based API URL configuration\n- Supports development/production environments\n- Handles Render deployment scenarios\n- Falls back to defaults if env vars not set\n- Runtime override support via `window.__API_URL__`\n\n**`src/lib/api.ts`**\n- Axios instance with base URL from config\n- Request interceptor: adds Bearer token and `X-Tenant-Slug` header\n- Gets tenant slug from localStorage user data\n- Response interceptor: handles 401 errors, refreshes tokens automatically\n- Redirects to login on auth failure\n\n**`src/lib/auth.ts`**\n- `login()`: stores tokens and user in localStorage\n- `getCurrentUser()`: fetches current user from API\n- `logout()`: clears localStorage and redirects\n- `getStoredUser()`: retrieves user from localStorage\n- `isAuthenticated()`: checks for access token\n\n**`src/lib/utils.ts`**\n- `cn()`: merges Tailwind classes (clsx + tailwind-merge)\n- `formatCurrency()`: formats numbers as currency\n- `formatDate()`: formats dates\n- `formatDateTime()`: formats dates with time\n\n**`src/lib/permissions.ts`**\n- Permission enum matching backend\n- Role-to-permissions mapping (SUPER_ADMIN, ADMIN, STAFF, CUSTOMER)\n- Helper functions: `hasPermission()`, `hasAnyPermission()`, `hasAllPermissions()`\n- Role checkers: `isAdmin()`, `isSuperAdmin()`, `isStaff()`\n\n### **4. Components**\n\n**`src/components/providers/Providers.tsx`**\n- Wraps app with React Query QueryClientProvider\n- Configures staleTime (1 minute) and refetch behavior\n\n**`src/components/dashboard/Header.tsx`**\n- Displays welcome message with user's first name\n- Shows RoleBadge component\n- Displays tenant name\n- Notification bell (placeholder)\n- User menu with logout option\n\n**`src/components/dashboard/Sidebar.tsx`**\n- Navigation menu with icons\n- Highlights active route\n- Permission-based visibility (Customers only for SUPER_ADMIN)\n- Uses PermissionGuard for permission-protected items\n- Shows version in footer\n\n**`src/components/permissions/PermissionGuard.tsx`**\n- Conditional rendering based on permissions\n- Supports single permission or array\n- `requireAll` flag for AND/OR logic\n- Prevents hydration mismatches (client-side only)\n\n**`src/components/permissions/RoleBadge.tsx`**\n- Displays user role as colored badge\n- Color-coded by role (purple=SUPER_ADMIN, blue=ADMIN, gray=STAFF, green=CUSTOMER)\n- Prevents hydration mismatches\n\n### **5. Dashboard Pages**\n\n**`src/app/dashboard/layout.tsx`**\n- Protected layout wrapper\n- Checks authentication, redirects to login if not authenticated\n- Renders Sidebar and Header\n- Main content area with scrolling\n\n**`src/app/dashboard/page.tsx`** (Main Dashboard)\n- Stats cards: Revenue, Orders, Products, Customers with trend indicators\n- Recent orders list\n- Low stock alerts\n- Tenants section (SUPER_ADMIN only)\n- Uses React Query for data fetching\n\n**`src/app/dashboard/products/page.tsx`**\n- Product list table with search\n- Pagination\n- Actions: View, Edit (permission-protected), Delete (permission-protected)\n- Links to create new product and bulk import\n- Shows product thumbnail, SKU, stock, price, status\n\n**`src/app/dashboard/products/new/page.tsx`**\n- Comprehensive product creation form\n- Sections: Basic Info, Pricing, Inventory, Categories, Images, Additional Info, SEO\n- Auto-generates slug from name\n- Image URL input (supports multiple images)\n- Category multi-select\n- Form validation with Zod\n\n**`src/app/dashboard/products/[id]/page.tsx`** (Product Detail)\n- Displays product details in read-only view\n- Shows thumbnail, name, slug, price, stock, status, SKU, category\n- Edit button (permission-protected)\n\n**`src/app/dashboard/products/[id]/edit/page.tsx`**\n- Similar to new product page but pre-filled with existing data\n- Updates product via PUT request\n- Loads product data on mount\n\n**`src/app/dashboard/products/bulk-import/page.tsx`**\n- CSV upload interface with drag-and-drop\n- Downloads CSV template\n- Parses and validates CSV data\n- Shows validation errors\n- Stores data in sessionStorage for preview page\n\n**`src/app/dashboard/products/bulk-import/preview/page.tsx`**\n- Reviews imported products before publishing\n- Shows validation status for each product\n- Allows editing individual products\n- Bulk publish functionality\n- Maps category slugs to IDs\n\n**`src/app/dashboard/categories/page.tsx`**\n- Category list with stats cards\n- Search functionality\n- Create/Edit via modal\n- Delete with validation (checks for products/subcategories)\n- Shows parent category, product count, display order\n\n**`src/app/dashboard/categories/CategoryModal.tsx`**\n- Modal for creating/editing categories\n- Auto-generates slug from name\n- Parent category selection (prevents self-reference)\n- Image URL input\n- Display order field\n- Active status toggle\n\n**`src/app/dashboard/orders/page.tsx`**\n- Order list with stats cards (Total, Pending, Processing, Completed, Revenue)\n- Search by order number or customer email\n- Filter panel (status, payment status, date range)\n- Order details modal trigger\n- Pagination\n\n**`src/app/dashboard/orders/OrderFilters.tsx`**\n- Filter component for orders\n- Order status dropdown\n- Payment status dropdown\n- Date range inputs (start/end)\n- Apply/Reset buttons\n\n**`src/app/dashboard/orders/OrderDetailsModal.tsx`**\n- Full order details modal\n- Customer information\n- Shipping and billing addresses\n- Order items table\n- Order summary (subtotal, shipping, tax, discount, total)\n- Update order status and payment status\n- Tracking number input\n- Internal notes field\n\n**`src/app/dashboard/customers/page.tsx`**\n- SUPER_ADMIN only\n- Customer list with stats\n- Search by name or email\n- Shows customer avatar, name, email, phone, join date, last login, order count, lifetime value\n- Customer details modal trigger\n- Redirects non-SUPER_ADMIN users\n\n**`src/app/dashboard/customers/CustomerDetailsModal.tsx`**\n- Full customer profile modal\n- Toggle customer active status\n- Contact information\n- Customer stats (orders, lifetime value, addresses)\n- Customer segment assignment (VIP, Regular, New, At Risk)\n- Address list\n- Recent orders table\n\n**`src/app/dashboard/staff/page.tsx`**\n- Staff/Admin management page\n- Shows different title for SUPER_ADMIN vs ADMIN\n- Staff list table\n- Invite staff modal trigger\n- Edit staff modal trigger\n- Delete staff functionality\n- Shows role, status, last login\n\n**`src/app/dashboard/staff/InviteStaffModal.tsx`**\n- Modal for creating new staff/admin users\n- Form: email, firstName, lastName, phone, password\n- Password generator (12+ chars, uppercase, lowercase, numbers, special)\n- Show/hide password toggle\n- Role determined by backend based on current user's role\n\n**`src/app/dashboard/staff/EditStaffModal.tsx`**\n- Modal for editing staff members\n- Can update firstName, lastName, phone, isActive\n- Email is read-only\n- Form validation\n\n**`src/app/dashboard/analytics/page.tsx`**\n- Analytics dashboard with period selector (7d, 30d, 90d, 1y)\n- Stats cards: Revenue, Orders, Customers, Products\n- Top selling products list\n- Permission-protected\n\n**`src/app/dashboard/settings/page.tsx`**\n- Settings page with tab navigation\n- Tabs: Tenant Information (ADMIN/STAFF only), Store Information, Appearance, Notifications, Security\n- Role-based tab visibility\n- Default tab based on role\n- Fetches tenant settings and details\n\n**`src/app/dashboard/settings/StoreInfoTab.tsx`**\n- Store information form\n- Fields: name, email, phone, address, city, state, country, zipCode\n- Read-only mode support\n- Icon-enhanced inputs\n\n**`src/app/dashboard/settings/TenantInfoTab.tsx`**\n- Tenant information form (ADMIN/STAFF)\n- Basic info: name, slug (read-only), status (read-only), subscription plan (read-only)\n- Contact information\n- Address information\n- Tax information (GST, PAN)\n- Statistics display (users, products, orders, customers)\n- Read-only mode for STAFF\n\n**`src/app/dashboard/settings/AppearanceTab.tsx`**\n- Logo URL input with preview\n- Primary and secondary color pickers (hex input + color picker)\n- Color preview section\n- Form validation\n\n**`src/app/dashboard/settings/NotificationsTab.tsx`**\n- Notification preferences toggles\n- Options: Order notifications, Low stock alerts, Customer registration, Review notifications, Marketing emails\n- Stores settings in tenant metadata\n- Shows email delivery address\n\n### **6. Build & Deployment**\n\n**`scripts/verify-env.sh`**\n- Verifies environment variables before build\n- Warns if NEXT_PUBLIC_API_URL is not set\n- Prints all env vars for debugging\n\n**`Dockerfile`**\n- Multi-stage build (deps, builder, production)\n- Accepts build args for environment variables\n- Builds shared packages first\n- Copies monorepo structure for local package references\n- Exposes port 3001\n\n### **Key Patterns & Architecture**\n\n1. Authentication: Token-based with automatic refresh\n2. Multi-tenancy: Tenant slug in headers, role-based access\n3. Permissions: Granular permission checks throughout\n4. Data fetching: React Query for caching and state management\n5. Form handling: React Hook Form + Zod validation\n6. UI: Tailwind CSS with custom design system\n7. Type safety: TypeScript throughout\n8. Error handling: Toast notifications via Sonner\n9. Hydration safety: Client-side checks to prevent SSR mismatches\n\nThe admin dashboard is a multi-tenant e-commerce admin panel with role-based access control, product/category/order management, staff management, analytics, and settings configuration.",
+          "timestamp": "2025-11-16T13:07:42.235Z"
+        }
+      ],
+      "total_additions": 522,
+      "total_deletions": 410,
+      "accepted_lines": 327,
+      "overriden_lines": 0
+    }
+  }
+}
