@@ -1,0 +1,85 @@
+apps/backend/src/config/urls.ts
+  5265e0a 1-88
+apps/storefront/src/lib/api.ts
+  5265e0a 2,4
+apps/admin-dashboard/next.config.js
+  5265e0a 10-13
+apps/admin-dashboard/src/lib/config/urls.ts
+  5265e0a 1-64
+apps/storefront/src/lib/config/urls.ts
+  5265e0a 1-64
+apps/storefront/next.config.js
+  5265e0a 9-11,13
+apps/backend/src/server.ts
+  5265e0a 11,25,28
+apps/admin-dashboard/src/lib/api.ts
+  5265e0a 2,4
+render-dev.yaml
+  5265e0a 1-108
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.18",
+  "base_commit_sha": "3ef14854dcab086ccbe87bfd9fc56ae17346529d",
+  "prompts": {
+    "5265e0a": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "936feb91-95bd-439c-baee-a7c0fbbf71e6",
+        "model": "composer-1"
+      },
+      "human_author": "kishore28kumar <kishore28kks@gmail.com>",
+      "messages": [
+        {
+          "type": "user",
+          "text": "i previously deployed the main branch in Prodcution Environment in render like this\n\npulss-admin(admin-dashboard)\npulss(backend)\npulss-store(storefront)\n\nbut this time i want to deploy 'dev' branch,  Development Environment.\n\npulss-admin-dev\n\npulss-dev\n\npulss-store-dev\n\nguide me through and make the necessary change in project for this domain",
+          "timestamp": "2025-11-16T07:54:35.699Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Reviewing the current configuration to identify changes needed for deploying the 'dev' branch to a Development Environment.",
+          "timestamp": "2025-11-16T07:54:38.164Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "/Users/em997/Documents/Learning/react-app/pulss/render.yaml"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "/Users/em997/Documents/Learning/react-app/pulss/apps/admin-dashboard/next.config.js"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "/Users/em997/Documents/Learning/react-app/pulss/apps/storefront/next.config.js"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "/Users/em997/Documents/Learning/react-app/pulss/apps/admin-dashboard/src/lib/api.ts"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "/Users/em997/Documents/Learning/react-app/pulss/apps/storefront/src/lib/api.ts"
+          }
+        }
+      ],
+      "total_additions": 613,
+      "total_deletions": 15,
+      "accepted_lines": 504,
+      "overriden_lines": 0
+    }
+  }
+}
