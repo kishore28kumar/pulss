@@ -37,19 +37,25 @@ const env = getEnvironment();
 
 // Export API URL based on environment
 export const getApiUrl = (): string => {
-  let apiUrl: string;
-  
-  // If NEXT_PUBLIC_API_URL is explicitly set, use it (highest priority)
+  // NEXT_PUBLIC_API_URL has highest priority - use it if set
   if (process.env.NEXT_PUBLIC_API_URL) {
-    apiUrl = process.env.NEXT_PUBLIC_API_URL;
-  } else {
-    // Otherwise use environment-based config
-    apiUrl = URL_CONFIG[env].API_URL;
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL.trim();
+    
+    // Debug logging
+    if (typeof window !== 'undefined') {
+      console.log('[API Config] Using NEXT_PUBLIC_API_URL:', apiUrl);
+    }
+    
+    return apiUrl;
   }
   
-  // Ensure /api is appended if not present (Render fromService only gives hostname)
-  if (!apiUrl.endsWith('/api')) {
-    apiUrl = apiUrl.endsWith('/') ? `${apiUrl}api` : `${apiUrl}/api`;
+  // Otherwise fall back to environment-based config
+  const apiUrl = URL_CONFIG[env].API_URL;
+  
+  // Debug logging
+  if (typeof window !== 'undefined') {
+    console.log('[API Config] NEXT_PUBLIC_API_URL not set, using fallback:', apiUrl);
+    console.log('[API Config] DEPLOY_ENV:', env);
   }
   
   return apiUrl;
