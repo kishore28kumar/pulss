@@ -7,8 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import api from '@/lib/api';
 import { toast } from 'sonner';
-import { useState, useEffect } from 'react';
-import { getUserRole } from '@/lib/permissions';
+import { useEffect } from 'react';
 
 interface StaffMember {
   id: string;
@@ -36,13 +35,6 @@ const editSchema = z.object({
 type EditFormData = z.infer<typeof editSchema>;
 
 export default function EditStaffModal({ staffMember, onClose, onSuccess }: EditStaffModalProps) {
-  const [mounted, setMounted] = useState(false);
-  const [userRole, setUserRole] = useState<string | null>(null);
-
-  useEffect(() => {
-    setMounted(true);
-    setUserRole(getUserRole());
-  }, []);
 
   const {
     register,
