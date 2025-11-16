@@ -49,24 +49,24 @@ export default function ProductDetailPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <Link
             href="/dashboard/products"
-            className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-2"
+            className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-2 text-sm sm:text-base"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Products
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900">{product.name}</h1>
-          <p className="text-gray-500 mt-1">Product Details</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{product.name}</h1>
+          <p className="text-sm sm:text-base text-gray-500 mt-1">Product Details</p>
         </div>
         <PermissionGuard permission={Permission.PRODUCTS_UPDATE}>
           <Link
             href={`/dashboard/products/${product.id}/edit`}
-            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm sm:text-base"
           >
             <Edit className="w-5 h-5 mr-2" />
             Edit Product
@@ -75,8 +75,8 @@ export default function ProductDetailPage() {
       </div>
 
       {/* Product Details */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
           {/* Product Image */}
           {product.thumbnail && (
             <div>

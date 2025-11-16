@@ -280,18 +280,18 @@ export default function BulkImportPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div>
         <Link
           href="/dashboard/products"
-          className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-2"
+          className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-2 text-sm sm:text-base"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Products
         </Link>
-        <h1 className="text-3xl font-bold text-gray-900">Bulk Import Products</h1>
-        <p className="text-gray-500 mt-1">Upload a CSV file to import multiple products at once</p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Bulk Import Products</h1>
+        <p className="text-sm sm:text-base text-gray-500 mt-1">Upload a CSV file to import multiple products at once</p>
       </div>
 
       {/* Instructions */}
@@ -313,15 +313,15 @@ export default function BulkImportPage() {
       </div>
 
       {/* Download Template */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <div className="flex items-center justify-between">
+      <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-1">CSV Template</h3>
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1">CSV Template</h3>
             <p className="text-sm text-gray-500">Download a template file with all required fields</p>
           </div>
           <button
             onClick={downloadTemplate}
-            className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
+            className="inline-flex items-center justify-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition text-sm sm:text-base"
           >
             <Download className="w-5 h-5 mr-2" />
             Download Template
@@ -330,8 +330,8 @@ export default function BulkImportPage() {
       </div>
 
       {/* Upload Area */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Upload CSV File</h3>
+      <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6">
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Upload CSV File</h3>
 
         <div
           onDragOver={handleDragOver}
@@ -402,7 +402,7 @@ export default function BulkImportPage() {
 
         {/* Continue Button */}
         {csvData.length > 0 && (
-          <div className="mt-6 flex items-center justify-end space-x-4">
+          <div className="mt-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3">
             <button
               onClick={() => {
                 setCsvData([]);
@@ -411,14 +411,14 @@ export default function BulkImportPage() {
                   fileInputRef.current.value = '';
                 }
               }}
-              className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+              className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition text-sm sm:text-base"
             >
               Cancel
             </button>
             <button
               onClick={handleContinue}
               disabled={errors.length > 0}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
             >
               Continue to Preview
             </button>

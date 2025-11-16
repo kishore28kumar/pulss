@@ -215,29 +215,29 @@ export default function EditProductPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <Link
             href="/dashboard/products"
-            className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-2"
+            className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-2 text-sm sm:text-base"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Products
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900">Edit Product</h1>
-          <p className="text-gray-500 mt-1">Update product information</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Edit Product</h1>
+          <p className="text-sm sm:text-base text-gray-500 mt-1">Update product information</p>
         </div>
       </div>
 
       {/* Form */}
-      <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-xl border border-gray-200 p-6 space-y-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 space-y-4 sm:space-y-6">
         {/* Basic Information */}
-        <div className="border-b border-gray-200 pb-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Basic Information</h2>
+        <div className="border-b border-gray-200 pb-4 sm:pb-6">
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Basic Information</h2>
           
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
                 Product Name *
@@ -299,10 +299,10 @@ export default function EditProductPage() {
         </div>
 
         {/* Pricing */}
-        <div className="border-b border-gray-200 pb-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Pricing</h2>
+        <div className="border-b border-gray-200 pb-4 sm:pb-6">
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Pricing</h2>
           
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             <div>
               <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-2">
                 Price *
@@ -354,8 +354,8 @@ export default function EditProductPage() {
         </div>
 
         {/* Inventory */}
-        <div className="border-b border-gray-200 pb-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Inventory</h2>
+        <div className="border-b border-gray-200 pb-4 sm:pb-6">
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Inventory</h2>
           
           <div className="flex items-center mb-4">
             <input
@@ -370,7 +370,7 @@ export default function EditProductPage() {
           </div>
 
           {trackInventory && (
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="stockQuantity" className="block text-sm font-medium text-gray-700 mb-2">
                   Stock Quantity
@@ -401,7 +401,7 @@ export default function EditProductPage() {
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-4 mt-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
             <div>
               <label htmlFor="sku" className="block text-sm font-medium text-gray-700 mb-2">
                 SKU
@@ -431,13 +431,13 @@ export default function EditProductPage() {
         </div>
 
         {/* Categories */}
-        <div className="border-b border-gray-200 pb-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Categories *</h2>
+        <div className="border-b border-gray-200 pb-4 sm:pb-6">
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Categories *</h2>
           
           {categoriesLoading ? (
             <div className="text-gray-500">Loading categories...</div>
           ) : (
-            <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-4">
               {categories?.map((category) => (
                 <label key={category.id} className="flex items-center space-x-2 cursor-pointer">
                   <input
@@ -457,10 +457,10 @@ export default function EditProductPage() {
         </div>
 
         {/* Images */}
-        <div className="border-b border-gray-200 pb-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Product Images</h2>
+        <div className="border-b border-gray-200 pb-4 sm:pb-6">
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Product Images</h2>
           
-          <div className="flex space-x-2 mb-4">
+          <div className="flex flex-col sm:flex-row gap-2 mb-4">
             <input
               type="url"
               value={imageUrl}
@@ -471,14 +471,14 @@ export default function EditProductPage() {
             <button
               type="button"
               onClick={handleAddImage}
-              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
+              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition whitespace-nowrap"
             >
               Add Image
             </button>
           </div>
 
           {watch('images') && watch('images')!.length > 0 && (
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               {watch('images')!.map((image, index) => (
                 <div key={index} className="relative">
                   <img
@@ -500,10 +500,10 @@ export default function EditProductPage() {
         </div>
 
         {/* Additional Information */}
-        <div className="border-b border-gray-200 pb-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Additional Information</h2>
+        <div className="border-b border-gray-200 pb-4 sm:pb-6">
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Additional Information</h2>
           
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label htmlFor="manufacturer" className="block text-sm font-medium text-gray-700 mb-2">
                 Manufacturer
@@ -544,7 +544,7 @@ export default function EditProductPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 mt-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
             <div className="flex items-center">
               <input
                 id="isActive"
@@ -596,8 +596,8 @@ export default function EditProductPage() {
         </div>
 
         {/* SEO */}
-        <div className="pb-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">SEO</h2>
+        <div className="pb-4 sm:pb-6">
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">SEO</h2>
           
           <div className="space-y-4">
             <div>
@@ -629,17 +629,17 @@ export default function EditProductPage() {
         </div>
 
         {/* Actions */}
-        <div className="flex items-center justify-end space-x-4 pt-6 border-t border-gray-200">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 pt-4 sm:pt-6 border-t border-gray-200">
           <Link
             href="/dashboard/products"
-            className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+            className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition text-center text-sm sm:text-base"
           >
             Cancel
           </Link>
           <button
             type="submit"
             disabled={mutation.isPending}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-sm sm:text-base"
           >
             {mutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
             Update Product

@@ -301,23 +301,23 @@ export default function BulkImportPreviewPage() {
   const invalidCount = products.filter((p) => !p.isValid).length;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div>
         <Link
           href="/dashboard/products/bulk-import"
-          className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-2"
+          className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-2 text-sm sm:text-base"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Import
         </Link>
-        <h1 className="text-3xl font-bold text-gray-900">Review & Validate Products</h1>
-        <p className="text-gray-500 mt-1">Review your products before publishing</p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Review & Validate Products</h1>
+        <p className="text-sm sm:text-base text-gray-500 mt-1">Review your products before publishing</p>
       </div>
 
       {/* Summary */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <div className="grid grid-cols-3 gap-4">
+      <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6">
+        <div className="grid grid-cols-3 gap-3 sm:gap-4">
           <div className="text-center">
             <div className="text-3xl font-bold text-gray-900">{products.length}</div>
             <div className="text-sm text-gray-500">Total Products</div>
@@ -468,28 +468,28 @@ export default function BulkImportPreviewPage() {
       </div>
 
       {/* Actions */}
-      <div className="flex items-center justify-between bg-white rounded-xl border border-gray-200 p-6">
-        <div className="text-sm text-gray-500">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-white rounded-xl border border-gray-200 p-4 sm:p-6">
+        <div className="text-xs sm:text-sm text-gray-500 text-center sm:text-left">
           {validCount > 0 && (
-            <span className="text-green-600 font-medium">{validCount} product(s) ready to publish</span>
+            <span className="text-green-600 font-medium block sm:inline">{validCount} product(s) ready to publish</span>
           )}
           {invalidCount > 0 && (
-            <span className="text-red-600 font-medium ml-4">
+            <span className="text-red-600 font-medium block sm:inline sm:ml-4 mt-1 sm:mt-0">
               {invalidCount} product(s) need attention
             </span>
           )}
         </div>
-        <div className="flex items-center space-x-4">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
           <Link
             href="/dashboard/products/bulk-import"
-            className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+            className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition text-center text-sm sm:text-base"
           >
             Cancel
           </Link>
           <button
             onClick={handlePublish}
             disabled={publishMutation.isPending || validCount === 0}
-            className="inline-flex items-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center justify-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
           >
             {publishMutation.isPending ? (
               <>

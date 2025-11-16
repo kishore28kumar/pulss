@@ -98,9 +98,9 @@ export default function CustomerDetailsModal({ customerId, onClose, onUpdate }: 
         <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" onClick={onClose} />
 
         {/* Modal */}
-        <div className="relative bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <div className="relative bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto m-0 sm:m-4">
           {/* Header */}
-          <div className="sticky top-0 bg-white flex items-center justify-between p-6 border-b border-gray-200 z-10">
+          <div className="sticky top-0 bg-white flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 z-10">
             <div className="flex items-center space-x-4">
               {customer.users.avatar ? (
                 <img
@@ -131,7 +131,7 @@ export default function CustomerDetailsModal({ customerId, onClose, onUpdate }: 
             </button>
           </div>
 
-          <div className="p-6 space-y-6">
+          <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
             {/* Status Card */}
             <div className={`rounded-lg p-4 ${customer.users.isActive ? 'bg-green-50' : 'bg-red-50'}`}>
               <div className="flex items-center justify-between">
@@ -214,7 +214,7 @@ export default function CustomerDetailsModal({ customerId, onClose, onUpdate }: 
             </div>
 
             {/* Customer Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               <div className="bg-blue-50 rounded-lg p-4">
                 <div className="flex items-center justify-between">
                   <div>

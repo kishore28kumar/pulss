@@ -66,7 +66,7 @@ export default function StoreInfoTab({ settings, onSave, isSaving, readOnly = fa
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
       {/* Store Name */}
       <div>
         <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
@@ -79,7 +79,7 @@ export default function StoreInfoTab({ settings, onSave, isSaving, readOnly = fa
             type="text"
             {...register('name')}
             disabled={readOnly}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed text-sm sm:text-base"
             placeholder="My Awesome Store"
           />
         </div>
@@ -89,7 +89,7 @@ export default function StoreInfoTab({ settings, onSave, isSaving, readOnly = fa
       </div>
 
       {/* Contact Information */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
             Email Address *
@@ -147,7 +147,7 @@ export default function StoreInfoTab({ settings, onSave, isSaving, readOnly = fa
       </div>
 
       {/* Location Details */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-2">
             City

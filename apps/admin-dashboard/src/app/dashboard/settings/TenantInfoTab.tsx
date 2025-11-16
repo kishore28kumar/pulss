@@ -94,12 +94,12 @@ export default function TenantInfoTab({ settings, onSave, isSaving, readOnly = f
   const isReadOnly = readOnly || (mounted && userRole === 'STAFF');
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
       {/* Read-only Info Banner */}
       {isReadOnly && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
           <div className="flex items-start space-x-3">
-            <Tag className="w-5 h-5 text-yellow-600 mt-0.5" />
+            <Tag className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" />
             <div>
               <h3 className="text-sm font-medium text-yellow-900">View Only</h3>
               <p className="text-sm text-yellow-700 mt-1">
@@ -111,10 +111,10 @@ export default function TenantInfoTab({ settings, onSave, isSaving, readOnly = f
       )}
 
       {/* Tenant Basic Information */}
-      <div className="border-b border-gray-200 pb-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h3>
+      <div className="border-b border-gray-200 pb-4 sm:pb-6">
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Basic Information</h3>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Tenant Name */}
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
@@ -159,7 +159,7 @@ export default function TenantInfoTab({ settings, onSave, isSaving, readOnly = f
         </div>
 
         {/* Status and Subscription (Read-only) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Status
@@ -211,10 +211,10 @@ export default function TenantInfoTab({ settings, onSave, isSaving, readOnly = f
       </div>
 
       {/* Contact Information */}
-      <div className="border-b border-gray-200 pb-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Contact Information</h3>
+      <div className="border-b border-gray-200 pb-4 sm:pb-6">
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Contact Information</h3>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
               Email Address
@@ -259,8 +259,8 @@ export default function TenantInfoTab({ settings, onSave, isSaving, readOnly = f
       </div>
 
       {/* Address Information */}
-      <div className="border-b border-gray-200 pb-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Address Information</h3>
+      <div className="border-b border-gray-200 pb-4 sm:pb-6">
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Address Information</h3>
         
         <div className="mb-4">
           <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-2">
@@ -273,7 +273,7 @@ export default function TenantInfoTab({ settings, onSave, isSaving, readOnly = f
               {...register('address')}
               disabled={isReadOnly}
               rows={2}
-              className={`w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+              className={`w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base ${
                 isReadOnly ? 'bg-gray-50 cursor-not-allowed' : ''
               }`}
               placeholder="123 Main Street, Suite 100"
@@ -281,7 +281,7 @@ export default function TenantInfoTab({ settings, onSave, isSaving, readOnly = f
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-2">
               City
@@ -349,10 +349,10 @@ export default function TenantInfoTab({ settings, onSave, isSaving, readOnly = f
       </div>
 
       {/* Tax Information */}
-      <div className="border-b border-gray-200 pb-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Tax Information</h3>
+      <div className="border-b border-gray-200 pb-4 sm:pb-6">
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Tax Information</h3>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label htmlFor="gstNumber" className="block text-sm font-medium text-gray-700 mb-2">
               GST Number
@@ -395,10 +395,10 @@ export default function TenantInfoTab({ settings, onSave, isSaving, readOnly = f
 
       {/* Statistics (Read-only) */}
       {settings?._count && (
-        <div className="pb-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Statistics</h3>
+        <div className="pb-4 sm:pb-6">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Statistics</h3>
           
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
             <div className="bg-gray-50 rounded-lg p-4">
               <div className="text-sm text-gray-500">Users</div>
               <div className="text-2xl font-bold text-gray-900">{settings._count.users || 0}</div>

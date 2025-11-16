@@ -129,12 +129,12 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
-          <p className="text-gray-500 mt-1">Manage your store configuration</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Settings</h1>
+          <p className="text-sm sm:text-base text-gray-500 mt-1">Manage your store configuration</p>
         </div>
       </div>
 
@@ -154,7 +154,7 @@ export default function SettingsPage() {
       {/* Tabs Navigation */}
       <div className="bg-white rounded-xl border border-gray-200">
         <div className="border-b border-gray-200">
-          <nav className="flex space-x-8 px-6" aria-label="Tabs">
+          <nav className="flex overflow-x-auto space-x-4 sm:space-x-8 px-4 sm:px-6" aria-label="Tabs">
             {tabs
               .filter((tab) => {
                 // Show Tenant Information tab only for Admin and Staff
@@ -171,14 +171,14 @@ export default function SettingsPage() {
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
                     className={`
-                      flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm transition
+                      flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-xs sm:text-sm transition whitespace-nowrap
                       ${isActive
                         ? 'border-blue-500 text-blue-600'
                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                       }
                     `}
                   >
-                    <Icon className="w-5 h-5" />
+                    <Icon className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
                     <span>{tab.name}</span>
                   </button>
                 );
@@ -187,7 +187,7 @@ export default function SettingsPage() {
         </div>
 
         {/* Tab Content */}
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {activeTab === 'tenant' && mounted && (userRole === 'ADMIN' || userRole === 'STAFF') && (
             <>
               {tenantDetailsLoading ? (

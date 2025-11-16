@@ -1,16 +1,21 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Bell, LogOut, User, Store } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Bell, LogOut, User, Store, Menu, X } from 'lucide-react';
 import { authService } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
 import RoleBadge from '@/components/permissions/RoleBadge';
 
-export default function Header() {
+interface HeaderProps {
+  onMenuClick?: () => void;
+}
+
+export default function Header({ onMenuClick }: HeaderProps) {
   const router = useRouter();
   const [showMenu, setShowMenu] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Only access localStorage on the client side
@@ -18,31 +23,75 @@ export default function Header() {
     setIsLoaded(true);
   }, []);
 
+  useEffect(() => {
+    // Close menu when clicking outside
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+
+    if (showMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showMenu]);
+
   const handleLogout = () => {
     authService.logout();
     router.push('/login');
   };
 
+  const handleMenuClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (onMenuClick) {
+      onMenuClick();
+    }
+  };
+
   return (
-    <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6">
-      <div>
-        <div className="flex items-center space-x-3">
-          <h2 className="text-xl font-semibold text-gray-900">
-            Welcome back{isLoaded && user?.firstName ? `, ${user.firstName}` : ''}!
-          </h2>
-          <RoleBadge />
-        </div>
-        <div className="flex items-center space-x-2 mt-1">
-          {user?.tenant && (
-            <>
-              <Store className="w-4 h-4 text-gray-400" />
-              <p className="text-sm text-gray-500">{user.tenant.name}</p>
-            </>
-          )}
+    <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 sm:px-6 relative z-[60]">
+      <div className="flex items-center space-x-3 flex-1 min-w-0">
+        {/* Mobile menu button */}
+        <button
+          onClick={handleMenuClick}
+          className="lg:hidden p-2 -ml-2 text-gray-600 hover:text-gray-900 active:text-gray-900 active:bg-gray-100 transition-colors rounded-lg min-w-[44px] min-h-[44px] flex items-center justify-center z-[70] relative bg-white"
+          style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', cursor: 'pointer', pointerEvents: 'auto', userSelect: 'none', zIndex: 70 }}
+          aria-label="Toggle menu"
+          type="button"
+        >
+          <Menu className="w-6 h-6" />
+        </button>
+
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 truncate">
+              <span className="hidden sm:inline">Welcome back</span>
+              <span className="sm:hidden">Dashboard</span>
+              {isLoaded && user?.firstName && (
+                <span className="hidden sm:inline">, {user.firstName}</span>
+              )}
+            </h2>
+            <div className="hidden sm:block">
+              <RoleBadge />
+            </div>
+          </div>
+          <div className="hidden sm:flex items-center space-x-2 mt-1">
+            {user?.tenant && (
+              <>
+                <Store className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                <p className="text-sm text-gray-500 truncate">{user.tenant.name}</p>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
         {/* Notifications */}
         <button className="relative p-2 text-gray-400 hover:text-gray-600 transition">
           <Bell className="w-5 h-5" />
@@ -50,24 +99,24 @@ export default function Header() {
         </button>
 
         {/* User Menu */}
-        <div className="relative">
+        <div className="relative" ref={menuRef}>
           <button
             onClick={() => setShowMenu(!showMenu)}
-            className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 transition"
+            className="flex items-center space-x-2 sm:space-x-3 p-2 rounded-lg hover:bg-gray-50 transition"
           >
-            <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+            <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
               <User className="w-4 h-4 text-white" />
             </div>
             <div className="text-left hidden sm:block">
               <p className="text-sm font-medium text-gray-900">
                 {user?.firstName} {user?.lastName}
               </p>
-              <p className="text-xs text-gray-500">{user?.email}</p>
+              <p className="text-xs text-gray-500 truncate max-w-[120px]">{user?.email}</p>
             </div>
           </button>
 
           {showMenu && (
-            <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2">
+            <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
               <button
                 onClick={handleLogout}
                 className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition"

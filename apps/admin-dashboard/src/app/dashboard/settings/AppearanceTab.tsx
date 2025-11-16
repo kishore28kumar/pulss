@@ -57,10 +57,10 @@ export default function AppearanceTab({ settings, onSave, isSaving, readOnly = f
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 sm:space-y-8">
       {/* Logo Section */}
       <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Brand Logo</h3>
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Brand Logo</h3>
         <div className="space-y-4">
           <div>
             <label htmlFor="logo" className="block text-sm font-medium text-gray-700 mb-2">
@@ -102,9 +102,9 @@ export default function AppearanceTab({ settings, onSave, isSaving, readOnly = f
       </div>
 
       {/* Color Scheme Section */}
-      <div className="border-t border-gray-200 pt-8">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Color Scheme</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="border-t border-gray-200 pt-6 sm:pt-8">
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Color Scheme</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
           {/* Primary Color */}
           <div>
             <label htmlFor="primaryColor" className="block text-sm font-medium text-gray-700 mb-2">

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   LayoutDashboard,
   Package,
@@ -13,6 +13,7 @@ import {
   Store,
   UserCog,
   BarChart3,
+  X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import PermissionGuard from '@/components/permissions/PermissionGuard';
@@ -44,20 +45,35 @@ const navigation = [
   { name: 'Settings', href: '/dashboard/settings', icon: Settings },
 ];
 
-export default function Sidebar() {
+interface SidebarProps {
+  onClose?: () => void;
+}
+
+export default function Sidebar({ onClose }: SidebarProps) {
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const prevPathnameRef = useRef<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
     setUserRole(getUserRole());
   }, []);
 
+  // Close sidebar when route changes on mobile
+  useEffect(() => {
+    // Only close if we're on mobile, pathname actually changed (not on initial mount), and onClose exists
+    if (onClose && window.innerWidth < 1024 && prevPathnameRef.current !== null && prevPathnameRef.current !== pathname) {
+      onClose();
+    }
+    // Update the previous pathname
+    prevPathnameRef.current = pathname;
+  }, [pathname, onClose]);
+
   return (
-    <div className="w-64 bg-white border-r border-gray-200 flex flex-col">
+    <div className="w-64 bg-white border-r border-gray-200 flex flex-col h-full">
       {/* Logo */}
-      <div className="h-16 flex items-center px-6 border-b border-gray-200">
+      <div className="h-16 flex items-center justify-between px-6 border-b border-gray-200">
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
             <Store className="w-6 h-6 text-white" />
@@ -67,10 +83,18 @@ export default function Sidebar() {
             <p className="text-xs text-gray-500">Admin Panel</p>
           </div>
         </div>
+        {/* Close button for mobile */}
+        <button
+          onClick={onClose}
+          className="lg:hidden p-2 text-gray-400 hover:text-gray-600 transition"
+          aria-label="Close menu"
+        >
+          <X className="w-5 h-5" />
+        </button>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-4 py-6 space-y-1">
+      <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
         {navigation.map((item) => {
           // Skip Customers tab if user is not SUPER_ADMIN
           if (item.requireSuperAdmin && (!mounted || userRole !== 'SUPER_ADMIN')) {
@@ -82,6 +106,7 @@ export default function Sidebar() {
             <Link
               key={item.name}
               href={item.href}
+              onClick={onClose}
               className={cn(
                 'flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors',
                 isActive
@@ -89,7 +114,7 @@ export default function Sidebar() {
                   : 'text-gray-700 hover:bg-gray-50'
               )}
             >
-              <item.icon className="w-5 h-5" />
+              <item.icon className="w-5 h-5 flex-shrink-0" />
               <span className="font-medium">{item.name}</span>
             </Link>
           );

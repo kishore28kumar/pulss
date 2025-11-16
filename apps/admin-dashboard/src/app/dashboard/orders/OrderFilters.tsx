@@ -48,7 +48,7 @@ export default function OrderFilters({ filters, onApply, onReset }: OrderFilters
 
   return (
     <div className="mt-4 pt-4 border-t border-gray-200">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         {/* Order Status */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -115,7 +115,7 @@ export default function OrderFilters({ filters, onApply, onReset }: OrderFilters
       </div>
 
       {/* Action Buttons */}
-      <div className="flex items-center justify-end space-x-3 mt-4">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 mt-4">
         <button
           onClick={handleReset}
           className="px-4 py-2 text-sm border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"

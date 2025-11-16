@@ -107,9 +107,9 @@ export default function OrderDetailsModal({ order, onClose, onUpdate }: OrderDet
         <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" onClick={onClose} />
 
         {/* Modal */}
-        <div className="relative bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <div className="relative bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto m-0 sm:m-4">
           {/* Header */}
-          <div className="sticky top-0 bg-white flex items-center justify-between p-6 border-b border-gray-200 z-10">
+          <div className="sticky top-0 bg-white flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 z-10">
             <div>
               <h2 className="text-2xl font-bold text-gray-900">Order Details</h2>
               <p className="text-sm text-gray-500 mt-1">{order.orderNumber}</p>
@@ -122,9 +122,9 @@ export default function OrderDetailsModal({ order, onClose, onUpdate }: OrderDet
             </button>
           </div>
 
-          <div className="p-6 space-y-6">
+          <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
             {/* Order Info */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               <div className="bg-gray-50 rounded-lg p-4">
                 <p className="text-sm text-gray-500 mb-1">Order Date</p>
                 <p className="font-medium text-gray-900">{formatDateTime(order.createdAt)}</p>
@@ -308,9 +308,9 @@ export default function OrderDetailsModal({ order, onClose, onUpdate }: OrderDet
             )}
 
             {/* Update Order Status */}
-            <div className="border-t border-gray-200 pt-6">
+            <div className="border-t border-gray-200 pt-4 sm:pt-6">
               <h3 className="font-semibold text-gray-900 mb-4">Update Order Status</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Order Status
@@ -361,7 +361,7 @@ export default function OrderDetailsModal({ order, onClose, onUpdate }: OrderDet
                   </div>
                 </div>
 
-                <div className="md:col-span-2">
+                <div className="sm:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Internal Notes
                   </label>
@@ -377,10 +377,10 @@ export default function OrderDetailsModal({ order, onClose, onUpdate }: OrderDet
             </div>
 
             {/* Actions */}
-            <div className="flex items-center justify-end space-x-3 pt-4 border-t border-gray-200">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 pt-4 border-t border-gray-200">
               <button
                 onClick={onClose}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition text-sm sm:text-base"
                 disabled={updateMutation.isPending}
               >
                 Cancel
@@ -388,7 +388,7 @@ export default function OrderDetailsModal({ order, onClose, onUpdate }: OrderDet
               <button
                 onClick={handleUpdate}
                 disabled={updateMutation.isPending}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center"
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center text-sm sm:text-base"
               >
                 {updateMutation.isPending ? (
                   <>
