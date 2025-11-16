@@ -105,7 +105,6 @@ export default function EditProductPage() {
     },
   });
 
-  const name = watch('name');
   const trackInventory = watch('trackInventory');
   const selectedCategories = watch('categoryIds');
 
