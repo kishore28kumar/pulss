@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import {
   LayoutDashboard,
   Package,
@@ -15,14 +16,19 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import PermissionGuard from '@/components/permissions/PermissionGuard';
-import { Permission } from '@/lib/permissions';
+import { Permission, getUserRole } from '@/lib/permissions';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Products', href: '/dashboard/products', icon: Package },
   { name: 'Categories', href: '/dashboard/categories', icon: FolderTree },
   { name: 'Orders', href: '/dashboard/orders', icon: ShoppingCart },
-  { name: 'Customers', href: '/dashboard/customers', icon: Users },
+  { 
+    name: 'Customers', 
+    href: '/dashboard/customers', 
+    icon: Users,
+    requireSuperAdmin: true, // Only SUPER_ADMIN can see Customers
+  },
   { 
     name: 'Staff', 
     href: '/dashboard/staff', 
@@ -40,6 +46,13 @@ const navigation = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+    setUserRole(getUserRole());
+  }, []);
 
   return (
     <div className="w-64 bg-white border-r border-gray-200 flex flex-col">
@@ -59,6 +72,11 @@ export default function Sidebar() {
       {/* Navigation */}
       <nav className="flex-1 px-4 py-6 space-y-1">
         {navigation.map((item) => {
+          // Skip Customers tab if user is not SUPER_ADMIN
+          if (item.requireSuperAdmin && (!mounted || userRole !== 'SUPER_ADMIN')) {
+            return null;
+          }
+
           const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
           const navItem = (
             <Link

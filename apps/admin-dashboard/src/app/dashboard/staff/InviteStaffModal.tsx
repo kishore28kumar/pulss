@@ -119,7 +119,7 @@ export default function InviteStaffModal({ onClose, onSuccess }: InviteStaffModa
   };
 
   const roleLabel = mounted && userRole === 'SUPER_ADMIN' ? 'Admin' : 'Staff';
-  const title = mounted && userRole === 'SUPER_ADMIN' ? 'Create Admin User' : 'Invite Staff Member';
+  const title = mounted && userRole === 'SUPER_ADMIN' ? 'Create Admin User' : 'Add Staff Member';
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">

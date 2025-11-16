@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { 
   Search, 
@@ -16,6 +17,7 @@ import {
 } from 'lucide-react';
 import api from '@/lib/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
+import { getUserRole } from '@/lib/permissions';
 import CustomerDetailsModal from './CustomerDetailsModal';
 
 interface Customer {
@@ -47,11 +49,25 @@ interface Customer {
 }
 
 export default function CustomersPage() {
+  const router = useRouter();
+  const [mounted, setMounted] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
 
-  // Fetch customers
+  useEffect(() => {
+    setMounted(true);
+    const role = getUserRole();
+    setUserRole(role);
+    
+    // Redirect if user is not SUPER_ADMIN
+    if (role && role !== 'SUPER_ADMIN') {
+      router.push('/dashboard');
+    }
+  }, [router]);
+
+  // Fetch customers (only for SUPER_ADMIN)
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['customers', { search, page }],
     queryFn: async () => {
@@ -60,19 +76,33 @@ export default function CustomersPage() {
       });
       return response.data.data;
     },
+    enabled: mounted && userRole === 'SUPER_ADMIN',
   });
 
-  // Fetch stats
+  // Fetch stats (only for SUPER_ADMIN)
   const { data: stats } = useQuery({
     queryKey: ['customer-stats'],
     queryFn: async () => {
       const response = await api.get('/customers/stats');
       return response.data.data;
     },
+    enabled: mounted && userRole === 'SUPER_ADMIN',
   });
 
   const customers = data?.data || [];
   const meta = data?.meta;
+
+  // Don't render if not SUPER_ADMIN
+  if (!mounted || userRole !== 'SUPER_ADMIN') {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <p className="text-gray-500 mt-4">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
