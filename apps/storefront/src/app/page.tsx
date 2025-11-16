@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
-import { ShoppingBag, TrendingUp, Shield, Truck, Store, LogIn, UserPlus } from 'lucide-react';
+import { ShoppingBag, TrendingUp, Shield, Truck, LogIn, UserPlus } from 'lucide-react';
 import api from '@/lib/api';
 import ProductCard from '@/components/products/ProductCard';
 import HeroSection from '@/components/home/HeroSection';
