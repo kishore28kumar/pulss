@@ -6,35 +6,44 @@ import {
   updateCategory,
   deleteCategory,
 } from '../controllers/categoryController';
-import { authenticateUser, authorize } from '../middleware/authMiddleware';
-import { requireTenant } from '../middleware/tenantMiddleware';
+import { authenticateUser, requireAdminOrStaff } from '../middleware/authMiddleware';
+import { requireTenant, ensureTenantAccess } from '../middleware/tenantMiddleware';
+import { requirePermission, Permission } from '../middleware/permissionMiddleware';
 
 const router = Router();
 
-// Public routes
+// Public routes (storefront)
 router.get('/', requireTenant, getCategories);
 router.get('/:id', requireTenant, getCategory);
 
-// Protected routes (Admin, Manager)
+// Protected routes - Admin only (STAFF can only view via public routes)
 router.post(
   '/',
   authenticateUser,
-  authorize('ADMIN', 'MANAGER'),
+  requireAdminOrStaff,
   requireTenant,
+  ensureTenantAccess,
+  requirePermission(Permission.CATEGORIES_CREATE),
   createCategory
 );
+
 router.put(
   '/:id',
   authenticateUser,
-  authorize('ADMIN', 'MANAGER'),
+  requireAdminOrStaff,
   requireTenant,
+  ensureTenantAccess,
+  requirePermission(Permission.CATEGORIES_UPDATE),
   updateCategory
 );
+
 router.delete(
   '/:id',
   authenticateUser,
-  authorize('ADMIN', 'MANAGER'),
+  requireAdminOrStaff,
   requireTenant,
+  ensureTenantAccess,
+  requirePermission(Permission.CATEGORIES_DELETE),
   deleteCategory
 );
 

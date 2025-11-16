@@ -14,6 +14,8 @@ import { toast } from 'sonner';
 import StoreInfoTab from './StoreInfoTab';
 import AppearanceTab from './AppearanceTab';
 import NotificationsTab from './NotificationsTab';
+import PermissionGuard from '@/components/permissions/PermissionGuard';
+import { Permission } from '@/lib/permissions';
 
 type TabType = 'store' | 'appearance' | 'notifications' | 'security';
 
@@ -120,25 +122,61 @@ export default function SettingsPage() {
         {/* Tab Content */}
         <div className="p-6">
           {activeTab === 'store' && (
-            <StoreInfoTab
-              settings={settings}
-              onSave={handleSave}
-              isSaving={updateMutation.isPending}
-            />
+            <PermissionGuard
+              permission={Permission.SETTINGS_UPDATE}
+              fallback={
+                <StoreInfoTab
+                  settings={settings}
+                  onSave={() => {}}
+                  isSaving={false}
+                  readOnly={true}
+                />
+              }
+            >
+              <StoreInfoTab
+                settings={settings}
+                onSave={handleSave}
+                isSaving={updateMutation.isPending}
+              />
+            </PermissionGuard>
           )}
           {activeTab === 'appearance' && (
-            <AppearanceTab
-              settings={settings}
-              onSave={handleSave}
-              isSaving={updateMutation.isPending}
-            />
+            <PermissionGuard
+              permission={Permission.SETTINGS_UPDATE}
+              fallback={
+                <AppearanceTab
+                  settings={settings}
+                  onSave={() => {}}
+                  isSaving={false}
+                  readOnly={true}
+                />
+              }
+            >
+              <AppearanceTab
+                settings={settings}
+                onSave={handleSave}
+                isSaving={updateMutation.isPending}
+              />
+            </PermissionGuard>
           )}
           {activeTab === 'notifications' && (
-            <NotificationsTab
-              settings={settings}
-              onSave={handleSave}
-              isSaving={updateMutation.isPending}
-            />
+            <PermissionGuard
+              permission={Permission.SETTINGS_UPDATE}
+              fallback={
+                <NotificationsTab
+                  settings={settings}
+                  onSave={() => {}}
+                  isSaving={false}
+                  readOnly={true}
+                />
+              }
+            >
+              <NotificationsTab
+                settings={settings}
+                onSave={handleSave}
+                isSaving={updateMutation.isPending}
+              />
+            </PermissionGuard>
           )}
           {activeTab === 'security' && (
             <div className="text-center py-12">

@@ -70,6 +70,11 @@ export const tenantMiddleware = async (
 };
 
 export const requireTenant = (req: Request, res: Response, next: NextFunction): void => {
+  // SUPER_ADMIN can proceed without tenant (for cross-tenant operations)
+  if (req.user?.role === 'SUPER_ADMIN') {
+    return next();
+  }
+
   if (!req.tenant || !req.tenantId) {
     res.status(400).json({
       success: false,
@@ -77,6 +82,33 @@ export const requireTenant = (req: Request, res: Response, next: NextFunction): 
     });
     return;
   }
+  next();
+};
+
+/**
+ * Ensure user can only access their own tenant's data
+ * SUPER_ADMIN can access any tenant
+ */
+export const ensureTenantAccess = (req: Request, res: Response, next: NextFunction): void => {
+  // If no user is authenticated, skip (will be caught by auth middleware)
+  if (!req.user) {
+    return next();
+  }
+
+  // SUPER_ADMIN can access any tenant
+  if (req.user.role === 'SUPER_ADMIN') {
+    return next();
+  }
+
+  // Other roles must access their own tenant only
+  if (req.tenantId && req.user.tenantId !== req.tenantId) {
+    res.status(403).json({
+      success: false,
+      error: 'Access denied to this resource',
+    });
+    return;
+  }
+
   next();
 };
 

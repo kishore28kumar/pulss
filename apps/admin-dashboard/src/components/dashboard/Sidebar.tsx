@@ -10,8 +10,12 @@ import {
   FolderTree,
   Settings,
   Store,
+  UserCog,
+  BarChart3,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import PermissionGuard from '@/components/permissions/PermissionGuard';
+import { Permission } from '@/lib/permissions';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -19,6 +23,18 @@ const navigation = [
   { name: 'Categories', href: '/dashboard/categories', icon: FolderTree },
   { name: 'Orders', href: '/dashboard/orders', icon: ShoppingCart },
   { name: 'Customers', href: '/dashboard/customers', icon: Users },
+  { 
+    name: 'Staff', 
+    href: '/dashboard/staff', 
+    icon: UserCog,
+    permission: Permission.STAFF_VIEW,
+  },
+  { 
+    name: 'Analytics', 
+    href: '/dashboard/analytics', 
+    icon: BarChart3,
+    permission: Permission.ANALYTICS_VIEW,
+  },
   { name: 'Settings', href: '/dashboard/settings', icon: Settings },
 ];
 
@@ -44,7 +60,7 @@ export default function Sidebar() {
       <nav className="flex-1 px-4 py-6 space-y-1">
         {navigation.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
-          return (
+          const navItem = (
             <Link
               key={item.name}
               href={item.href}
@@ -59,6 +75,17 @@ export default function Sidebar() {
               <span className="font-medium">{item.name}</span>
             </Link>
           );
+
+          // If item has permission requirement, wrap in PermissionGuard
+          if (item.permission) {
+            return (
+              <PermissionGuard key={item.name} permission={item.permission}>
+                {navItem}
+              </PermissionGuard>
+            );
+          }
+
+          return navItem;
         })}
       </nav>
 

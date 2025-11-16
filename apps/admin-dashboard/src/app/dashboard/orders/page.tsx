@@ -15,6 +15,8 @@ import api from '@/lib/api';
 import { formatCurrency, formatDateTime } from '@/lib/utils';
 import OrderDetailsModal from './OrderDetailsModal';
 import OrderFilters from './OrderFilters';
+import PermissionGuard from '@/components/permissions/PermissionGuard';
+import { Permission } from '@/lib/permissions';
 
 interface Order {
   id: string;
@@ -135,10 +137,12 @@ export default function OrdersPage() {
           <h1 className="text-3xl font-bold text-gray-900">Orders</h1>
           <p className="text-gray-500 mt-1">Manage and track customer orders</p>
         </div>
-        <button className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-          <Download className="w-5 h-5 mr-2" />
-          Export Orders
-        </button>
+        <PermissionGuard permission={Permission.ORDERS_EXPORT}>
+          <button className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+            <Download className="w-5 h-5 mr-2" />
+            Export Orders
+          </button>
+        </PermissionGuard>
       </div>
 
       {/* Stats Cards */}

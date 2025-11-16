@@ -6,6 +6,8 @@ import { Plus, Search, Edit, Trash2, Eye } from 'lucide-react';
 import api from '@/lib/api';
 import { formatCurrency } from '@/lib/utils';
 import Link from 'next/link';
+import PermissionGuard from '@/components/permissions/PermissionGuard';
+import { Permission } from '@/lib/permissions';
 
 export default function ProductsPage() {
   const [search, setSearch] = useState('');
@@ -29,13 +31,15 @@ export default function ProductsPage() {
           <h1 className="text-3xl font-bold text-gray-900">Products</h1>
           <p className="text-gray-500 mt-1">Manage your product inventory</p>
         </div>
-        <Link
-          href="/dashboard/products/new"
-          className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-        >
-          <Plus className="w-5 h-5 mr-2" />
-          Add Product
-        </Link>
+        <PermissionGuard permission={Permission.PRODUCTS_CREATE}>
+          <Link
+            href="/dashboard/products/new"
+            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+          >
+            <Plus className="w-5 h-5 mr-2" />
+            Add Product
+          </Link>
+        </PermissionGuard>
       </div>
 
       {/* Search and Filters */}
@@ -137,15 +141,19 @@ export default function ProductsPage() {
                           <button className="p-2 text-gray-400 hover:text-blue-600 transition">
                             <Eye className="w-4 h-4" />
                           </button>
-                          <Link
-                            href={`/dashboard/products/${product.id}/edit`}
-                            className="p-2 text-gray-400 hover:text-blue-600 transition"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Link>
-                          <button className="p-2 text-gray-400 hover:text-red-600 transition">
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          <PermissionGuard permission={Permission.PRODUCTS_UPDATE}>
+                            <Link
+                              href={`/dashboard/products/${product.id}/edit`}
+                              className="p-2 text-gray-400 hover:text-blue-600 transition"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Link>
+                          </PermissionGuard>
+                          <PermissionGuard permission={Permission.PRODUCTS_DELETE}>
+                            <button className="p-2 text-gray-400 hover:text-red-600 transition">
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </PermissionGuard>
                         </div>
                       </td>
                     </tr>

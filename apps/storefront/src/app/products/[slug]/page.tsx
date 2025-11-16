@@ -31,7 +31,7 @@ function ProductDetailContent() {
   const [selectedImage, setSelectedImage] = useState(0);
 
   const { addToCart, isAddingToCart } = useCart();
-  const { addToWishlist, isInWishlist, removeFromWishlist } = useWishlist();
+  const { addToWishlist, isInWishlist, removeFromWishlist, isLoaded: wishlistLoaded } = useWishlist();
 
   // Fetch product details
   const { data: product, isLoading } = useQuery({
@@ -96,7 +96,7 @@ function ProductDetailContent() {
 
   const images = product?.images || [];
   const currentImage = images[selectedImage] || product?.thumbnail;
-  const inWishlist = product ? isInWishlist(product.id) : false;
+  const inWishlist = wishlistLoaded && product ? isInWishlist(product.id) : false;
   const inStock = product && product.stock > 0;
   const discount = product?.comparePrice
     ? Math.round(((product.comparePrice - product.price) / product.comparePrice) * 100)

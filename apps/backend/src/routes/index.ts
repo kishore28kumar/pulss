@@ -7,6 +7,9 @@ import orderRoutes from './orderRoutes';
 import cartRoutes from './cartRoutes';
 import stripeRoutes from './stripeRoutes';
 import customerRoutes from './customerRoutes';
+import staffRoutes from './staffRoutes';
+import analyticsRoutes from './analyticsRoutes';
+import reportRoutes from './reportRoutes';
 
 const router = Router();
 
@@ -19,5 +22,8 @@ router.use('/orders', orderRoutes);
 router.use('/customers', customerRoutes);
 router.use('/cart', cartRoutes);
 router.use('/stripe', stripeRoutes);
+router.use('/staff', staffRoutes);
+router.use('/analytics', analyticsRoutes);
+router.use('/reports', reportRoutes);
 
 export default router;

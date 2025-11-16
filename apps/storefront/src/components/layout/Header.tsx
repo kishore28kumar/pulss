@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { ShoppingCart, User, Search, Menu, Heart, Store, LogOut } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
@@ -11,8 +11,14 @@ import { useWishlist } from '@/hooks/useWishlist';
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const { customer, isAuthenticated, logout } = useAuth();
-  const { wishlistCount } = useWishlist();
+  const [mounted, setMounted] = useState(false);
+  const { customer, isAuthenticated, isLoading: authLoading, logout } = useAuth();
+  const { wishlistCount, isLoaded: wishlistLoaded } = useWishlist();
+
+  // Track when component has mounted to prevent hydration mismatches
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const { data: cartData } = useQuery({
     queryKey: ['cart'],
@@ -24,7 +30,7 @@ export default function Header() {
         return { itemCount: 0 };
       }
     },
-    enabled: isAuthenticated && typeof window !== 'undefined',
+    enabled: mounted && isAuthenticated && typeof window !== 'undefined',
     retry: false,
   });
 
@@ -71,7 +77,7 @@ export default function Header() {
                 className="hidden md:flex items-center relative text-gray-700 hover:text-blue-600 transition"
               >
                 <Heart className="w-6 h-6" />
-                {wishlistCount > 0 && (
+                {mounted && wishlistLoaded && wishlistCount > 0 && (
                   <span className="absolute -top-2 -right-2 bg-pink-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
                     {wishlistCount}
                   </span>
@@ -83,13 +89,15 @@ export default function Header() {
                 className="relative flex items-center text-gray-700 hover:text-blue-600 transition"
               >
                 <ShoppingCart className="w-6 h-6" />
-                {cartData?.itemCount > 0 && (
+                {mounted && cartData?.itemCount > 0 && (
                   <span className="absolute -top-2 -right-2 bg-blue-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
                     {cartData.itemCount}
                   </span>
                 )}
               </Link>
 
+              {!authLoading && mounted && (
+                <>
               {isAuthenticated ? (
                 <div className="hidden md:flex items-center space-x-2">
                   <Link
@@ -115,6 +123,8 @@ export default function Header() {
                   <User className="w-6 h-6" />
                   <span className="text-sm font-medium">Login</span>
                 </Link>
+                  )}
+                </>
               )}
 
               <button
@@ -166,6 +176,8 @@ export default function Header() {
               <Link href="/categories" className="block py-2 text-gray-700 hover:text-blue-600">
                 Categories
               </Link>
+              {!authLoading && mounted && (
+                <>
               {isAuthenticated ? (
                 <>
                   <Link href="/account" className="block py-2 text-gray-700 hover:text-blue-600">
@@ -182,6 +194,8 @@ export default function Header() {
                 <Link href="/login" className="block py-2 text-gray-700 hover:text-blue-600">
                   Login
                 </Link>
+                  )}
+                </>
               )}
             </nav>
           </div>

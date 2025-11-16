@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Bell, LogOut, User } from 'lucide-react';
+import { Bell, LogOut, User, Store } from 'lucide-react';
 import { authService } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
+import RoleBadge from '@/components/permissions/RoleBadge';
 
 export default function Header() {
   const router = useRouter();
@@ -25,10 +26,20 @@ export default function Header() {
   return (
     <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6">
       <div>
-        <h2 className="text-xl font-semibold text-gray-900">
-          Welcome back{isLoaded && user?.firstName ? `, ${user.firstName}` : ''}!
-        </h2>
-        <p className="text-sm text-gray-500">Manage your store efficiently</p>
+        <div className="flex items-center space-x-3">
+          <h2 className="text-xl font-semibold text-gray-900">
+            Welcome back{isLoaded && user?.firstName ? `, ${user.firstName}` : ''}!
+          </h2>
+          <RoleBadge />
+        </div>
+        <div className="flex items-center space-x-2 mt-1">
+          {user?.tenant && (
+            <>
+              <Store className="w-4 h-4 text-gray-400" />
+              <p className="text-sm text-gray-500">{user.tenant.name}</p>
+            </>
+          )}
+        </div>
       </div>
 
       <div className="flex items-center space-x-4">
@@ -51,7 +62,7 @@ export default function Header() {
               <p className="text-sm font-medium text-gray-900">
                 {user?.firstName} {user?.lastName}
               </p>
-              <p className="text-xs text-gray-500">{user?.role}</p>
+              <p className="text-xs text-gray-500">{user?.email}</p>
             </div>
           </button>
 

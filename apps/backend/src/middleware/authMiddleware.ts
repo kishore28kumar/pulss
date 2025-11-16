@@ -18,6 +18,41 @@ declare global {
   }
 }
 
+/**
+ * Optional authentication - sets req.user if token is present, but doesn't fail if missing
+ * Useful for routes that need to support both authenticated and public access
+ */
+export const optionalAuthenticateUser = (req: Request, _res: Response, next: NextFunction) => {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+
+    if (!token) {
+      // No token provided - continue without authentication (for public routes)
+      return next();
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JWTPayload;
+
+    if (decoded.type !== 'access') {
+      // Invalid token type - continue without authentication
+      return next();
+    }
+
+    req.user = {
+      userId: decoded.userId,
+      email: decoded.email,
+      role: decoded.role,
+      tenantId: decoded.tenantId,
+    };
+
+    next();
+  } catch (error) {
+    // If token is invalid/expired, continue without authentication (for public routes)
+    // This allows public storefront access even with invalid tokens
+    next();
+  }
+};
+
 export const authenticateUser = (req: Request, _res: Response, next: NextFunction) => {
   try {
     const token = req.headers.authorization?.replace('Bearer ', '');
@@ -99,5 +134,21 @@ export const authorize = (...roles: string[]) => {
 
     next();
   };
+};
+
+/**
+ * Ensure user is authenticated and has admin/staff role (not customer)
+ */
+export const requireAdminOrStaff = (req: Request, _res: Response, next: NextFunction) => {
+  if (!req.user) {
+    return next(new AppError('Authentication required', 401));
+  }
+
+  const allowedRoles = ['SUPER_ADMIN', 'ADMIN', 'STAFF'];
+  if (!allowedRoles.includes(req.user.role)) {
+    return next(new AppError('Admin or Staff access required', 403));
+  }
+
+  next();
 };
 

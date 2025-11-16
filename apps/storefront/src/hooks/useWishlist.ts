@@ -81,6 +81,7 @@ export function useWishlist() {
     isInWishlist,
     clearWishlist,
     wishlistCount: wishlist.length,
+    isLoaded, // Expose isLoaded to prevent hydration mismatches
   };
 }
 

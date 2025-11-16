@@ -6,35 +6,47 @@ import {
   updateProduct,
   deleteProduct,
 } from '../controllers/productController';
-import { authenticateUser, authorize } from '../middleware/authMiddleware';
-import { requireTenant } from '../middleware/tenantMiddleware';
+import { authenticateUser, optionalAuthenticateUser, requireAdminOrStaff } from '../middleware/authMiddleware';
+import { requireTenant, ensureTenantAccess } from '../middleware/tenantMiddleware';
+import { requirePermission, Permission, canUpdateProduct } from '../middleware/permissionMiddleware';
 
 const router = Router();
 
-// Public routes
-router.get('/', requireTenant, getProducts);
-router.get('/:id', requireTenant, getProduct);
+// Public routes (storefront) - require tenant for storefront access
+// Optional authentication allows SUPER_ADMIN to bypass tenant requirement
+router.get('/', optionalAuthenticateUser, requireTenant, getProducts);
+router.get('/:id', optionalAuthenticateUser, requireTenant, getProduct);
 
-// Protected routes (Admin, Manager, Staff)
+// Protected routes - Admin/Staff only
+// Note: requireTenant allows SUPER_ADMIN to bypass tenant requirement
 router.post(
   '/',
   authenticateUser,
-  authorize('ADMIN', 'MANAGER', 'STAFF'),
-  requireTenant,
+  requireAdminOrStaff,
+  requireTenant, // Optional for SUPER_ADMIN
+  ensureTenantAccess, // Allows SUPER_ADMIN to access any tenant
+  requirePermission(Permission.PRODUCTS_CREATE),
   createProduct
 );
+
 router.put(
   '/:id',
   authenticateUser,
-  authorize('ADMIN', 'MANAGER', 'STAFF'),
-  requireTenant,
+  requireAdminOrStaff,
+  requireTenant, // Optional for SUPER_ADMIN
+  ensureTenantAccess, // Allows SUPER_ADMIN to access any tenant
+  requirePermission(Permission.PRODUCTS_UPDATE),
+  canUpdateProduct,
   updateProduct
 );
+
 router.delete(
   '/:id',
   authenticateUser,
-  authorize('ADMIN', 'MANAGER'),
-  requireTenant,
+  requireAdminOrStaff,
+  requireTenant, // Optional for SUPER_ADMIN
+  ensureTenantAccess, // Allows SUPER_ADMIN to access any tenant
+  requirePermission(Permission.PRODUCTS_DELETE),
   deleteProduct
 );
 

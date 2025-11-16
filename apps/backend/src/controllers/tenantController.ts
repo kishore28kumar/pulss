@@ -159,21 +159,44 @@ export const updateTenant = asyncHandler(
       throw new AppError('Tenant not found', 404);
     }
 
+    // ADMIN can only update their own tenant
+    if (req.user && req.user.role === 'ADMIN' && req.user.tenantId !== id) {
+      throw new AppError('You can only update your own tenant', 403);
+    }
+
+    // Prevent ADMIN from updating sensitive fields
+    const updateData: any = {};
+    if (req.user?.role === 'ADMIN') {
+      // ADMIN can only update these fields
+      updateData.name = data.name;
+      updateData.email = data.email;
+      updateData.phone = data.phone;
+      updateData.address = data.address;
+      updateData.city = data.city;
+      updateData.state = data.state;
+      updateData.country = data.country;
+      updateData.pincode = data.zipCode;
+      updateData.logoUrl = data.logo;
+      updateData.primaryColor = data.primaryColor;
+      updateData.secondaryColor = data.secondaryColor;
+    } else {
+      // SUPER_ADMIN can update all fields
+      updateData.name = data.name;
+      updateData.email = data.email;
+      updateData.phone = data.phone;
+      updateData.address = data.address;
+      updateData.city = data.city;
+      updateData.state = data.state;
+      updateData.country = data.country;
+      updateData.pincode = data.zipCode;
+      updateData.logoUrl = data.logo;
+      updateData.primaryColor = data.primaryColor;
+      updateData.secondaryColor = data.secondaryColor;
+    }
+
     const updatedTenant = await prisma.tenants.update({
       where: { id },
-      data: {
-        name: data.name,
-        email: data.email,
-        phone: data.phone,
-        address: data.address,
-        city: data.city,
-        state: data.state,
-        country: data.country,
-        pincode: data.zipCode,
-        logoUrl: data.logo,
-        primaryColor: data.primaryColor,
-        secondaryColor: data.secondaryColor,
-      },
+      data: updateData,
     });
 
     const response: ApiResponse = {

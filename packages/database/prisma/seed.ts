@@ -35,20 +35,23 @@ async function main() {
     console.log('✅ Default tenant created');
   }
 
-  // Create admin user
-  console.log('Creating admin user...');
+  // Create super admin user
+  console.log('Creating super admin user...');
   const hashedPassword = await bcrypt.hash('password123', 10);
 
   await prisma.users.upsert({
     where: { email: 'admin@example.com' },
-    update: {},
+    update: {
+      role: 'SUPER_ADMIN',
+      updatedAt: new Date(),
+    },
     create: {
       id: `user_admin_${Date.now()}`,
       email: 'admin@example.com',
       password: hashedPassword,
-      firstName: 'Admin',
-      lastName: 'User',
-      role: 'ADMIN',
+      firstName: 'Super',
+      lastName: 'Admin',
+      role: 'SUPER_ADMIN',
       tenantId: tenant.id,
       isActive: true,
       emailVerified: true,
@@ -56,7 +59,7 @@ async function main() {
     },
   });
 
-  console.log('✅ Admin user created (admin@example.com / password123)');
+  console.log('✅ Super Admin user created (admin@example.com / password123)');
 
   // Create categories
   console.log('Creating categories...');
@@ -444,9 +447,10 @@ async function main() {
   console.log('✅ Products created');
   console.log(`\n🎉 Seed completed successfully!`);
   console.log(`📦 Created ${products.length} products across 4 categories`);
-  console.log(`\n👤 Admin Login Credentials:`);
+  console.log(`\n👤 Super Admin Login Credentials:`);
   console.log(`   Email: admin@example.com`);
-  console.log(`   Password: password123\n`);
+  console.log(`   Password: password123`);
+  console.log(`   Role: SUPER_ADMIN\n`);
 }
 
 main()

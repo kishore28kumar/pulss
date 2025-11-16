@@ -9,10 +9,6 @@ import { AppError, asyncHandler } from '../middleware/errorHandler';
 
 export const getProducts = asyncHandler(
   async (req: Request, res: Response) => {
-    if (!req.tenantId) {
-      throw new AppError('Tenant not found', 400);
-    }
-
     const {
       categoryId,
       search,
@@ -25,14 +21,28 @@ export const getProducts = asyncHandler(
       limit = 20,
       sortBy = 'createdAt',
       sortOrder = 'desc',
+      tenantId, // Optional tenant filter for SUPER_ADMIN
     } = req.query as any;
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
     // Build where clause
-    const where: any = {
-      tenantId: req.tenantId,
-    };
+    const where: any = {};
+
+    // SUPER_ADMIN can see all products or filter by tenantId
+    // Other roles can only see their tenant's products
+    if (req.user?.role === 'SUPER_ADMIN') {
+      if (tenantId) {
+        where.tenantId = tenantId;
+      }
+      // If no tenantId specified, SUPER_ADMIN sees all products
+    } else {
+      // Non-SUPER_ADMIN users must have a tenantId
+      if (!req.tenantId) {
+        throw new AppError('Tenant not found', 400);
+      }
+      where.tenantId = req.tenantId;
+    }
 
     if (search) {
       where.OR = [
@@ -61,7 +71,7 @@ export const getProducts = asyncHandler(
     }
 
     if (inStock === 'true') {
-      where.stockQuantity = { gt: 0 };
+      where.stock = { gt: 0 };
     }
 
     // Execute query
@@ -109,18 +119,33 @@ export const getProduct = asyncHandler(
   async (req: Request, res: Response) => {
     const { id } = req.params;
 
+    // Build where clause based on user role
+    let whereClause: any;
+
+    if (req.user?.role === 'SUPER_ADMIN') {
+      // SUPER_ADMIN can access any product
+      whereClause = {
+        OR: [
+          { id },
+          { slug: id },
+        ],
+      };
+    } else {
+      // Other roles can only access their tenant's products
     if (!req.tenantId) {
       throw new AppError('Tenant not found', 400);
     }
-
-    // Try to find by ID first, then by slug
-    const product = await prisma.products.findFirst({
-      where: {
+      whereClause = {
         OR: [
           { id, tenantId: req.tenantId },
           { slug: id, tenantId: req.tenantId },
         ],
-      },
+      };
+    }
+
+    // Try to find by ID first, then by slug
+    const product = await prisma.products.findFirst({
+      where: whereClause,
       include: {
         categories: {
           select: {
@@ -154,8 +179,20 @@ export const getProduct = asyncHandler(
 
 export const createProduct = asyncHandler(
   async (req: Request, res: Response) => {
+    // SUPER_ADMIN can create products for any tenant (must specify tenantId in body)
+    // Other roles can only create products for their own tenant
+    let targetTenantId: string;
+    
+    if (req.user?.role === 'SUPER_ADMIN') {
+      targetTenantId = req.body.tenantId || req.tenantId;
+      if (!targetTenantId) {
+        throw new AppError('Tenant ID is required', 400);
+      }
+    } else {
     if (!req.tenantId) {
       throw new AppError('Tenant not found', 400);
+      }
+      targetTenantId = req.tenantId;
     }
 
     const data: CreateProductDTO = req.body;
@@ -164,7 +201,7 @@ export const createProduct = asyncHandler(
     const existingProduct = await prisma.products.findUnique({
       where: {
         tenantId_slug: {
-          tenantId: req.tenantId,
+          tenantId: targetTenantId,
           slug: data.slug,
         },
       },
@@ -178,7 +215,7 @@ export const createProduct = asyncHandler(
     const product = await prisma.products.create({
       data: {
         id: `prod_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        tenantId: req.tenantId,
+        tenantId: targetTenantId,
         name: data.name,
         slug: data.slug,
         description: data.description,
@@ -231,16 +268,23 @@ export const updateProduct = asyncHandler(
     const { id } = req.params;
     const data: UpdateProductDTO = req.body;
 
+    // Build where clause based on user role
+    let whereClause: any;
+
+    if (req.user?.role === 'SUPER_ADMIN') {
+      // SUPER_ADMIN can update any product
+      whereClause = { id };
+    } else {
+      // Other roles can only update their tenant's products
     if (!req.tenantId) {
       throw new AppError('Tenant not found', 400);
+      }
+      whereClause = { id, tenantId: req.tenantId };
     }
 
     // Check if product exists
     const existingProduct = await prisma.products.findFirst({
-      where: {
-        id,
-        tenantId: req.tenantId,
-      },
+      where: whereClause,
     });
 
     if (!existingProduct) {
@@ -252,7 +296,7 @@ export const updateProduct = asyncHandler(
       const slugExists = await prisma.products.findUnique({
         where: {
           tenantId_slug: {
-            tenantId: req.tenantId,
+            tenantId: existingProduct.tenantId,
             slug: data.slug,
           },
         },
@@ -349,15 +393,22 @@ export const deleteProduct = asyncHandler(
   async (req: Request, res: Response) => {
     const { id } = req.params;
 
+    // Build where clause based on user role
+    let whereClause: any;
+
+    if (req.user?.role === 'SUPER_ADMIN') {
+      // SUPER_ADMIN can delete any product
+      whereClause = { id };
+    } else {
+      // Other roles can only delete their tenant's products
     if (!req.tenantId) {
       throw new AppError('Tenant not found', 400);
+      }
+      whereClause = { id, tenantId: req.tenantId };
     }
 
     const product = await prisma.products.findFirst({
-      where: {
-        id,
-        tenantId: req.tenantId,
-      },
+      where: whereClause,
     });
 
     if (!product) {

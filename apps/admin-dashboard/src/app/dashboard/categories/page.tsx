@@ -6,6 +6,8 @@ import { Plus, Search, Edit, Trash2, FolderTree } from 'lucide-react';
 import api from '@/lib/api';
 import { toast } from 'sonner';
 import CategoryModal from './CategoryModal';
+import PermissionGuard from '@/components/permissions/PermissionGuard';
+import { Permission } from '@/lib/permissions';
 
 interface Category {
   id: string;
@@ -97,13 +99,15 @@ export default function CategoriesPage() {
           <h1 className="text-3xl font-bold text-gray-900">Categories</h1>
           <p className="text-gray-500 mt-1">Organize your products into categories</p>
         </div>
-        <button
-          onClick={handleCreate}
-          className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-        >
-          <Plus className="w-5 h-5 mr-2" />
-          Add Category
-        </button>
+        <PermissionGuard permission={Permission.CATEGORIES_CREATE}>
+          <button
+            onClick={handleCreate}
+            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+          >
+            <Plus className="w-5 h-5 mr-2" />
+            Add Category
+          </button>
+        </PermissionGuard>
       </div>
 
       {/* Stats Cards */}
@@ -268,19 +272,23 @@ export default function CategoriesPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex items-center justify-end space-x-2">
-                          <button
-                            onClick={() => handleEdit(category)}
-                            className="p-2 text-gray-400 hover:text-blue-600 transition"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(category)}
-                            className="p-2 text-gray-400 hover:text-red-600 transition"
-                            disabled={deleteMutation.isPending}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          <PermissionGuard permission={Permission.CATEGORIES_UPDATE}>
+                            <button
+                              onClick={() => handleEdit(category)}
+                              className="p-2 text-gray-400 hover:text-blue-600 transition"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                          </PermissionGuard>
+                          <PermissionGuard permission={Permission.CATEGORIES_DELETE}>
+                            <button
+                              onClick={() => handleDelete(category)}
+                              className="p-2 text-gray-400 hover:text-red-600 transition"
+                              disabled={deleteMutation.isPending}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </PermissionGuard>
                         </div>
                       </td>
                     </tr>

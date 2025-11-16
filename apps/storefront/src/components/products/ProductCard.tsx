@@ -12,8 +12,8 @@ interface ProductCardProps {
 
 export default function ProductCard({ product }: ProductCardProps) {
   const { addToCart, isAddingToCart } = useCart();
-  const { addToWishlist, isInWishlist, removeFromWishlist } = useWishlist();
-  const isWishlisted = isInWishlist(product.id);
+  const { addToWishlist, isInWishlist, removeFromWishlist, isLoaded } = useWishlist();
+  const isWishlisted = isLoaded && isInWishlist(product.id);
 
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -55,14 +55,14 @@ export default function ProductCard({ product }: ProductCardProps) {
             <button
               onClick={handleToggleWishlist}
               className={`p-2 rounded-full shadow-md transition ${
-                isWishlisted 
+                isLoaded && isWishlisted 
                   ? 'bg-red-50' 
                   : 'bg-white opacity-0 group-hover:opacity-100'
               }`}
             >
               <Heart 
                 className={`w-5 h-5 transition ${
-                  isWishlisted 
+                  isLoaded && isWishlisted 
                     ? 'text-red-600 fill-red-600' 
                     : 'text-gray-700 hover:text-red-600'
                 }`} 
