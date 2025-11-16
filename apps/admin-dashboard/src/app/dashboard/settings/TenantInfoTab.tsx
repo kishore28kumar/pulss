@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Save, Building2, Mail, Phone, MapPin, Globe, Tag, CreditCard, Calendar, FileText } from 'lucide-react';
+import { Save, Building2, Mail, Phone, MapPin, Tag, CreditCard, Calendar, FileText } from 'lucide-react';
 import { getUserRole } from '@/lib/permissions';
 
 const tenantInfoSchema = z.object({
