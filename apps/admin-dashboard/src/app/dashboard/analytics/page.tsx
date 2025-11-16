@@ -21,16 +21,6 @@ export default function AnalyticsPage() {
     },
   });
 
-  const { data: revenueData, isLoading: revenueLoading } = useQuery({
-    queryKey: ['analytics-revenue', period],
-    queryFn: async () => {
-      const response = await api.get('/analytics/revenue', {
-        params: { period },
-      });
-      return response.data.data;
-    },
-  });
-
   const { data: productData, isLoading: productLoading } = useQuery({
     queryKey: ['analytics-products'],
     queryFn: async () => {

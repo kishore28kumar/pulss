@@ -18,9 +18,10 @@ interface AppearanceTabProps {
   settings: any;
   onSave: (data: any) => void;
   isSaving: boolean;
+  readOnly?: boolean;
 }
 
-export default function AppearanceTab({ settings, onSave, isSaving }: AppearanceTabProps) {
+export default function AppearanceTab({ settings, onSave, isSaving, readOnly = false }: AppearanceTabProps) {
   const [primaryColor, setPrimaryColor] = useState(settings?.primaryColor || '#3B82F6');
   const [secondaryColor, setSecondaryColor] = useState(settings?.secondaryColor || '#8B5CF6');
   
@@ -71,7 +72,8 @@ export default function AppearanceTab({ settings, onSave, isSaving }: Appearance
                 id="logo"
                 type="url"
                 {...register('logo')}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                disabled={readOnly}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
                 placeholder="https://example.com/logo.png"
               />
             </div>
@@ -120,7 +122,8 @@ export default function AppearanceTab({ settings, onSave, isSaving }: Appearance
                     setPrimaryColor(e.target.value);
                     setValue('primaryColor', e.target.value);
                   }}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono"
+                  disabled={readOnly}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono disabled:bg-gray-100 disabled:cursor-not-allowed"
                   placeholder="#3B82F6"
                 />
               </div>
@@ -131,7 +134,8 @@ export default function AppearanceTab({ settings, onSave, isSaving }: Appearance
                   setPrimaryColor(e.target.value);
                   setValue('primaryColor', e.target.value);
                 }}
-                className="w-12 h-10 rounded-lg cursor-pointer border border-gray-300"
+                disabled={readOnly}
+                className="w-12 h-10 rounded-lg cursor-pointer border border-gray-300 disabled:cursor-not-allowed disabled:opacity-50"
               />
             </div>
             {errors.primaryColor && (
@@ -159,7 +163,8 @@ export default function AppearanceTab({ settings, onSave, isSaving }: Appearance
                     setSecondaryColor(e.target.value);
                     setValue('secondaryColor', e.target.value);
                   }}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono"
+                  disabled={readOnly}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono disabled:bg-gray-100 disabled:cursor-not-allowed"
                   placeholder="#8B5CF6"
                 />
               </div>
@@ -170,7 +175,8 @@ export default function AppearanceTab({ settings, onSave, isSaving }: Appearance
                   setSecondaryColor(e.target.value);
                   setValue('secondaryColor', e.target.value);
                 }}
-                className="w-12 h-10 rounded-lg cursor-pointer border border-gray-300"
+                disabled={readOnly}
+                className="w-12 h-10 rounded-lg cursor-pointer border border-gray-300 disabled:cursor-not-allowed disabled:opacity-50"
               />
             </div>
             {errors.secondaryColor && (
@@ -207,12 +213,13 @@ export default function AppearanceTab({ settings, onSave, isSaving }: Appearance
       </div>
 
       {/* Save Button */}
-      <div className="flex items-center justify-end pt-4 border-t border-gray-200">
-        <button
-          type="submit"
-          disabled={isSaving}
-          className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-        >
+      {!readOnly && (
+        <div className="flex items-center justify-end pt-4 border-t border-gray-200">
+          <button
+            type="submit"
+            disabled={isSaving}
+            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          >
           {isSaving ? (
             <>
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
@@ -224,8 +231,9 @@ export default function AppearanceTab({ settings, onSave, isSaving }: Appearance
               Save Changes
             </>
           )}
-        </button>
-      </div>
+          </button>
+        </div>
+      )}
     </form>
   );
 }

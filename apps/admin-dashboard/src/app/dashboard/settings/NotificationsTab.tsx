@@ -7,6 +7,7 @@ interface NotificationsTabProps {
   settings: any;
   onSave: (data: any) => void;
   isSaving: boolean;
+  readOnly?: boolean;
 }
 
 interface NotificationSettings {
@@ -17,7 +18,7 @@ interface NotificationSettings {
   marketingEmails: boolean;
 }
 
-export default function NotificationsTab({ settings, onSave, isSaving }: NotificationsTabProps) {
+export default function NotificationsTab({ settings, onSave, isSaving, readOnly = false }: NotificationsTabProps) {
   const [notifications, setNotifications] = useState<NotificationSettings>({
     orderNotifications: true,
     lowStockAlerts: true,
@@ -112,7 +113,8 @@ export default function NotificationsTab({ settings, onSave, isSaving }: Notific
                 <button
                   type="button"
                   onClick={() => handleToggle(group.key)}
-                  className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                  disabled={readOnly}
+                  className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${
                     notifications[group.key] ? 'bg-blue-600' : 'bg-gray-200'
                   }`}
                 >
@@ -148,13 +150,14 @@ export default function NotificationsTab({ settings, onSave, isSaving }: Notific
       </div>
 
       {/* Save Button */}
-      <div className="flex items-center justify-end pt-4 border-t border-gray-200">
-        <button
-          type="button"
-          onClick={handleSave}
-          disabled={isSaving}
-          className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-        >
+      {!readOnly && (
+        <div className="flex items-center justify-end pt-4 border-t border-gray-200">
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={isSaving}
+            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          >
           {isSaving ? (
             <>
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
@@ -166,8 +169,9 @@ export default function NotificationsTab({ settings, onSave, isSaving }: Notific
               Save Changes
             </>
           )}
-        </button>
-      </div>
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -23,9 +23,10 @@ interface StoreInfoTabProps {
   settings: any;
   onSave: (data: any) => void;
   isSaving: boolean;
+  readOnly?: boolean;
 }
 
-export default function StoreInfoTab({ settings, onSave, isSaving }: StoreInfoTabProps) {
+export default function StoreInfoTab({ settings, onSave, isSaving, readOnly = false }: StoreInfoTabProps) {
   const {
     register,
     handleSubmit,
@@ -77,7 +78,8 @@ export default function StoreInfoTab({ settings, onSave, isSaving }: StoreInfoTa
             id="name"
             type="text"
             {...register('name')}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            disabled={readOnly}
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
             placeholder="My Awesome Store"
           />
         </div>
@@ -98,7 +100,8 @@ export default function StoreInfoTab({ settings, onSave, isSaving }: StoreInfoTa
               id="email"
               type="email"
               {...register('email')}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              disabled={readOnly}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
               placeholder="store@example.com"
             />
           </div>
@@ -117,7 +120,8 @@ export default function StoreInfoTab({ settings, onSave, isSaving }: StoreInfoTa
               id="phone"
               type="tel"
               {...register('phone')}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              disabled={readOnly}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
               placeholder="+1 (555) 123-4567"
             />
           </div>
@@ -135,7 +139,8 @@ export default function StoreInfoTab({ settings, onSave, isSaving }: StoreInfoTa
             id="address"
             {...register('address')}
             rows={2}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            disabled={readOnly}
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
             placeholder="123 Main Street, Suite 100"
           />
         </div>
@@ -151,7 +156,8 @@ export default function StoreInfoTab({ settings, onSave, isSaving }: StoreInfoTa
             id="city"
             type="text"
             {...register('city')}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            disabled={readOnly}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
             placeholder="New York"
           />
         </div>
@@ -164,7 +170,8 @@ export default function StoreInfoTab({ settings, onSave, isSaving }: StoreInfoTa
             id="state"
             type="text"
             {...register('state')}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            disabled={readOnly}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
             placeholder="NY"
           />
         </div>
@@ -177,7 +184,8 @@ export default function StoreInfoTab({ settings, onSave, isSaving }: StoreInfoTa
             id="zipCode"
             type="text"
             {...register('zipCode')}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            disabled={readOnly}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
             placeholder="10001"
           />
         </div>
@@ -190,19 +198,21 @@ export default function StoreInfoTab({ settings, onSave, isSaving }: StoreInfoTa
             id="country"
             type="text"
             {...register('country')}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            disabled={readOnly}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
             placeholder="United States"
           />
         </div>
       </div>
 
       {/* Save Button */}
-      <div className="flex items-center justify-end pt-4 border-t border-gray-200">
-        <button
-          type="submit"
-          disabled={isSaving}
-          className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-        >
+      {!readOnly && (
+        <div className="flex items-center justify-end pt-4 border-t border-gray-200">
+          <button
+            type="submit"
+            disabled={isSaving}
+            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          >
           {isSaving ? (
             <>
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
@@ -214,8 +224,9 @@ export default function StoreInfoTab({ settings, onSave, isSaving }: StoreInfoTa
               Save Changes
             </>
           )}
-        </button>
-      </div>
+          </button>
+        </div>
+      )}
     </form>
   );
 }
