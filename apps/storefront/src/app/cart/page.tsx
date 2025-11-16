@@ -220,7 +220,7 @@ function CartPageContent() {
                     </div>
 
                     <p className="text-gray-600 mb-4">
-                      ${item.price.toFixed(2)} each
+                      ₹{item.price.toFixed(2)} each
                     </p>
 
                     <div className="flex items-center justify-between">
@@ -248,7 +248,7 @@ function CartPageContent() {
                       {/* Item Total */}
                       <div className="text-right">
                         <p className="text-xl font-bold text-gray-900">
-                          ${item.total.toFixed(2)}
+                          ₹{item.total.toFixed(2)}
                         </p>
                         {item.stockQuantity < 10 && (
                           <p className="text-xs text-orange-600 mt-1">
@@ -280,27 +280,27 @@ function CartPageContent() {
               <div className="space-y-4 mb-6">
                 <div className="flex justify-between text-gray-600">
                   <span>Subtotal</span>
-                  <span className="font-semibold">${cartData?.subtotal.toFixed(2)}</span>
+                  <span className="font-semibold">₹{cartData?.subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-gray-600">
                   <span>Tax (10%)</span>
-                  <span className="font-semibold">${tax.toFixed(2)}</span>
+                  <span className="font-semibold">₹{tax.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-gray-600">
                   <span>Shipping</span>
                   <span className="font-semibold">
-                    {shipping === 0 ? 'FREE' : `$${shipping.toFixed(2)}`}
+                    {shipping === 0 ? 'FREE' : `₹${shipping.toFixed(2)}`}
                   </span>
                 </div>
                 {cartData && cartData.subtotal < 50 && (
                   <p className="text-xs text-green-600">
-                    Add ${(50 - cartData.subtotal).toFixed(2)} more for free shipping!
+                    Add ₹{(50 - cartData.subtotal).toFixed(2)} more for free shipping!
                   </p>
                 )}
                 <div className="border-t pt-4">
                   <div className="flex justify-between text-lg font-bold text-gray-900">
                     <span>Total</span>
-                    <span>${total.toFixed(2)}</span>
+                    <span>₹{total.toFixed(2)}</span>
                   </div>
                 </div>
               </div>
@@ -328,7 +328,7 @@ function CartPageContent() {
                 </div>
                 <div className="flex items-center space-x-3 text-sm text-gray-600">
                   <Truck className="w-5 h-5 text-blue-600" />
-                  <span>Free Shipping Over $50</span>
+                  <span>Free Shipping Over ₹50</span>
                 </div>
                 <div className="flex items-center space-x-3 text-sm text-gray-600">
                   <CreditCard className="w-5 h-5 text-purple-600" />

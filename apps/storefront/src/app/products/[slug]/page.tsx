@@ -243,17 +243,17 @@ function ProductDetailContent() {
               <div className="mb-6">
                 <div className="flex items-center space-x-3">
                   <span className="text-4xl font-bold text-gray-900">
-                    ${product.price.toFixed(2)}
+                    ₹{product.price.toFixed(2)}
                   </span>
                   {product.comparePrice && (
                     <span className="text-2xl text-gray-400 line-through">
-                      ${product.comparePrice.toFixed(2)}
+                      ₹{product.comparePrice.toFixed(2)}
                     </span>
                   )}
                 </div>
                 {product.comparePrice && (
                   <p className="text-sm text-green-600 font-medium mt-1">
-                    You save ${(product.comparePrice - product.price).toFixed(2)} ({discount}%)
+                    You save ₹{(product.comparePrice - product.price).toFixed(2)} ({discount}%)
                   </p>
                 )}
               </div>
@@ -348,7 +348,7 @@ function ProductDetailContent() {
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900 text-sm">Free Shipping</h3>
-                    <p className="text-xs text-gray-600">On orders over $50</p>
+                    <p className="text-xs text-gray-600">On orders over ₹50</p>
                   </div>
                 </div>
 

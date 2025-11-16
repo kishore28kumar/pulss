@@ -186,7 +186,7 @@ function WishlistPageContent() {
                 {/* Price */}
                 <div className="flex items-center gap-2 mb-4">
                   <span className="text-xl font-bold text-gray-900">
-                    ${item.price.toFixed(2)}
+                    ₹{item.price.toFixed(2)}
                   </span>
                 </div>
 

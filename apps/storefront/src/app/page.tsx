@@ -83,7 +83,7 @@ export default function HomePage() {
                 <Truck className="w-6 h-6 text-blue-600" />
               </div>
               <h3 className="font-semibold text-gray-900 text-sm mb-1">Free Shipping</h3>
-              <p className="text-xs text-gray-600">On orders over $50</p>
+              <p className="text-xs text-gray-600">On orders over ₹50</p>
             </div>
             <div className="text-center">
               <div className="inline-flex items-center justify-center w-12 h-12 bg-green-100 rounded-full mb-3">
@@ -151,7 +151,7 @@ export default function HomePage() {
                 <Truck className="w-8 h-8 text-blue-600" />
               </div>
               <h3 className="font-semibold text-gray-900 mb-2">Free Shipping</h3>
-              <p className="text-sm text-gray-600">On orders over $50</p>
+              <p className="text-sm text-gray-600">On orders over ₹50</p>
             </div>
             <div className="text-center">
               <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">

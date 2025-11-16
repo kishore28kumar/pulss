@@ -50,7 +50,7 @@ function WishlistTestContent() {
                     <div key={item.id} className="flex items-center justify-between bg-white p-3 rounded">
                       <div>
                         <p className="font-semibold">{item.name}</p>
-                        <p className="text-sm text-gray-600">${item.price}</p>
+                        <p className="text-sm text-gray-600">₹{item.price}</p>
                         <p className="text-xs text-gray-500">Added: {new Date(item.addedAt).toLocaleString()}</p>
                       </div>
                       <button
