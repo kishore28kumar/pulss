@@ -1,6 +1,7 @@
 import axios from 'axios';
+import { getApiUrl } from './config/urls';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://pulss.onrender.com/api';
+const API_URL = getApiUrl();
 const TENANT_SLUG = process.env.NEXT_PUBLIC_TENANT_SLUG || 'default';
 
 export const api = axios.create({

@@ -8,6 +8,7 @@ import dotenv from 'dotenv';
 import { errorHandler } from './middleware/errorHandler';
 import { tenantMiddleware } from './middleware/tenantMiddleware';
 import routes from './routes';
+import { getCorsOrigins } from './config/urls';
 
 dotenv.config();
 
@@ -21,13 +22,10 @@ const PORT = process.env.BACKEND_PORT || 5000;
 // Security
 app.use(helmet());
 
-// CORS
+// CORS - Uses environment-based URL configuration
 app.use(
   cors({
-    origin: [
-      process.env.ADMIN_URL || 'http://localhost:3001',
-      process.env.STOREFRONT_URL || process.env.FRONTEND_URL || 'http://localhost:3000',
-    ],
+    origin: getCorsOrigins(),
     credentials: true,
   })
 );

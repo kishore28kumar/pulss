@@ -1,0 +1,108 @@
+services:
+  # PostgreSQL Database (can share with production or use separate)
+  # Note: You may want to use a separate database for dev environment
+  - type: pserv
+    name: pulss-postgres-dev
+    env: docker
+    plan: starter
+    region: oregon
+    databases:
+      - name: pulss_db_dev
+        user: pulss_user_dev
+
+  # Backend API (Dev)
+  - type: web
+    name: pulss-dev
+    env: docker
+    dockerfilePath: ./apps/backend/Dockerfile
+    dockerContext: .
+    plan: starter
+    region: oregon
+    branch: dev
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DEPLOY_ENV
+        value: development
+      - key: DATABASE_URL
+        fromDatabase:
+          name: pulss-postgres-dev
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: FRONTEND_URL
+        value: https://pulss-store-dev.onrender.com
+      - key: ADMIN_URL
+        value: https://pulss-admin-dev.onrender.com
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: EMAIL_HOST
+        sync: false
+      - key: EMAIL_PORT
+        value: "587"
+      - key: EMAIL_USER
+        sync: false
+      - key: EMAIL_PASSWORD
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
+
+  # Storefront (Customer-facing) - Dev
+  - type: web
+    name: pulss-store-dev
+    env: docker
+    dockerfilePath: ./apps/storefront/Dockerfile
+    dockerContext: .
+    plan: starter
+    region: oregon
+    branch: dev
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DEPLOY_ENV
+        value: development
+      - key: NEXT_PUBLIC_API_URL
+        fromService:
+          type: web
+          name: pulss-dev
+          property: host
+          envVarKey: NEXT_PUBLIC_API_URL
+        # Note: The frontend config will automatically append /api if missing
+      - key: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+        sync: false
+
+  # Admin Dashboard - Dev
+  - type: web
+    name: pulss-admin-dev
+    env: docker
+    dockerfilePath: ./apps/admin-dashboard/Dockerfile
+    dockerContext: .
+    plan: starter
+    region: oregon
+    branch: dev
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DEPLOY_ENV
+        value: development
+      - key: NEXT_PUBLIC_API_URL
+        fromService:
+          type: web
+          name: pulss-dev
+          property: host
+          envVarKey: NEXT_PUBLIC_API_URL
+        # Note: The frontend config will automatically append /api if missing
+

@@ -1,6 +1,7 @@
 import axios from 'axios';
+import { getApiUrl } from './config/urls';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://pulss.onrender.com/api';
+const API_URL = getApiUrl();
 
 // Helper function to get tenant slug from stored user data
 const getTenantSlug = (): string | null => {
