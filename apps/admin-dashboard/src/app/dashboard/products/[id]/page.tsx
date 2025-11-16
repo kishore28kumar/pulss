@@ -1,6 +1,6 @@
 'use client';
 
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Edit } from 'lucide-react';
 import Link from 'next/link';
@@ -11,7 +11,6 @@ import { Permission } from '@/lib/permissions';
 
 export default function ProductDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const productId = params?.id as string;
 
   const { data: product, isLoading } = useQuery({
