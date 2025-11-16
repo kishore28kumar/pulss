@@ -117,11 +117,11 @@ export default function ProductsPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`text-sm font-medium ${
-                          product.stockQuantity > product.lowStockThreshold
+                          product.stock > product.lowStockThreshold
                             ? 'text-green-600'
                             : 'text-red-600'
                         }`}>
-                          {product.stockQuantity} units
+                          {product.stock} units
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
