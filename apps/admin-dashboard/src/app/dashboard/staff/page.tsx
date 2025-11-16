@@ -10,6 +10,7 @@ import PermissionGuard from '@/components/permissions/PermissionGuard';
 import { Permission } from '@/lib/permissions';
 import { getUserRole } from '@/lib/permissions';
 import InviteStaffModal from './InviteStaffModal';
+import EditStaffModal from './EditStaffModal';
 
 interface StaffMember {
   id: string;
@@ -29,6 +30,7 @@ export default function StaffPage() {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [editingStaff, setEditingStaff] = useState<StaffMember | null>(null);
   const [mounted, setMounted] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
   const queryClient = useQueryClient();
@@ -68,6 +70,10 @@ export default function StaffPage() {
     if (confirm(`Are you sure you want to remove ${member.firstName} ${member.lastName}?`)) {
       deleteMutation.mutate(member.id);
     }
+  };
+
+  const handleEdit = (member: StaffMember) => {
+    setEditingStaff(member);
   };
 
   return (
@@ -216,7 +222,11 @@ export default function StaffPage() {
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex items-center justify-end space-x-2">
                           <PermissionGuard permission={Permission.STAFF_UPDATE}>
-                            <button className="p-2 text-gray-400 hover:text-blue-600 transition">
+                            <button
+                              onClick={() => handleEdit(member)}
+                              className="p-2 text-gray-400 hover:text-blue-600 transition"
+                              title="Edit Staff Member"
+                            >
                               <Edit className="w-4 h-4" />
                             </button>
                           </PermissionGuard>
@@ -225,6 +235,7 @@ export default function StaffPage() {
                               onClick={() => handleDelete(member)}
                               className="p-2 text-gray-400 hover:text-red-600 transition"
                               disabled={deleteMutation.isPending}
+                              title="Delete Staff Member"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -297,6 +308,18 @@ export default function StaffPage() {
           onClose={() => setShowInviteModal(false)}
           onSuccess={() => {
             setShowInviteModal(false);
+            queryClient.invalidateQueries({ queryKey: ['staff'] });
+          }}
+        />
+      )}
+
+      {/* Edit Modal */}
+      {editingStaff && (
+        <EditStaffModal
+          staffMember={editingStaff}
+          onClose={() => setEditingStaff(null)}
+          onSuccess={() => {
+            setEditingStaff(null);
             queryClient.invalidateQueries({ queryKey: ['staff'] });
           }}
         />
