@@ -1,0 +1,143 @@
+apps/storefront/src/app/products/[slug]/page.tsx
+  e48f481 246,250,256,351
+apps/storefront/src/app/wishlist-test/page.tsx
+  e48f481 53
+apps/storefront/src/app/cart/page.tsx
+  e48f481 223,251,283,287,292,297,303,331
+apps/admin-dashboard/src/lib/utils.ts
+  e48f481 8-9
+apps/storefront/src/lib/utils.ts
+  e48f481 8-9
+apps/storefront/src/app/page.tsx
+  e48f481 86,154
+apps/storefront/src/app/wishlist/page.tsx
+  e48f481 189
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.18",
+  "base_commit_sha": "19d68d7e63ffb043a2c0f144fe5793e4e530a7e7",
+  "prompts": {
+    "e48f481": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "fb2a477a-a7cd-455b-87c8-a27925b2f322",
+        "model": "composer-1"
+      },
+      "human_author": "kishore28kumar <kishore28kks@gmail.com>",
+      "messages": [
+        {
+          "type": "user",
+          "text": "check in how many place we use $  in whole project",
+          "timestamp": "2025-11-16T13:53:42.603Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Searching the project for `$` occurrences.",
+          "timestamp": "2025-11-16T13:53:44.874Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "grep",
+          "input": {
+            "output_mode": "count",
+            "pattern": "\\$"
+          }
+        },
+        {
+          "type": "assistant",
+          "text": "Found 246 occurrences of `$` across 61 files. Showing a sample with context:",
+          "timestamp": "2025-11-16T13:53:45.703Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "grep",
+          "input": {
+            "head_limit": 50,
+            "output_mode": "content",
+            "pattern": "\\$"
+          }
+        },
+        {
+          "type": "assistant",
+          "text": "Getting a breakdown by file type and usage pattern:",
+          "timestamp": "2025-11-16T13:53:46.685Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "grep",
+          "input": {
+            "output_mode": "count",
+            "pattern": "\\$\\{"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "grep",
+          "input": {
+            "output_mode": "count",
+            "pattern": "\\$[a-zA-Z_]"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "grep",
+          "input": {
+            "output_mode": "count",
+            "pattern": "\\$\\$"
+          }
+        },
+        {
+          "type": "assistant",
+          "text": "Checking remaining `$` occurrences (not `${` or `$variable`):",
+          "timestamp": "2025-11-16T13:53:47.964Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "grep",
+          "input": {
+            "output_mode": "content",
+            "path": "apps/storefront/src/app/cart/page.tsx",
+            "pattern": "\\$"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "grep",
+          "input": {
+            "output_mode": "content",
+            "path": "apps/storefront/scripts/verify-env.sh",
+            "pattern": "\\$"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "grep",
+          "input": {
+            "output_mode": "content",
+            "path": "apps/admin-dashboard/scripts/verify-env.sh",
+            "pattern": "\\$"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "grep",
+          "input": {
+            "output_mode": "content",
+            "path": "packages/database/prisma/seed.ts",
+            "pattern": "\\$"
+          }
+        },
+        {
+          "type": "assistant",
+          "text": "## Summary: `$` usage in the project\n\nTotal: 246 occurrences across 61 files\n\n### Breakdown by usage type:\n\n1. Template literals (`${...}`): ~205 occurrences\n   - JavaScript/TypeScript template strings\n   - Used in React components, API calls, error messages\n\n2. Shell variables: ~13 occurrences\n   - `${VAR}` and `$VAR` in shell scripts\n   - Files: `verify-env.sh` scripts, Dockerfiles, `docker-compose.yml`\n\n3. Currency symbols: ~11 occurrences\n   - Displaying prices (e.g., `$${price}`, `$50`)\n   - Mainly in `apps/storefront/src/app/cart/page.tsx`\n\n4. Regex patterns: ~4 occurrences\n   - End-of-string anchor `$` (e.g., `/^[a-z0-9-]+$/`)\n   - Used for validation in bulk import pages\n\n5. Prisma methods: ~1 occurrence\n   - `prisma.$disconnect()` in `packages/database/prisma/seed.ts`\n\n6. Other: ~12 occurrences\n   - Various contexts (documentation, config files, etc.)\n\n### Files with most occurrences:\n- `apps/admin-dashboard/src/app/dashboard/products/bulk-import/preview/page.tsx`: 19\n- `apps/admin-dashboard/src/app/dashboard/products/bulk-import/page.tsx`: 14\n- `apps/admin-dashboard/src/app/dashboard/settings/TenantInfoTab.tsx`: 10\n- `apps/storefront/src/app/cart/page.tsx`: 11\n- `apps/storefront/src/app/products/[slug]/page.tsx`: 13\n\nMost are template literals for string interpolation in React/TypeScript code.",
+          "timestamp": "2025-11-16T13:53:49.468Z"
+        }
+      ],
+      "total_additions": 20,
+      "total_deletions": 20,
+      "accepted_lines": 20,
+      "overriden_lines": 0
+    }
+  }
+}
