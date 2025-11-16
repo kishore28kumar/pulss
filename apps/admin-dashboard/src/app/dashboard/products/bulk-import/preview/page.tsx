@@ -244,7 +244,7 @@ export default function BulkImportPreviewPage() {
             metaDescription: product.metaDescription || undefined,
           };
 
-          const response = await api.post('/products', payload);
+          await api.post('/products', payload);
           results.push({ success: true, product: product.name });
         } catch (error: any) {
           errors.push(`${product.name}: ${error.response?.data?.error || error.message}`);
