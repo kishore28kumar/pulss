@@ -63,6 +63,9 @@ COPY --from=builder /app/packages ./packages
 COPY --from=builder /app/apps/backend/dist ./apps/backend/dist
 COPY --from=builder /app/apps/backend/package*.json ./apps/backend/
 
+# Ensure Prisma schema and migrations are available
+COPY --from=builder /app/packages/database/prisma ./packages/database/prisma
+
 WORKDIR /app/apps/backend
 
 EXPOSE 5000
