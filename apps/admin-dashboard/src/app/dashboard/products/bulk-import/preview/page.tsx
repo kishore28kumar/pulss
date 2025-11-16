@@ -96,44 +96,44 @@ export default function BulkImportPreviewPage() {
     const rowNum = index + 1;
 
     if (!product.name || product.name.trim().length < 2) {
-      errors.push(`Name must be at least 2 characters`);
+      errors.push(`Row ${rowNum}: Name must be at least 2 characters`);
     }
 
     if (!product.slug || product.slug.trim().length < 2) {
-      errors.push(`Slug must be at least 2 characters`);
+      errors.push(`Row ${rowNum}: Slug must be at least 2 characters`);
     } else if (!/^[a-z0-9-]+$/.test(product.slug)) {
-      errors.push(`Slug must contain only lowercase letters, numbers, and hyphens`);
+      errors.push(`Row ${rowNum}: Slug must contain only lowercase letters, numbers, and hyphens`);
     }
 
     if (!product.price || isNaN(parseFloat(product.price)) || parseFloat(product.price) < 0) {
-      errors.push(`Price must be a valid number >= 0`);
+      errors.push(`Row ${rowNum}: Price must be a valid number >= 0`);
     }
 
     if (product.compareAtPrice && (isNaN(parseFloat(product.compareAtPrice)) || parseFloat(product.compareAtPrice) < 0)) {
-      errors.push(`Compare at price must be a valid number >= 0`);
+      errors.push(`Row ${rowNum}: Compare at price must be a valid number >= 0`);
     }
 
     if (product.costPrice && (isNaN(parseFloat(product.costPrice)) || parseFloat(product.costPrice) < 0)) {
-      errors.push(`Cost price must be a valid number >= 0`);
+      errors.push(`Row ${rowNum}: Cost price must be a valid number >= 0`);
     }
 
     if (product.stockQuantity && (isNaN(parseInt(product.stockQuantity)) || parseInt(product.stockQuantity) < 0)) {
-      errors.push(`Stock quantity must be a valid integer >= 0`);
+      errors.push(`Row ${rowNum}: Stock quantity must be a valid integer >= 0`);
     }
 
     if (product.lowStockThreshold && (isNaN(parseInt(product.lowStockThreshold)) || parseInt(product.lowStockThreshold) < 0)) {
-      errors.push(`Low stock threshold must be a valid integer >= 0`);
+      errors.push(`Row ${rowNum}: Low stock threshold must be a valid integer >= 0`);
     }
 
     if (product.weight && (isNaN(parseFloat(product.weight)) || parseFloat(product.weight) < 0)) {
-      errors.push(`Weight must be a valid number >= 0`);
+      errors.push(`Row ${rowNum}: Weight must be a valid number >= 0`);
     }
 
     if (product.images) {
       const imageUrls = product.images.split(',').map((url) => url.trim());
       for (const url of imageUrls) {
         if (url && !isValidUrl(url)) {
-          errors.push(`Invalid image URL: ${url}`);
+          errors.push(`Row ${rowNum}: Invalid image URL: ${url}`);
         }
       }
     }
