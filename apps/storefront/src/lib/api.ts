@@ -4,6 +4,13 @@ import { getApiUrl } from './config/urls';
 const API_URL = getApiUrl();
 const TENANT_SLUG = process.env.NEXT_PUBLIC_TENANT_SLUG || 'default';
 
+// Debug logging to verify API URL
+if (typeof window !== 'undefined') {
+  console.log('[Storefront API] API_URL:', API_URL);
+  console.log('[Storefront API] NEXT_PUBLIC_API_URL env:', process.env.NEXT_PUBLIC_API_URL);
+  console.log('[Storefront API] TENANT_SLUG:', TENANT_SLUG);
+}
+
 export const api = axios.create({
   baseURL: API_URL,
   headers: {

@@ -30,17 +30,25 @@ CMD ["npm", "run", "dev"]
 FROM base AS builder
 WORKDIR /app
 
-# Accept build arguments for environment variables
+# Accept build arguments for environment variables (with defaults)
 ARG NEXT_PUBLIC_API_URL
 ARG DEPLOY_ENV
 ARG NEXT_PUBLIC_TENANT_SLUG
 ARG NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
 
 # Set as environment variables for the build
+# Use ARG value if provided, otherwise keep empty (will be set by Render's env vars)
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 ENV DEPLOY_ENV=${DEPLOY_ENV}
 ENV NEXT_PUBLIC_TENANT_SLUG=${NEXT_PUBLIC_TENANT_SLUG}
 ENV NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
+
+# Debug: Print environment variables during build
+RUN echo "=== Build Environment Variables ===" && \
+    echo "NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-NOT_SET}" && \
+    echo "DEPLOY_ENV=${DEPLOY_ENV:-NOT_SET}" && \
+    echo "NEXT_PUBLIC_TENANT_SLUG=${NEXT_PUBLIC_TENANT_SLUG:-NOT_SET}" && \
+    echo "==================================="
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
