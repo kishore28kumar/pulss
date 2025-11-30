@@ -16,7 +16,7 @@ export default function StoreHomePage() {
   const router = useRouter();
   const params = useParams();
   const storeName = params['store-name'] as string;
-  const { tenant, isLoading: tenantLoading } = useTenant();
+  const { isLoading: tenantLoading } = useTenant();
   const { isAuthenticated, customer, isLoading: authLoading } = useAuth();
   
   // Redirect to login if not authenticated
