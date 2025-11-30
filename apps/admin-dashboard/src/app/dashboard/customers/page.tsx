@@ -9,7 +9,7 @@ import {
   UserCheck, 
   UserX, 
   ShoppingBag,
-  DollarSign,
+  IndianRupee,
   Eye,
   CheckCircle,
   Mail,
@@ -181,7 +181,7 @@ export default function CustomersPage() {
               </h3>
             </div>
             <div className="w-12 h-12 bg-green-50 rounded-lg flex items-center justify-center">
-              <DollarSign className="w-6 h-6 text-green-600" />
+              <IndianRupee className="w-6 h-6 text-green-600" />
             </div>
           </div>
         </div>

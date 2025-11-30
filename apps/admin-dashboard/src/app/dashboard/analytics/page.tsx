@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { DollarSign, ShoppingBag, Users, Package, TrendingUp, TrendingDown } from 'lucide-react';
+import { IndianRupee, ShoppingBag, Users, Package, TrendingUp, TrendingDown } from 'lucide-react';
 import api from '@/lib/api';
 import { formatCurrency } from '@/lib/utils';
 import PermissionGuard from '@/components/permissions/PermissionGuard';
@@ -69,7 +69,7 @@ export default function AnalyticsPage() {
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="w-12 h-12 bg-green-50 rounded-lg flex items-center justify-center">
-              <DollarSign className="w-6 h-6 text-green-600" />
+              <IndianRupee className="w-6 h-6 text-green-600" />
             </div>
             <div className={`flex items-center text-sm font-medium ${
               (dashboardStats?.revenueChange || 0) >= 0 ? 'text-green-600' : 'text-red-600'

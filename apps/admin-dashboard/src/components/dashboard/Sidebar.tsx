@@ -31,7 +31,7 @@ const navigation = [
     requireSuperAdmin: true, // Only SUPER_ADMIN can see Customers
   },
   { 
-    name: 'Staff', 
+    name: 'Tenants', 
     href: '/dashboard/staff', 
     icon: UserCog,
     permission: Permission.STAFF_VIEW,

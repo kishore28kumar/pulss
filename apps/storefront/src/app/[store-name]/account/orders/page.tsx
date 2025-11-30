@@ -8,7 +8,7 @@ import Image from 'next/image';
 import {
   Package,
   Calendar,
-  DollarSign,
+  IndianRupee,
   ShoppingBag,
   Eye,
   Truck,
@@ -367,7 +367,7 @@ function OrdersPageContent() {
                               <span>{itemCount} {itemCount === 1 ? 'item' : 'items'}</span>
                             </div>
                             <div className="flex items-center gap-1">
-                              <DollarSign className="w-4 h-4" />
+                              <IndianRupee className="w-4 h-4" />
                               <span className="font-semibold text-gray-900">
                                 {formatCurrency(order.total)}
                               </span>

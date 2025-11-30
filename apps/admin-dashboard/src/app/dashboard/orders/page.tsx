@@ -7,7 +7,7 @@ import {
   Filter, 
   Eye, 
   ShoppingBag, 
-  DollarSign, 
+  IndianRupee, 
   Package, 
   Download
 } from 'lucide-react';
@@ -212,7 +212,7 @@ export default function OrdersPage() {
               </h3>
             </div>
             <div className="w-12 h-12 bg-green-50 rounded-lg flex items-center justify-center">
-              <DollarSign className="w-6 h-6 text-green-600" />
+              <IndianRupee className="w-6 h-6 text-green-600" />
             </div>
           </div>
         </div>
