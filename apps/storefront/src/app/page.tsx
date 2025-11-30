@@ -52,7 +52,7 @@ export default function HomePage() {
         <p className="text-gray-500 text-sm">
           Need help? Contact your local store for assistance.
         </p>
-      </div>
+        </div>
     </div>
   );
 }

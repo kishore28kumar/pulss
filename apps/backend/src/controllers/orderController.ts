@@ -4,6 +4,121 @@ import { ApiResponse, CreateOrderDTO, UpdateOrderStatusDTO, PaginatedResponse } 
 import { AppError, asyncHandler } from '../middleware/errorHandler';
 
 // ============================================
+// ORDER ID AND ORDER NUMBER GENERATORS
+// ============================================
+
+/**
+ * Generate order ID in format: YYYY-XXXX-MMDD
+ * Where XXXX is timestamp-based 4-digit number (globally unique)
+ */
+const generateOrderId = (): string => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  
+  // Use timestamp-based approach: combine milliseconds and process time
+  const timestamp = Date.now();
+  // Extract last 4 digits from timestamp, ensuring uniqueness
+  // Use modulo to get 4-digit number, add process time for variation
+  const processTime = Number(process.hrtime.bigint() % 1000n);
+  const combined = timestamp + processTime;
+  const randomPart = String(combined % 10000).padStart(4, '0');
+  
+  return `${year}-${randomPart}-${month}${day}`;
+};
+
+/**
+ * Generate order number in format: YYYY-MMDD-XXXX
+ * Where XXXX is globally sequential 4-digit number (no reset)
+ */
+const generateOrderNumber = async (): Promise<string> => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const mmdd = `${month}${day}`;
+  
+  // Get the last order globally to extract the sequential number
+  const lastOrder = await prisma.orders.findFirst({
+    orderBy: { createdAt: 'desc' },
+    select: { orderNumber: true },
+  });
+  
+  let sequentialNumber = 1;
+  
+  if (lastOrder && lastOrder.orderNumber) {
+    // Extract sequential number from last order
+    // Format: YYYY-MMDD-XXXX
+    const parts = lastOrder.orderNumber.split('-');
+    if (parts.length === 3) {
+      const lastSequential = parseInt(parts[2]);
+      if (!isNaN(lastSequential)) {
+        sequentialNumber = lastSequential + 1;
+      }
+    }
+  }
+  
+  // Ensure 4 digits
+  const sequentialPart = String(sequentialNumber).padStart(4, '0');
+  const orderNumber = `${year}-${mmdd}-${sequentialPart}`;
+  
+  // Check for collision and increment until unique
+  let attempts = 0;
+  let finalOrderNumber = orderNumber;
+  while (attempts < 100) {
+    const existing = await prisma.orders.findUnique({
+      where: { orderNumber: finalOrderNumber },
+    });
+    
+    if (!existing) {
+      break;
+    }
+    
+    sequentialNumber++;
+    const sequentialPart = String(sequentialNumber).padStart(4, '0');
+    finalOrderNumber = `${year}-${mmdd}-${sequentialPart}`;
+    attempts++;
+  }
+  
+  if (attempts >= 100) {
+    throw new AppError('Failed to generate unique order number', 500);
+  }
+  
+  return finalOrderNumber;
+};
+
+/**
+ * Generate globally unique order ID with collision checking
+ */
+const generateUniqueOrderId = async (): Promise<string> => {
+  let orderId = generateOrderId();
+  let attempts = 0;
+  
+  while (attempts < 100) {
+    const existing = await prisma.orders.findUnique({
+      where: { id: orderId },
+    });
+    
+    if (!existing) {
+      return orderId;
+    }
+    
+    // Regenerate with slight variation
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const timestamp = Date.now() + attempts; // Add attempts to vary
+    const randomPart = String(timestamp % 10000).padStart(4, '0');
+    orderId = `${year}-${randomPart}-${month}${day}`;
+    attempts++;
+  }
+  
+  throw new AppError('Failed to generate unique order ID', 500);
+};
+
+// ============================================
 // GET ALL ORDERS
 // ============================================
 
@@ -227,11 +342,9 @@ export const createOrder = asyncHandler(
     const tax = subtotal * 0.1; // 10% tax (simplified)
     const total = subtotal + shippingFee + tax;
 
-    // Generate order number
-    const orderCount = await prisma.orders.count({
-      where: { tenantId: req.tenantId },
-    });
-    const orderNumber = `ORD-${new Date().getFullYear()}-${String(orderCount + 1).padStart(6, '0')}`;
+    // Generate order ID and order number with new formats
+    const orderId = await generateUniqueOrderId();
+    const orderNumber = await generateOrderNumber();
 
     // Use billing address if provided, otherwise use shipping address
     const billingAddress = data.billingAddress || data.shippingAddress;
@@ -239,7 +352,7 @@ export const createOrder = asyncHandler(
     // Create order
     const order = await prisma.orders.create({
       data: {
-        id: `ord_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        id: orderId,
         orderNumber,
         tenantId: req.tenantId,
         customerId: req.customerId,

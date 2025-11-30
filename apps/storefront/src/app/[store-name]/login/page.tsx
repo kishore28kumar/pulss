@@ -55,7 +55,7 @@ export default function LoginPage() {
 
   // Redirect if already authenticated
   if (isAuthenticated) {
-    router.push(`/${storeName}/account`);
+    router.push(`/${storeName}`);
     return null;
   }
 
@@ -66,7 +66,7 @@ export default function LoginPage() {
 
     try {
       await login(loginData.email, loginData.password);
-      router.push(`/${storeName}/account`);
+      router.push(`/${storeName}`);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Invalid email or password');
     } finally {
@@ -97,7 +97,7 @@ export default function LoginPage() {
         }));
       }
       
-      router.push(`/${storeName}/account`);
+      router.push(`/${storeName}`);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Registration failed. Please try again.');
     } finally {

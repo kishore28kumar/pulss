@@ -67,7 +67,19 @@ export const authService = {
       localStorage.removeItem('customerToken');
       localStorage.removeItem('refreshToken');
       localStorage.removeItem('customer');
-      window.location.href = '/';
+      
+      // Extract tenant slug from URL path
+      // Path format: /[store-name]/... or /[store-name]
+      const pathSegments = window.location.pathname.split('/').filter(Boolean);
+      const storeName = pathSegments[0];
+      
+      if (storeName) {
+        // Redirect to tenant-specific login page
+        window.location.href = `/${storeName}/login`;
+      } else {
+        // No tenant context, redirect to home (QR message)
+        window.location.href = '/';
+      }
     }
   },
 

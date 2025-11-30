@@ -1,7 +1,9 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { ShoppingBag, TrendingUp, Shield, Truck, LogIn, UserPlus } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import api from '@/lib/api';
@@ -11,10 +13,18 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTenant } from '@/contexts/TenantContext';
 
 export default function StoreHomePage() {
+  const router = useRouter();
   const params = useParams();
   const storeName = params['store-name'] as string;
   const { tenant, isLoading: tenantLoading } = useTenant();
-  const { isAuthenticated, customer } = useAuth();
+  const { isAuthenticated, customer, isLoading: authLoading } = useAuth();
+  
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated && storeName) {
+      router.push(`/${storeName}/login`);
+    }
+  }, [isAuthenticated, authLoading, router, storeName]);
   
   const { data: featuredProducts, isLoading } = useQuery({
     queryKey: ['featured-products', storeName],
@@ -28,8 +38,8 @@ export default function StoreHomePage() {
     retry: false,
   });
 
-  // Show loading state while tenant is loading
-  if (tenantLoading) {
+  // Show loading state while tenant is loading or auth is loading
+  if (tenantLoading || authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -40,55 +50,14 @@ export default function StoreHomePage() {
     );
   }
 
-  // Show hero section for non-authenticated users
+  // Show loading/redirecting state if not authenticated (redirect is in progress)
   if (!isAuthenticated) {
     return (
-      <div>
-        {/* Hero Section - Conversion-Focused */}
-        <HeroSection isAuthenticated={false} />
-        
-        {/* Additional CTA Cards for Non-Authenticated Users */}
-        <section className="py-16 bg-white">
-          <div className="container mx-auto px-4">
-            <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
-              {/* Sign In Card */}
-              <Link
-                href={`/${storeName}/login`}
-                className="group bg-white rounded-2xl shadow-xl p-8 hover:shadow-2xl transition-all duration-300 border-2 border-transparent hover:border-blue-500"
-              >
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-6 group-hover:bg-blue-600 transition-colors">
-                  <LogIn className="w-8 h-8 text-blue-600 group-hover:text-white transition-colors" />
-                </div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-3">Sign In</h2>
-                <p className="text-gray-600 mb-6">
-                  Already have an account? Sign in to continue shopping and access your orders.
-                </p>
-                <div className="flex items-center text-blue-600 font-semibold group-hover:text-blue-700">
-                  <span>Sign In Now</span>
-                  <span className="ml-2 transform group-hover:translate-x-2 transition-transform">→</span>
-                </div>
-              </Link>
-
-              {/* Create Account Card */}
-              <Link
-                href={`/${storeName}/login`}
-                className="group bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl shadow-xl p-8 hover:shadow-2xl transition-all duration-300 text-white"
-              >
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full mb-6 group-hover:bg-white/30 transition-colors">
-                  <UserPlus className="w-8 h-8 text-white" />
-                </div>
-                <h2 className="text-2xl font-bold mb-3">Create Account</h2>
-                <p className="text-blue-100 mb-6">
-                  New to {tenant?.name || 'Pulss Store'}? Create an account to start shopping and enjoy exclusive benefits.
-                </p>
-                <div className="flex items-center font-semibold group-hover:text-blue-50">
-                  <span>Get Started</span>
-                  <span className="ml-2 transform group-hover:translate-x-2 transition-transform">→</span>
-                </div>
-              </Link>
-            </div>
-          </div>
-        </section>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+          <p className="text-gray-600">Redirecting to login...</p>
+        </div>
       </div>
     );
   }
