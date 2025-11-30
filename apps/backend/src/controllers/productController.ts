@@ -307,32 +307,40 @@ export const updateProduct = asyncHandler(
       }
     }
 
+    // Build update data object, only including fields that are provided
+    const updateData: any = {
+      updatedAt: new Date(),
+    };
+
+    if (data.name !== undefined) updateData.name = data.name;
+    if (data.slug !== undefined) updateData.slug = data.slug;
+    if (data.description !== undefined) updateData.description = data.description;
+    if (data.price !== undefined) updateData.price = data.price;
+    if (data.compareAtPrice !== undefined) updateData.comparePrice = data.compareAtPrice;
+    if (data.costPrice !== undefined) updateData.costPrice = data.costPrice;
+    if (data.sku !== undefined) updateData.sku = data.sku;
+    if (data.barcode !== undefined) updateData.barcode = data.barcode;
+    if (data.trackInventory !== undefined) updateData.trackInventory = data.trackInventory;
+    if (data.stockQuantity !== undefined) updateData.stock = data.stockQuantity;
+    if (data.lowStockThreshold !== undefined) updateData.lowStockThreshold = data.lowStockThreshold;
+    if (data.isActive !== undefined) updateData.isActive = data.isActive;
+    if (data.isFeatured !== undefined) updateData.isFeatured = data.isFeatured;
+    if (data.requiresPrescription !== undefined) updateData.requiresPrescription = data.requiresPrescription;
+    if (data.manufacturer !== undefined) updateData.manufacturer = data.manufacturer;
+    if (data.metaTitle !== undefined) updateData.metaTitle = data.metaTitle;
+    if (data.metaDescription !== undefined) updateData.metaDescription = data.metaDescription;
+    if (data.images !== undefined) {
+      updateData.images = data.images;
+      updateData.thumbnail = data.images[0] || null;
+    }
+    if (data.categoryIds !== undefined) {
+      updateData.categoryId = data.categoryIds[0] || null;
+    }
+
     // Update product
     const product = await prisma.products.update({
       where: { id },
-      data: {
-        name: data.name,
-        slug: data.slug,
-        description: data.description,
-        price: data.price,
-        comparePrice: data.compareAtPrice,
-        costPrice: data.costPrice,
-        sku: data.sku,
-        barcode: data.barcode,
-        trackInventory: data.trackInventory,
-        stock: data.stockQuantity,
-        lowStockThreshold: data.lowStockThreshold,
-        isActive: data.isActive,
-        isFeatured: data.isFeatured,
-        requiresPrescription: data.requiresPrescription,
-        manufacturer: data.manufacturer,
-        metaTitle: data.metaTitle,
-        metaDescription: data.metaDescription,
-        thumbnail: data.images?.[0],
-        images: data.images || undefined,
-        categoryId: data.categoryIds?.[0] || undefined,
-        updatedAt: new Date(),
-      },
+      data: updateData,
       include: {
         categories: {
           select: {

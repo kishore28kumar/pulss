@@ -110,7 +110,7 @@ export default function EditProductPage() {
 
   // Load product data into form
   useEffect(() => {
-    if (product) {
+    if (product && categories && categories.length > 0) {
       setValue('name', product.name || '');
       setValue('slug', product.slug || '');
       setValue('description', product.description || '');
@@ -125,7 +125,16 @@ export default function EditProductPage() {
       setValue('lowStockThreshold', product.lowStockThreshold || 10);
       setValue('weight', product.weight || undefined);
       setValue('weightUnit', product.weightUnit || 'kg');
-      setValue('categoryIds', product.categories?.[0]?.id ? [product.categories[0].id] : []);
+      
+      // Set category: use existing category if available, otherwise use first available category as default
+      const existingCategoryId = product.categories?.[0]?.id;
+      if (existingCategoryId) {
+        setValue('categoryIds', [existingCategoryId]);
+      } else if (categories.length > 0) {
+        // Default to first category if product has no category
+        setValue('categoryIds', [categories[0].id]);
+      }
+      
       setValue('images', product.images || []);
       setValue('isActive', product.isActive ?? true);
       setValue('isFeatured', product.isFeatured ?? false);
@@ -135,7 +144,7 @@ export default function EditProductPage() {
       setValue('metaTitle', product.metaTitle || '');
       setValue('metaDescription', product.metaDescription || '');
     }
-  }, [product, setValue]);
+  }, [product, categories, setValue]);
 
   // Update product mutation
   const mutation = useMutation({
@@ -166,18 +175,26 @@ export default function EditProductPage() {
         metaDescription: data.metaDescription || undefined,
       };
 
+      console.log('Sending payload to API:', payload);
+      console.log('isFeatured in payload:', payload.isFeatured);
+      
       return await api.put(`/products/${productId}`, payload);
     },
-    onSuccess: () => {
+    onSuccess: (response) => {
+      console.log('Update successful:', response.data);
       toast.success('Product updated successfully');
       router.push('/dashboard/products');
     },
     onError: (error: any) => {
+      console.error('Update error:', error);
+      console.error('Error response:', error.response?.data);
       toast.error(error.response?.data?.error || 'Failed to update product');
     },
   });
 
   const onSubmit = (data: ProductFormData) => {
+    console.log('onSubmit called with data:', data);
+    console.log('isFeatured value:', data.isFeatured);
     mutation.mutate(data);
   };
 
@@ -232,7 +249,24 @@ export default function EditProductPage() {
       </div>
 
       {/* Form */}
-      <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 space-y-4 sm:space-y-6">
+      <form 
+        onSubmit={handleSubmit(
+          (data) => {
+            console.log('Form submitted with data:', data);
+            console.log('isFeatured value:', data.isFeatured);
+            onSubmit(data);
+          },
+          (errors) => {
+            console.error('Form validation errors:', errors);
+            // Show toast error for each validation error
+            const errorMessages = Object.entries(errors).map(([field, error]: [string, any]) => {
+              return `${field}: ${error?.message || 'Invalid value'}`;
+            });
+            toast.error(`Please fix form errors: ${errorMessages.join(', ')}`);
+          }
+        )} 
+        className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 space-y-4 sm:space-y-6"
+      >
         {/* Basic Information */}
         <div className="border-b border-gray-200 pb-4 sm:pb-6">
           <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Basic Information</h2>
@@ -563,6 +597,10 @@ export default function EditProductPage() {
                 type="checkbox"
                 {...register('isFeatured')}
                 className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                onChange={(e) => {
+                  console.log('isFeatured checkbox changed:', e.target.checked);
+                  setValue('isFeatured', e.target.checked, { shouldDirty: true });
+                }}
               />
               <label htmlFor="isFeatured" className="ml-2 text-sm font-medium text-gray-700">
                 Featured
