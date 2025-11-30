@@ -183,7 +183,7 @@ export default function BulkUploadSection({
 
   // Validate products
   const validateProducts = (productsToValidate: BulkProduct[]): BulkProduct[] => {
-    return productsToValidate.map((product, index) => {
+    return productsToValidate.map((product) => {
       const errors: string[] = [];
       
       if (!product.name || product.name.length < 2) {

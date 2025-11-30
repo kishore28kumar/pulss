@@ -34,7 +34,7 @@ export function getTenantPath(path: string, tenantSlug?: string): string {
   let slug = tenantSlug;
   if (!slug && typeof window !== 'undefined') {
     const pathSegments = window.location.pathname.split('/').filter(Boolean);
-    slug = pathSegments[0] || null;
+    slug = pathSegments[0] || undefined;
   }
   
   if (!slug) {
