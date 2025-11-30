@@ -138,7 +138,7 @@ export default function InviteStaffModal({ onClose, onSuccess }: InviteStaffModa
 
       return await api.post('/staff/invite', payload);
     },
-    onSuccess: (response, variables) => {
+    onSuccess: (_response, variables) => {
       const roleLabel = userRole === 'SUPER_ADMIN' ? 'Admin' : 'Staff';
       toast.success(`${roleLabel} user created successfully`);
       
