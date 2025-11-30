@@ -103,7 +103,7 @@ export default function AccountPage() {
                   <span>Profile</span>
                 </button>
                 <Link
-                  href={getPath('/account/orders')}
+                  href={getPath('/orders')}
                   className="w-full flex items-center space-x-3 px-4 py-3 text-left text-gray-700 hover:bg-gray-50 rounded-lg transition"
                 >
                   <ShoppingBag className="w-5 h-5" />
@@ -204,7 +204,7 @@ export default function AccountPage() {
               </Link>
 
               <Link
-                href={getPath('/account/orders?filter=PENDING')}
+                href={getPath('/orders')}
                 className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition cursor-pointer"
               >
                 <div className="flex items-center justify-between">
@@ -242,7 +242,7 @@ export default function AccountPage() {
                 <h3 className="text-xl font-bold text-gray-900">Recent Orders</h3>
                 {orders && orders.length > 0 && (
                   <Link
-                    href={getPath('/account/orders')}
+                    href={getPath('/orders')}
                     className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
                   >
                     View All

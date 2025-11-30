@@ -356,7 +356,7 @@ function OrderDetailContent() {
                   Continue Shopping
                 </Link>
                 <Link
-                  href={getPath('/account/orders')}
+                  href={getPath('/orders')}
                   className="w-full block text-center px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:border-blue-600 hover:text-blue-600 transition"
                 >
                   View All Orders

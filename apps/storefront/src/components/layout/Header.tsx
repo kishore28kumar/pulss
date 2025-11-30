@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ShoppingCart, User, Search, Menu, Heart, Store, LogOut } from 'lucide-react';
+import { ShoppingCart, User, Search, Menu, Heart, Store, LogOut, ShoppingBag } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useParams } from 'next/navigation';
@@ -87,7 +87,8 @@ export default function Header() {
             <div className="flex items-center space-x-4">
               <Link
                 href={getPath('/wishlist')}
-                className="hidden md:flex items-center relative text-gray-700 hover:text-blue-600 transition"
+                className="hidden md:flex items-center relative text-gray-700 hover:text-blue-600 transition group"
+                title="Wishlist"
               >
                 <Heart className="w-6 h-6" />
                 {mounted && wishlistLoaded && wishlistCount > 0 && (
@@ -95,11 +96,28 @@ export default function Header() {
                     {wishlistCount}
                   </span>
                 )}
+                <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+                  Wishlist
+                </span>
               </Link>
+
+              {isAuthenticated && (
+                <Link
+                  href={getPath('/orders')}
+                  className="hidden md:flex items-center relative text-gray-700 hover:text-blue-600 transition group"
+                  title="Orders"
+                >
+                  <ShoppingBag className="w-6 h-6" />
+                  <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+                    Orders
+                  </span>
+                </Link>
+              )}
 
               <Link
                 href={getPath('/cart')}
-                className="relative flex items-center text-gray-700 hover:text-blue-600 transition"
+                className="relative flex items-center text-gray-700 hover:text-blue-600 transition group"
+                title="Shopping Cart"
               >
                 <ShoppingCart className="w-6 h-6" />
                 {mounted && cartData?.itemCount > 0 && (
@@ -107,6 +125,9 @@ export default function Header() {
                     {cartData.itemCount}
                   </span>
                 )}
+                <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+                  Shopping Cart
+                </span>
               </Link>
 
               {!authLoading && mounted && (
@@ -115,10 +136,14 @@ export default function Header() {
                 <div className="hidden md:flex items-center space-x-2">
                   <Link
                     href={getPath('/account')}
-                    className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition"
+                    className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition group relative"
+                    title="My Account"
                   >
                     <User className="w-6 h-6" />
                     <span className="text-sm font-medium">{customer?.firstName}</span>
+                    <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+                      My Account
+                    </span>
                   </Link>
                   <button
                     onClick={logout}
