@@ -78,11 +78,30 @@ export default function NewProductPage() {
   const [bulkUploading, setBulkUploading] = useState(false);
   const [showBulkSummary, setShowBulkSummary] = useState(false);
   const [bulkUploadResult, setBulkUploadResult] = useState<any>(null);
+  const [showTenantDropdown, setShowTenantDropdown] = useState(false);
+  const tenantDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setMounted(true);
     setUserRole(getUserRole());
   }, []);
+
+  // Close tenant dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (tenantDropdownRef.current && !tenantDropdownRef.current.contains(event.target as Node)) {
+        setShowTenantDropdown(false);
+      }
+    };
+
+    if (showTenantDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showTenantDropdown]);
 
   const isSuperAdminUser = mounted && isSuperAdmin();
 
@@ -352,30 +371,76 @@ export default function NewProductPage() {
       {/* Tenant Selector for SUPER_ADMIN */}
       {isSuperAdminUser && (
         <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6">
-          <label htmlFor="tenant-select" className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
             <Store className="w-4 h-4 inline mr-2" />
             Select Admin/Store *
           </label>
-          <select
-            id="tenant-select"
-            value={selectedTenantId || ''}
-            onChange={(e) => {
-              setSelectedTenantId(e.target.value || null);
-              if (showBulkUpload && !e.target.value) {
-                setShowBulkUpload(false);
-                setBulkProducts([]);
-              }
-            }}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
-            required
-          >
-            <option value="">-- Select an Admin/Store --</option>
-            {adminsData?.data?.map((admin) => (
-              <option key={admin.id} value={admin.tenants?.id || ''}>
-                {admin.firstName} {admin.lastName} ({admin.tenants?.name || 'No Store'})
-              </option>
-            ))}
-          </select>
+          <div className="relative" ref={tenantDropdownRef}>
+            <button
+              type="button"
+              onClick={() => setShowTenantDropdown(!showTenantDropdown)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base bg-white text-left flex items-center justify-between hover:bg-gray-50 transition"
+            >
+              <span className={selectedTenantId ? 'text-gray-900' : 'text-gray-500'}>
+                {selectedTenantId
+                  ? (() => {
+                      const selectedAdmin = adminsData?.data?.find(
+                        (admin) => admin.tenants?.id === selectedTenantId
+                      );
+                      return selectedAdmin
+                        ? `${selectedAdmin.firstName} ${selectedAdmin.lastName} (${selectedAdmin.tenants?.name || 'No Store'})`
+                        : '-- Select an Admin/Store --';
+                    })()
+                  : '-- Select an Admin/Store --'}
+              </span>
+              {showTenantDropdown ? (
+                <ChevronUp className="w-4 h-4 text-gray-400 flex-shrink-0" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />
+              )}
+            </button>
+            {showTenantDropdown && (
+              <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedTenantId(null);
+                    setShowTenantDropdown(false);
+                    if (showBulkUpload) {
+                      setShowBulkUpload(false);
+                      setBulkProducts([]);
+                    }
+                  }}
+                  className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 transition ${
+                    !selectedTenantId ? 'bg-blue-50 text-blue-600' : 'text-gray-700'
+                  }`}
+                >
+                  -- Select an Admin/Store --
+                </button>
+                {adminsData?.data?.map((admin) => (
+                  <button
+                    key={admin.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedTenantId(admin.tenants?.id || null);
+                      setShowTenantDropdown(false);
+                      if (showBulkUpload && !admin.tenants?.id) {
+                        setShowBulkUpload(false);
+                        setBulkProducts([]);
+                      }
+                    }}
+                    className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 transition ${
+                      selectedTenantId === admin.tenants?.id
+                        ? 'bg-blue-50 text-blue-600'
+                        : 'text-gray-700'
+                    }`}
+                  >
+                    {admin.firstName} {admin.lastName} ({admin.tenants?.name || 'No Store'})
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           {!selectedTenantId && (
             <p className="mt-2 text-sm text-red-600">
               Please select an admin/store to create a product on their behalf.

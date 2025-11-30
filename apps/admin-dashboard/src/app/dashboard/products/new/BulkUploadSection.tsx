@@ -2,7 +2,8 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { Upload, Download, FileText, CheckCircle, AlertCircle, X, Edit2, Save, XCircle, Loader2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Upload, Download, FileText, CheckCircle, AlertCircle, X, Edit2, Save, XCircle, Loader2, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '@/lib/api';
 
@@ -72,6 +73,7 @@ export default function BulkUploadSection({
   adminsData,
   onSuccess,
 }: BulkUploadSectionProps) {
+  const router = useRouter();
   const csvFileInputRef = useRef<HTMLInputElement>(null);
   const [products, setProducts] = useState<BulkProduct[]>([]);
   const [editingCell, setEditingCell] = useState<{ row: number; col: string } | null>(null);
@@ -79,6 +81,7 @@ export default function BulkUploadSection({
   const [isDragging, setIsDragging] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [summaryData, setSummaryData] = useState<any>(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   // Download CSV template
   const downloadTemplate = () => {
@@ -241,6 +244,9 @@ export default function BulkUploadSection({
         const validated = validateProducts(parsed);
         
         setProducts(validated);
+        // Store products in sessionStorage for preview page
+        sessionStorage.setItem('bulkUploadProducts', JSON.stringify(validated));
+        
         const validCount = validated.filter(p => p.isValid).length;
         const invalidCount = validated.length - validCount;
         
@@ -290,6 +296,8 @@ export default function BulkUploadSection({
     updated[rowIndex] = validated[0];
     
     setProducts(updated);
+    // Update sessionStorage
+    sessionStorage.setItem('bulkUploadProducts', JSON.stringify(updated));
     setEditingCell(null);
   };
 
@@ -372,27 +380,13 @@ export default function BulkUploadSection({
       return;
     }
 
-    const summary = calculateSummary();
-    
-    // Create a more detailed confirmation message
-    const confirmationMessage = [
-      `Upload ${summary.valid} products?`,
-      '',
-      `Summary:`,
-      `• Total Products: ${summary.total}`,
-      `• Valid Products: ${summary.valid}`,
-      `• Invalid Products: ${summary.invalid} (will be skipped)`,
-      `• Categories Used: ${summary.categories}`,
-      `• Estimated Processing Time: ~${summary.estimatedTime} seconds`,
-      '',
-      `Note: Invalid products will be skipped and shown in the summary after upload.`,
-    ].join('\n');
+    setShowConfirmModal(true);
+  };
 
-    const confirmed = window.confirm(confirmationMessage);
-
-    if (confirmed) {
-      bulkUploadMutation.mutate(validProducts);
-    }
+  const confirmBulkUpload = () => {
+    const validProducts = products.filter(p => p.isValid);
+    setShowConfirmModal(false);
+    bulkUploadMutation.mutate(validProducts);
   };
 
   const summary = calculateSummary();
@@ -419,7 +413,8 @@ export default function BulkUploadSection({
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
-          className={`border-2 border-dashed rounded-lg p-12 text-center transition-colors ${
+          onClick={() => csvFileInputRef.current?.click()}
+          className={`border-2 border-dashed rounded-lg p-12 text-center transition-colors cursor-pointer ${
             isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300'
           }`}
         >
@@ -438,8 +433,11 @@ export default function BulkUploadSection({
             Drag and drop your CSV file here, or{' '}
             <button
               type="button"
-              onClick={() => csvFileInputRef.current?.click()}
-              className="text-blue-600 hover:text-blue-700 underline"
+              onClick={(e) => {
+                e.stopPropagation();
+                csvFileInputRef.current?.click();
+              }}
+              className="text-blue-600 hover:text-blue-700"
             >
               browse
             </button>
@@ -468,6 +466,7 @@ export default function BulkUploadSection({
                 type="button"
                 onClick={() => {
                   setProducts([]);
+                  sessionStorage.removeItem('bulkUploadProducts');
                   if (csvFileInputRef.current) csvFileInputRef.current.value = '';
                 }}
                 className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
@@ -653,29 +652,114 @@ export default function BulkUploadSection({
                       )}
                     </td>
                     <td className="px-4 py-3">
-                      {product.errors && product.errors.length > 0 && (
-                        <div className="group relative">
-                          <AlertCircle className="w-4 h-4 text-red-500 cursor-help" />
-                          <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block bg-gray-900 text-white text-xs rounded px-2 py-1 z-10 whitespace-nowrap">
-                            {product.errors.join(', ')}
+                      <div className="flex items-center space-x-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            // Update sessionStorage before navigating
+                            sessionStorage.setItem('bulkUploadProducts', JSON.stringify(products));
+                            router.push(`/dashboard/products/new/preview?index=${index}`);
+                          }}
+                          className="text-blue-500 hover:text-blue-700"
+                          title="Preview product"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+                        {product.errors && product.errors.length > 0 && (
+                          <div className="group relative">
+                            <AlertCircle className="w-4 h-4 text-red-500 cursor-help" />
+                            <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block bg-gray-900 text-white text-xs rounded px-2 py-1 z-10 whitespace-nowrap">
+                              {product.errors.join(', ')}
+                            </div>
                           </div>
-                        </div>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const updated = products.filter((_, i) => i !== index);
-                          setProducts(updated);
-                        }}
-                        className="ml-2 text-red-500 hover:text-red-700"
-                      >
-                        <XCircle className="w-4 h-4" />
-                      </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const updated = products.filter((_, i) => i !== index);
+                            setProducts(updated);
+                            // Update sessionStorage
+                            sessionStorage.setItem('bulkUploadProducts', JSON.stringify(updated));
+                          }}
+                          className="text-red-500 hover:text-red-700"
+                          title="Remove product"
+                        >
+                          <XCircle className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Modal */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl max-w-md w-full shadow-xl">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-bold text-gray-900">Confirm Upload</h3>
+                <button
+                  onClick={() => setShowConfirmModal(false)}
+                  className="text-gray-400 hover:text-gray-600 transition"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <div className="mb-6">
+                <p className="text-gray-700 mb-4">
+                  Are you sure you want to upload <span className="font-semibold text-blue-600">{summary.valid}</span> products?
+                </p>
+                
+                <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Total Products:</span>
+                    <span className="font-medium text-gray-900">{summary.total}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Valid Products:</span>
+                    <span className="font-medium text-green-600">{summary.valid}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Invalid Products:</span>
+                    <span className="font-medium text-red-600">{summary.invalid} (will be skipped)</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Categories Used:</span>
+                    <span className="font-medium text-gray-900">{summary.categories}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Estimated Time:</span>
+                    <span className="font-medium text-gray-900">~{summary.estimatedTime} seconds</span>
+                  </div>
+                </div>
+                
+                <p className="text-xs text-gray-500 mt-4">
+                  Note: Invalid products will be skipped and shown in the summary after upload.
+                </p>
+              </div>
+              
+              <div className="flex items-center justify-end space-x-3">
+                <button
+                  onClick={() => setShowConfirmModal(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmBulkUpload}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center"
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  Upload Products
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -756,6 +840,7 @@ export default function BulkUploadSection({
               onClick={() => {
                 setShowSummary(false);
                 setProducts([]);
+                sessionStorage.removeItem('bulkUploadProducts');
                 if (csvFileInputRef.current) csvFileInputRef.current.value = '';
               }}
               className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
