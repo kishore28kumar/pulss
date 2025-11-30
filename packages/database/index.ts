@@ -9,11 +9,43 @@ const globalForPrisma = global as unknown as { prisma: PrismaClient };
 export const prisma =
   globalForPrisma.prisma ||
   new PrismaClient({
-    log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+    // Use event-based logging to filter out non-critical connection errors
+    log: process.env.NODE_ENV === 'development' 
+      ? [{ emit: 'event', level: 'query' }, { emit: 'event', level: 'error' }, { emit: 'event', level: 'warn' }]
+      : [{ emit: 'event', level: 'error' }],
     // Prisma 7+ example:
     // adapter: postgresAdapter(process.env.DATABASE_URL),
     // or: accelerateUrl: process.env.PRISMA_ACCELERATE_URL,
   });
+
+// Handle Prisma log events with filtering for non-critical errors
+prisma.$on('error' as never, (e: any) => {
+  const message = e.message || String(e);
+  
+  // Filter out connection closed errors - these are normal connection pool cleanup
+  // Prisma automatically reconnects on the next query
+  if (
+    message.includes('Error in PostgreSQL connection') &&
+    (message.includes('kind: Closed') || message.includes('Closed'))
+  ) {
+    // This is a connection pool cleanup, not a critical error
+    // Connection will be automatically re-established on next query
+    return;
+  }
+  
+  // Log actual errors
+  console.error('[Prisma error]:', message);
+});
+
+if (process.env.NODE_ENV === 'development') {
+  prisma.$on('query' as never, (e: any) => {
+    console.log(`[Prisma query]: ${e.query} - ${e.duration}ms`);
+  });
+  
+  prisma.$on('warn' as never, (e: any) => {
+    console.warn('[Prisma warn]:', e.message || String(e));
+  });
+}
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 
@@ -36,6 +68,17 @@ export async function connectWithRetry(maxRetries = 5, delayMs = 2000): Promise<
         throw new Error(`Database connection failed after ${maxRetries} attempts: ${errorMessage}`);
       }
     }
+  }
+}
+
+// Health check function - tests database connection
+export async function checkConnection(): Promise<boolean> {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    return true;
+  } catch (error) {
+    console.warn('⚠️  Database connection health check failed:', error);
+    return false;
   }
 }
 

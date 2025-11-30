@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { X, Loader2, UserPlus, Eye, EyeOff, RefreshCw, Store, ExternalLink, Copy } from 'lucide-react';
+import { X, Loader2, UserPlus, Eye, EyeOff, RefreshCw, Store, Copy } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';

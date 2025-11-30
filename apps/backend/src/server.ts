@@ -9,7 +9,7 @@ import { errorHandler } from './middleware/errorHandler';
 import { tenantMiddleware } from './middleware/tenantMiddleware';
 import routes from './routes';
 import { getCorsOrigins } from './config/urls';
-import { connectWithRetry } from '@pulss/database';
+import { connectWithRetry, checkConnection } from '@pulss/database';
 
 dotenv.config();
 
@@ -77,8 +77,13 @@ app.use(tenantMiddleware);
 // ROUTES
 // ============================================
 
-app.get('/health', (_req, res) => {
-  res.json({ status: 'ok', message: 'Pulss API is running' });
+app.get('/health', async (_req, res) => {
+  const dbConnected = await checkConnection();
+  res.json({ 
+    status: 'ok', 
+    message: 'Pulss API is running',
+    database: dbConnected ? 'connected' : 'disconnected'
+  });
 });
 
 app.use('/api', routes);
