@@ -397,6 +397,141 @@ export const updateProduct = asyncHandler(
 // DELETE PRODUCT
 // ============================================
 
+// ============================================
+// BULK CREATE PRODUCTS
+// ============================================
+
+export const bulkCreateProducts = asyncHandler(
+  async (req: Request, res: Response) => {
+    if (!req.user) {
+      throw new AppError('Authentication required', 401);
+    }
+
+    const { products, tenantId: bodyTenantId } = req.body;
+
+    if (!products || !Array.isArray(products) || products.length === 0) {
+      throw new AppError('Products array is required', 400);
+    }
+
+    if (products.length > 1000) {
+      throw new AppError('Maximum 1000 products allowed per upload', 400);
+    }
+
+    // Determine target tenant
+    let targetTenantId: string;
+    
+    if (req.user.role === 'SUPER_ADMIN') {
+      targetTenantId = bodyTenantId || req.tenantId;
+      if (!targetTenantId) {
+        throw new AppError('Tenant ID is required', 400);
+      }
+    } else {
+      if (!req.tenantId) {
+        throw new AppError('Tenant not found', 400);
+      }
+      targetTenantId = req.tenantId;
+    }
+
+    const results = {
+      success: [] as any[],
+      failed: [] as Array<{ name: string; slug: string; error: string }>,
+    };
+
+    // Process products in batches
+    for (const productData of products) {
+      try {
+        // Validate required fields
+        if (!productData.name || !productData.slug || productData.price === undefined) {
+          results.failed.push({
+            name: productData.name || 'Unknown',
+            slug: productData.slug || 'unknown',
+            error: 'Missing required fields (name, slug, price)',
+          });
+          continue;
+        }
+
+        // Check if slug already exists
+        const existingProduct = await prisma.products.findUnique({
+          where: {
+            tenantId_slug: {
+              tenantId: targetTenantId,
+              slug: productData.slug,
+            },
+          },
+        });
+
+        if (existingProduct) {
+          results.failed.push({
+            name: productData.name,
+            slug: productData.slug,
+            error: 'Product with this slug already exists',
+          });
+          continue;
+        }
+
+        // Create product
+        const product = await prisma.products.create({
+          data: {
+            id: `prod_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            tenantId: targetTenantId,
+            name: productData.name,
+            slug: productData.slug,
+            description: productData.description || null,
+            price: productData.price,
+            comparePrice: productData.compareAtPrice || null,
+            costPrice: productData.costPrice || null,
+            sku: productData.sku || null,
+            barcode: productData.barcode || null,
+            trackInventory: productData.trackInventory ?? true,
+            stock: productData.stockQuantity ?? 0,
+            lowStockThreshold: productData.lowStockThreshold ?? 10,
+            isActive: productData.isActive ?? true,
+            isFeatured: productData.isFeatured ?? false,
+            requiresPrescription: productData.requiresPrescription ?? false,
+            manufacturer: productData.manufacturer || null,
+            metaTitle: productData.metaTitle || null,
+            metaDescription: productData.metaDescription || null,
+            thumbnail: productData.images?.[0] || null,
+            images: productData.images || [],
+            categoryId: productData.categoryIds?.[0] || null,
+            updatedAt: new Date(),
+          },
+        });
+
+        results.success.push({
+          id: product.id,
+          name: product.name,
+          slug: product.slug,
+        });
+      } catch (error: any) {
+        results.failed.push({
+          name: productData.name || 'Unknown',
+          slug: productData.slug || 'unknown',
+          error: error.message || 'Failed to create product',
+        });
+      }
+    }
+
+    const response: ApiResponse = {
+      success: true,
+      data: {
+        successCount: results.success.length,
+        failedCount: results.failed.length,
+        totalCount: products.length,
+        successfulProducts: results.success,
+        failedProducts: results.failed,
+      },
+      message: `Successfully created ${results.success.length} out of ${products.length} products`,
+    };
+
+    res.status(201).json(response);
+  }
+);
+
+// ============================================
+// DELETE PRODUCT
+// ============================================
+
 export const deleteProduct = asyncHandler(
   async (req: Request, res: Response) => {
     const { id } = req.params;

@@ -31,7 +31,7 @@ export default function HomePage() {
     retry: false,
   });
 
-  return (
+    return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Hero Section */}
       <div className="container mx-auto px-4 py-16">
@@ -94,9 +94,9 @@ export default function HomePage() {
           <div className="text-center py-12">
             <Building2 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-600 text-lg">No stores available at the moment.</p>
-          </div>
-        )}
-      </div>
+            </div>
+          )}
+        </div>
     </div>
   );
 }

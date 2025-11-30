@@ -25,7 +25,7 @@ export function getTenantPath(path: string, tenantSlug?: string): string {
   if (!slug) {
     // If no tenant slug, return path as-is (for root pages)
     return `/${cleanPath}`;
-  }
-  
+}
+
   return `/${slug}/${cleanPath}`;
 }

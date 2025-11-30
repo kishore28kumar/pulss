@@ -183,7 +183,7 @@ export const inviteStaff = asyncHandler(
       targetTenantId = req.tenantId;
       if (role && role !== 'STAFF') {
         throw new AppError('Admin can only create Staff users', 400);
-      }
+    }
     } else {
       throw new AppError('You do not have permission to invite users', 403);
     }
@@ -272,8 +272,8 @@ export const updateStaff = asyncHandler(
 
     // SUPER_ADMIN can update any Admin, others can only update from their tenant
     if (req.user.role !== 'SUPER_ADMIN') {
-      if (!req.tenantId) {
-        throw new AppError('Tenant not found', 400);
+    if (!req.tenantId) {
+      throw new AppError('Tenant not found', 400);
       }
       whereClause.tenantId = req.tenantId;
     }
@@ -365,8 +365,8 @@ export const deleteStaff = asyncHandler(
 
     // SUPER_ADMIN can delete any Admin, others can only delete from their tenant
     if (req.user.role !== 'SUPER_ADMIN') {
-      if (!req.tenantId) {
-        throw new AppError('Tenant not found', 400);
+    if (!req.tenantId) {
+      throw new AppError('Tenant not found', 400);
       }
       whereClause.tenantId = req.tenantId;
     }

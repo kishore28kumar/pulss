@@ -59,9 +59,9 @@ export default function Header() {
               {tenant?.logoUrl ? (
                 <img src={tenant.logoUrl} alt={tenant.name} className="w-10 h-10 rounded-lg object-cover" />
               ) : (
-                <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                  <Store className="w-6 h-6 text-white" />
-                </div>
+              <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                <Store className="w-6 h-6 text-white" />
+              </div>
               )}
               <div>
                 <h1 className="text-xl font-bold text-gray-900">{tenant?.name || 'Pulss Store'}</h1>

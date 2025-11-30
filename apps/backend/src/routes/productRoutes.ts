@@ -5,6 +5,7 @@ import {
   createProduct,
   updateProduct,
   deleteProduct,
+  bulkCreateProducts,
 } from '../controllers/productController';
 import { authenticateUser, optionalAuthenticateUser, requireAdminOrStaff } from '../middleware/authMiddleware';
 import { requireTenant, ensureTenantAccess } from '../middleware/tenantMiddleware';
@@ -27,6 +28,16 @@ router.post(
   ensureTenantAccess, // Allows SUPER_ADMIN to access any tenant
   requirePermission(Permission.PRODUCTS_CREATE),
   createProduct
+);
+
+router.post(
+  '/bulk',
+  authenticateUser,
+  requireAdminOrStaff,
+  requireTenant, // Optional for SUPER_ADMIN
+  ensureTenantAccess, // Allows SUPER_ADMIN to access any tenant
+  requirePermission(Permission.PRODUCTS_CREATE),
+  bulkCreateProducts
 );
 
 router.put(
