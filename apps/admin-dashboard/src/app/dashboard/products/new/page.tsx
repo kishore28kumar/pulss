@@ -63,7 +63,6 @@ export default function NewProductPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const csvFileInputRef = useRef<HTMLInputElement>(null);
   const [imageUrl, setImageUrl] = useState('');
   const [uploading, setUploading] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -73,11 +72,6 @@ export default function NewProductPage() {
   );
   const [showBulkUpload, setShowBulkUpload] = useState(false);
   const [showSingleUpload, setShowSingleUpload] = useState(false);
-  const [bulkProducts, setBulkProducts] = useState<any[]>([]);
-  const [editingCell, setEditingCell] = useState<{ row: number; col: string } | null>(null);
-  const [bulkUploading, setBulkUploading] = useState(false);
-  const [showBulkSummary, setShowBulkSummary] = useState(false);
-  const [bulkUploadResult, setBulkUploadResult] = useState<any>(null);
   const [showTenantDropdown, setShowTenantDropdown] = useState(false);
   const tenantDropdownRef = useRef<HTMLDivElement>(null);
 
@@ -408,7 +402,6 @@ export default function NewProductPage() {
                     setShowTenantDropdown(false);
                     if (showBulkUpload) {
                       setShowBulkUpload(false);
-                      setBulkProducts([]);
                     }
                   }}
                   className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 transition ${
@@ -426,7 +419,6 @@ export default function NewProductPage() {
                       setShowTenantDropdown(false);
                       if (showBulkUpload && !admin.tenants?.id) {
                         setShowBulkUpload(false);
-                        setBulkProducts([]);
                       }
                     }}
                     className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 transition ${
@@ -461,8 +453,6 @@ export default function NewProductPage() {
                 setShowBulkUpload(newBulkState);
                 if (newBulkState) {
                   setShowSingleUpload(false); // Collapse single upload when bulk expands
-                  setBulkProducts([]);
-                  setBulkUploadResult(null);
                 }
               }}
               className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 transition"
@@ -491,8 +481,6 @@ export default function NewProductPage() {
                   isSuperAdminUser={isSuperAdminUser}
                   adminsData={adminsData?.data}
                   onSuccess={(result) => {
-                    setBulkUploadResult(result);
-                    setShowBulkSummary(true);
                     toast.success(`Successfully uploaded ${result.successCount || 0} products`);
                   }}
                 />
