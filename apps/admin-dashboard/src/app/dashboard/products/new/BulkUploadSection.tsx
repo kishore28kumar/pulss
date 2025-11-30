@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { Upload, Download, FileText, CheckCircle, AlertCircle, X, Edit2, Save, XCircle, Loader2, Eye } from 'lucide-react';
+import { Upload, Download, FileText, CheckCircle, AlertCircle, X, Edit2, XCircle, Loader2, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '@/lib/api';
 
