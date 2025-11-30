@@ -20,6 +20,11 @@ export const tenantMiddleware = async (
   _res: Response,
   next: NextFunction
 ) => {
+  // Skip processing for OPTIONS requests
+  if (req.method === 'OPTIONS') {
+    return next();
+  }
+
   try {
     let tenantSlug: string | undefined;
 
@@ -70,6 +75,11 @@ export const tenantMiddleware = async (
 };
 
 export const requireTenant = (req: Request, res: Response, next: NextFunction): void => {
+  // Skip for OPTIONS requests (CORS preflight)
+  if (req.method === 'OPTIONS') {
+    return next();
+  }
+
   // SUPER_ADMIN can proceed without tenant (for cross-tenant operations)
   if (req.user?.role === 'SUPER_ADMIN') {
     return next();
@@ -90,6 +100,11 @@ export const requireTenant = (req: Request, res: Response, next: NextFunction): 
  * SUPER_ADMIN can access any tenant
  */
 export const ensureTenantAccess = (req: Request, res: Response, next: NextFunction): void => {
+  // Skip for OPTIONS requests (CORS preflight)
+  if (req.method === 'OPTIONS') {
+    return next();
+  }
+
   // If no user is authenticated, skip (will be caught by auth middleware)
   if (!req.user) {
     return next();

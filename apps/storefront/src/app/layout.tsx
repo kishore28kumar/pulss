@@ -3,13 +3,11 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { Providers } from '@/components/providers/Providers';
 import { Toaster } from 'sonner';
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
 
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Pulss Store - Your One-Stop Shop',
+  title: 'Pulss - Multi-Tenant E-Commerce Platform',
   description: 'Shop quality products at great prices',
 };
 
@@ -22,11 +20,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <Providers>
-          <div className="flex flex-col min-h-screen">
-            <Header />
-            <main className="flex-1">{children}</main>
-            <Footer />
-          </div>
+          {children}
           <Toaster position="top-right" richColors />
         </Providers>
       </body>

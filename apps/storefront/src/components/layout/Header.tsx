@@ -4,16 +4,25 @@ import Link from 'next/link';
 import { ShoppingCart, User, Search, Menu, Heart, Store, LogOut } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useParams } from 'next/navigation';
 import api from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWishlist } from '@/hooks/useWishlist';
+import { useTenant } from '@/contexts/TenantContext';
+import { getTenantPath } from '@/lib/utils';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [mounted, setMounted] = useState(false);
+  const params = useParams();
+  const storeName = params['store-name'] as string | undefined;
+  const { tenant } = useTenant();
   const { customer, isAuthenticated, isLoading: authLoading, logout } = useAuth();
   const { wishlistCount, isLoaded: wishlistLoaded } = useWishlist();
+  
+  // Helper to get tenant-aware path
+  const getPath = (path: string) => storeName ? `/${storeName}${path}` : path;
 
   // Track when component has mounted to prevent hydration mismatches
   useEffect(() => {
@@ -46,12 +55,16 @@ export default function Header() {
         <div className="py-4 px-4">
           <div className="flex items-center justify-between">
             {/* Logo */}
-            <Link href="/" className="flex items-center space-x-2">
-              <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                <Store className="w-6 h-6 text-white" />
-              </div>
+            <Link href={getPath('/')} className="flex items-center space-x-2">
+              {tenant?.logoUrl ? (
+                <img src={tenant.logoUrl} alt={tenant.name} className="w-10 h-10 rounded-lg object-cover" />
+              ) : (
+                <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                  <Store className="w-6 h-6 text-white" />
+                </div>
+              )}
               <div>
-                <h1 className="text-xl font-bold text-gray-900">Pulss Store</h1>
+                <h1 className="text-xl font-bold text-gray-900">{tenant?.name || 'Pulss Store'}</h1>
                 <p className="text-xs text-gray-500">Quality Products</p>
               </div>
             </Link>
@@ -73,7 +86,7 @@ export default function Header() {
             {/* Actions */}
             <div className="flex items-center space-x-4">
               <Link
-                href="/wishlist"
+                href={getPath('/wishlist')}
                 className="hidden md:flex items-center relative text-gray-700 hover:text-blue-600 transition"
               >
                 <Heart className="w-6 h-6" />
@@ -85,7 +98,7 @@ export default function Header() {
               </Link>
 
               <Link
-                href="/cart"
+                href={getPath('/cart')}
                 className="relative flex items-center text-gray-700 hover:text-blue-600 transition"
               >
                 <ShoppingCart className="w-6 h-6" />
@@ -101,7 +114,7 @@ export default function Header() {
               {isAuthenticated ? (
                 <div className="hidden md:flex items-center space-x-2">
                   <Link
-                    href="/account"
+                    href={getPath('/account')}
                     className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition"
                   >
                     <User className="w-6 h-6" />
@@ -117,7 +130,7 @@ export default function Header() {
                 </div>
               ) : (
                 <Link
-                  href="/login"
+                  href={getPath('/login')}
                   className="hidden md:flex items-center space-x-1 text-gray-700 hover:text-blue-600 transition"
                 >
                   <User className="w-6 h-6" />
@@ -139,19 +152,19 @@ export default function Header() {
 
         {/* Navigation */}
         <nav className="hidden md:flex items-center justify-center space-x-8 py-3 border-t border-gray-100">
-          <Link href="/" className="text-gray-700 hover:text-blue-600 font-medium transition">
+          <Link href={getPath('/')} className="text-gray-700 hover:text-blue-600 font-medium transition">
             Home
           </Link>
-          <Link href="/products" className="text-gray-700 hover:text-blue-600 font-medium transition">
+          <Link href={getPath('/products')} className="text-gray-700 hover:text-blue-600 font-medium transition">
             Shop
           </Link>
-          <Link href="/categories" className="text-gray-700 hover:text-blue-600 font-medium transition">
+          <Link href={getPath('/categories')} className="text-gray-700 hover:text-blue-600 font-medium transition">
             Categories
           </Link>
-          <Link href="/about" className="text-gray-700 hover:text-blue-600 font-medium transition">
+          <Link href={getPath('/about')} className="text-gray-700 hover:text-blue-600 font-medium transition">
             About
           </Link>
-          <Link href="/contact" className="text-gray-700 hover:text-blue-600 font-medium transition">
+          <Link href={getPath('/contact')} className="text-gray-700 hover:text-blue-600 font-medium transition">
             Contact
           </Link>
         </nav>
@@ -167,20 +180,20 @@ export default function Header() {
               className="w-full px-4 py-2 border border-gray-300 rounded-lg"
             />
             <nav className="space-y-2">
-              <Link href="/" className="block py-2 text-gray-700 hover:text-blue-600">
+              <Link href={getPath('/')} className="block py-2 text-gray-700 hover:text-blue-600">
                 Home
               </Link>
-              <Link href="/products" className="block py-2 text-gray-700 hover:text-blue-600">
+              <Link href={getPath('/products')} className="block py-2 text-gray-700 hover:text-blue-600">
                 Shop
               </Link>
-              <Link href="/categories" className="block py-2 text-gray-700 hover:text-blue-600">
+              <Link href={getPath('/categories')} className="block py-2 text-gray-700 hover:text-blue-600">
                 Categories
               </Link>
               {!authLoading && mounted && (
                 <>
               {isAuthenticated ? (
                 <>
-                  <Link href="/account" className="block py-2 text-gray-700 hover:text-blue-600">
+                  <Link href={getPath('/account')} className="block py-2 text-gray-700 hover:text-blue-600">
                     Account
                   </Link>
                   <button
@@ -191,7 +204,7 @@ export default function Header() {
                   </button>
                 </>
               ) : (
-                <Link href="/login" className="block py-2 text-gray-700 hover:text-blue-600">
+                <Link href={getPath('/login')} className="block py-2 text-gray-700 hover:text-blue-600">
                   Login
                 </Link>
                   )}

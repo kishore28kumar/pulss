@@ -2,20 +2,27 @@ import axios from 'axios';
 import { getApiUrl } from './config/urls';
 
 const API_URL = getApiUrl();
-const TENANT_SLUG = process.env.NEXT_PUBLIC_TENANT_SLUG || 'default';
 
 // Debug logging to verify API URL
 if (typeof window !== 'undefined') {
   console.log('[Storefront API] API_URL:', API_URL);
   console.log('[Storefront API] NEXT_PUBLIC_API_URL env:', process.env.NEXT_PUBLIC_API_URL);
-  console.log('[Storefront API] TENANT_SLUG:', TENANT_SLUG);
 }
+
+// Helper function to get tenant slug from URL path
+const getTenantSlugFromPath = (): string | null => {
+  if (typeof window === 'undefined') return null;
+  
+  // Extract tenant slug from URL path
+  // Path format: /[store-name]/... or /[store-name]
+  const pathSegments = window.location.pathname.split('/').filter(Boolean);
+  return pathSegments[0] || null;
+};
 
 export const api = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
-    'X-Tenant-Slug': TENANT_SLUG,
   },
 });
 
@@ -27,6 +34,12 @@ api.interceptors.request.use(
       const token = localStorage.getItem('customerToken');
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
+      }
+
+      // Extract tenant slug from URL path and add to headers
+      const tenantSlug = getTenantSlugFromPath();
+      if (tenantSlug) {
+        config.headers['X-Tenant-Slug'] = tenantSlug;
       }
     }
     return config;

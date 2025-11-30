@@ -1,15 +1,16 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { ArrowLeft, Loader2, Store, Upload, X } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import Link from 'next/link';
 import api from '@/lib/api';
 import { toast } from 'sonner';
+import { getUserRole, isSuperAdmin } from '@/lib/permissions';
 
 const productSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -45,17 +46,64 @@ interface Category {
   slug: string;
 }
 
+interface Admin {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  tenants?: {
+    id: string;
+    name: string;
+    slug: string;
+  };
+}
+
 export default function NewProductPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [imageUrl, setImageUrl] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [selectedTenantId, setSelectedTenantId] = useState<string | null>(
+    searchParams?.get('tenantId') || null
+  );
 
-  // Fetch categories
-  const { data: categories, isLoading: categoriesLoading } = useQuery({
-    queryKey: ['categories'],
+  useEffect(() => {
+    setMounted(true);
+    setUserRole(getUserRole());
+  }, []);
+
+  const isSuperAdminUser = mounted && isSuperAdmin();
+
+  // Fetch admins list for SUPER_ADMIN
+  const { data: adminsData } = useQuery<{ data: Admin[] }>({
+    queryKey: ['staff'],
     queryFn: async () => {
-      const response = await api.get('/categories');
+      const response = await api.get('/staff');
+      return response.data.data;
+    },
+    enabled: isSuperAdminUser,
+  });
+
+  // Fetch categories - filter by tenant if SUPER_ADMIN has selected one
+  const { data: categories, isLoading: categoriesLoading } = useQuery({
+    queryKey: ['categories', selectedTenantId],
+    queryFn: async () => {
+      // For SUPER_ADMIN, we need to get the tenant slug from the selected admin
+      const selectedAdmin = adminsData?.data?.find(admin => admin.tenants?.id === selectedTenantId);
+      const tenantSlug = selectedAdmin?.tenants?.slug;
+      
+      const config: any = {};
+      if (isSuperAdminUser && tenantSlug) {
+        config.headers = { 'X-Tenant-Slug': tenantSlug };
+      }
+      
+      const response = await api.get('/categories', config);
       return response.data.data as Category[];
     },
+    enabled: !isSuperAdminUser || !!selectedTenantId, // SUPER_ADMIN must select tenant first
   });
 
   const {
@@ -112,7 +160,11 @@ export default function NewProductPage() {
   // Create product mutation
   const mutation = useMutation({
     mutationFn: async (data: ProductFormData) => {
-      const payload = {
+      if (isSuperAdminUser && !selectedTenantId) {
+        throw new Error('Please select an admin/store before creating a product');
+      }
+
+      const payload: any = {
         name: data.name,
         slug: data.slug,
         description: data.description || undefined,
@@ -138,11 +190,26 @@ export default function NewProductPage() {
         metaDescription: data.metaDescription || undefined,
       };
 
-      return await api.post('/products', payload);
+      // For SUPER_ADMIN, include tenantId in the request body and tenant slug in header
+      const config: any = {};
+      if (isSuperAdminUser && selectedTenantId) {
+        payload.tenantId = selectedTenantId;
+        // Get tenant slug from selected admin
+        const selectedAdmin = adminsData?.data?.find(admin => admin.tenants?.id === selectedTenantId);
+        if (selectedAdmin?.tenants?.slug) {
+          config.headers = { 'X-Tenant-Slug': selectedAdmin.tenants.slug };
+        }
+      }
+
+      return await api.post('/products', payload, config);
     },
     onSuccess: () => {
       toast.success('Product created successfully');
-      router.push('/dashboard/products');
+      if (isSuperAdminUser && selectedTenantId) {
+        router.push(`/dashboard/products?tenantId=${selectedTenantId}`);
+      } else {
+        router.push('/dashboard/products');
+      }
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.error || 'Failed to create product');
@@ -150,6 +217,10 @@ export default function NewProductPage() {
   });
 
   const onSubmit = (data: ProductFormData) => {
+    if (isSuperAdminUser && !selectedTenantId) {
+      toast.error('Please select an admin/store before creating a product');
+      return;
+    }
     mutation.mutate(data);
   };
 
@@ -158,6 +229,75 @@ export default function NewProductPage() {
       const currentImages = watch('images') || [];
       setValue('images', [...currentImages, imageUrl]);
       setImageUrl('');
+    }
+  };
+
+  // Handle file upload
+  const handleFileUpload = async (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload an image file');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size must be less than 5MB');
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      // Add tenant slug header if SUPER_ADMIN has selected a tenant
+      const config: any = {};
+      if (isSuperAdminUser && selectedTenantId) {
+        const selectedAdmin = adminsData?.data?.find(admin => admin.tenants?.id === selectedTenantId);
+        if (selectedAdmin?.tenants?.slug) {
+          config.headers = { 'X-Tenant-Slug': selectedAdmin.tenants.slug };
+        }
+      }
+
+      const response = await api.post('/upload', formData, {
+        ...config,
+        headers: {
+          ...config.headers,
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      const uploadedUrl = response.data.data.url;
+      const currentImages = watch('images') || [];
+      setValue('images', [...currentImages, uploadedUrl]);
+      toast.success('Image uploaded successfully');
+      
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to upload image');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleFileUpload(file);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      handleFileUpload(file);
     }
   };
 
@@ -181,16 +321,53 @@ export default function NewProductPage() {
       <div className="flex items-center justify-between">
         <div>
           <Link
-            href="/dashboard/products"
+            href={isSuperAdminUser && selectedTenantId 
+              ? `/dashboard/products?tenantId=${selectedTenantId}`
+              : '/dashboard/products'}
             className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-2 text-sm sm:text-base"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Products
           </Link>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Create New Product</h1>
-          <p className="text-sm sm:text-base text-gray-500 mt-1">Add a new product to your inventory</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+            {isSuperAdminUser ? 'Add Product on Behalf of Admin' : 'Create New Product'}
+          </h1>
+          <p className="text-sm sm:text-base text-gray-500 mt-1">
+            {isSuperAdminUser 
+              ? 'Add a new product on behalf of the selected admin'
+              : 'Add a new product to your inventory'}
+          </p>
         </div>
       </div>
+
+      {/* Tenant Selector for SUPER_ADMIN */}
+      {isSuperAdminUser && (
+        <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6">
+          <label htmlFor="tenant-select" className="block text-sm font-medium text-gray-700 mb-2">
+            <Store className="w-4 h-4 inline mr-2" />
+            Select Admin/Store *
+          </label>
+          <select
+            id="tenant-select"
+            value={selectedTenantId || ''}
+            onChange={(e) => setSelectedTenantId(e.target.value || null)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+            required
+          >
+            <option value="">-- Select an Admin/Store --</option>
+            {adminsData?.data?.map((admin) => (
+              <option key={admin.id} value={admin.tenants?.id || ''}>
+                {admin.firstName} {admin.lastName} ({admin.tenants?.name || 'No Store'})
+              </option>
+            ))}
+          </select>
+          {!selectedTenantId && (
+            <p className="mt-2 text-sm text-red-600">
+              Please select an admin/store to create a product on their behalf.
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Form */}
       <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 space-y-4 sm:space-y-6">
@@ -421,20 +598,46 @@ export default function NewProductPage() {
         <div className="border-b border-gray-200 pb-4 sm:pb-6">
           <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Product Images</h2>
           
+          {/* File Upload Area */}
+          <div
+            onDragOver={handleDragOver}
+            onDrop={handleDrop}
+            className="border-2 border-dashed border-gray-300 rounded-lg p-6 mb-4 hover:border-blue-400 transition-colors cursor-pointer"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              className="hidden"
+              disabled={uploading || (isSuperAdminUser && !selectedTenantId)}
+            />
+            <div className="text-center">
+              <Upload className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+              <p className="text-sm text-gray-600 mb-1">
+                {uploading ? 'Uploading...' : 'Click to upload or drag and drop'}
+              </p>
+              <p className="text-xs text-gray-500">PNG, JPG, GIF up to 5MB</p>
+            </div>
+          </div>
+
+          {/* URL Input */}
           <div className="flex flex-col sm:flex-row gap-2 mb-4">
             <input
               type="url"
               value={imageUrl}
               onChange={(e) => setImageUrl(e.target.value)}
               className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Enter image URL"
+              placeholder="Or enter image URL"
             />
             <button
               type="button"
               onClick={handleAddImage}
-              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition whitespace-nowrap"
+              disabled={!imageUrl}
+              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Add Image
+              Add URL
             </button>
           </div>
 

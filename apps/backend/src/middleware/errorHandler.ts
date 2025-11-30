@@ -16,7 +16,7 @@ export class AppError extends Error {
 
 export const errorHandler = (
   err: Error | AppError,
-  _req: Request,
+  req: Request,
   res: Response,
   _next: NextFunction
 ) => {
@@ -28,9 +28,19 @@ export const errorHandler = (
     message = err.message;
   }
 
-  // Log error in development
-  if (process.env.NODE_ENV === 'development') {
-    console.error('❌ Error:', err);
+  // Log error details
+  console.error('❌ Error:', {
+    message: err.message,
+    stack: err.stack,
+    method: req.method,
+    url: req.url,
+    statusCode,
+  });
+
+  // Don't send response if headers already sent
+  if (res.headersSent) {
+    console.error('⚠️ Headers already sent, cannot send error response');
+    return;
   }
 
   const response: ApiResponse = {

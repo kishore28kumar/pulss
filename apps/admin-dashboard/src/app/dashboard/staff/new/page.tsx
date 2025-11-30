@@ -1,7 +1,8 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { X, Loader2, UserPlus, Eye, EyeOff, RefreshCw, Store, ExternalLink, Copy } from 'lucide-react';
+import { ArrowLeft, Loader2, UserPlus, Eye, EyeOff, RefreshCw, Store, Copy } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -9,11 +10,6 @@ import api from '@/lib/api';
 import { toast } from 'sonner';
 import { useState, useEffect } from 'react';
 import { getUserRole } from '@/lib/permissions';
-
-interface InviteStaffModalProps {
-  onClose: () => void;
-  onSuccess: () => void;
-}
 
 const inviteSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -25,6 +21,7 @@ const inviteSchema = z.object({
   storeName: z.string().min(2, 'Store name must be at least 2 characters').optional(),
   storeRoute: z.string()
     .min(2, 'Store route must be at least 2 characters')
+    .max(15, 'Store route must be at most 15 characters')
     .regex(/^[a-z0-9-]+$/, 'Store route must contain only lowercase letters, numbers, and hyphens')
     .optional(),
 });
@@ -62,12 +59,12 @@ const generatePassword = (): string => {
   return generateStrongPassword();
 };
 
-export default function InviteStaffModal({ onClose, onSuccess }: InviteStaffModalProps) {
+export default function NewStaffPage() {
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [storefrontUrl, setStorefrontUrl] = useState<string>('');
-  const [createdStoreRoute, setCreatedStoreRoute] = useState<string>('');
 
   useEffect(() => {
     setMounted(true);
@@ -143,26 +140,19 @@ export default function InviteStaffModal({ onClose, onSuccess }: InviteStaffModa
       const roleLabel = userRole === 'SUPER_ADMIN' ? 'Admin' : 'Staff';
       toast.success(`${roleLabel} user created successfully`);
       
-      // If store route was provided, save it and show storefront link
-      if (isCreatingAdmin && variables.storeRoute) {
-        setCreatedStoreRoute(variables.storeRoute);
-        const storefrontBase = process.env.NEXT_PUBLIC_STOREFRONT_URL || 
-          (typeof window !== 'undefined' 
-            ? window.location.origin.replace(':3001', ':3000')
-            : 'http://localhost:3000');
-        const url = `${storefrontBase}/${variables.storeRoute}`;
-        setStorefrontUrl(url);
-        
-        // Copy to clipboard
+      // If store route was provided, copy URL to clipboard
+      if (isCreatingAdmin && variables.storeRoute && storefrontUrl) {
         if (typeof window !== 'undefined' && navigator.clipboard) {
-          navigator.clipboard.writeText(url);
+          navigator.clipboard.writeText(storefrontUrl);
           toast.success('Storefront URL copied to clipboard!');
         }
       }
       
       queryClient.invalidateQueries({ queryKey: ['staff'] });
       queryClient.invalidateQueries({ queryKey: ['tenants'] });
-      onSuccess();
+      
+      // Navigate back to staff page
+      router.push('/dashboard/staff');
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.error || error.message || 'Failed to create user');
@@ -177,30 +167,28 @@ export default function InviteStaffModal({ onClose, onSuccess }: InviteStaffModa
   const title = mounted && userRole === 'SUPER_ADMIN' ? 'Create Admin User' : 'Add Staff Member';
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto m-0 sm:m-4">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <UserPlus className="w-6 h-6 text-blue-600" />
-            </div>
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
-              <p className="text-sm text-gray-500">Add a new {roleLabel.toLowerCase()} member to your team</p>
-            </div>
-          </div>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4">
           <button
-            onClick={onClose}
+            onClick={() => router.back()}
             className="p-2 text-gray-400 hover:text-gray-600 transition"
-            disabled={mutation.isPending}
           >
-            <X className="w-5 h-5" />
+            <ArrowLeft className="w-5 h-5" />
           </button>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{title}</h1>
+            <p className="text-sm sm:text-base text-gray-500 mt-1">
+              Add a new {roleLabel.toLowerCase()} member to your team
+            </p>
+          </div>
         </div>
+      </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit(onSubmit)} className="p-4 sm:p-6 space-y-4">
+      {/* Form */}
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* Email */}
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
@@ -210,7 +198,7 @@ export default function InviteStaffModal({ onClose, onSuccess }: InviteStaffModa
               id="email"
               type="email"
               {...register('email')}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="user@example.com"
             />
             {errors.email && (
@@ -273,9 +261,9 @@ export default function InviteStaffModal({ onClose, onSuccess }: InviteStaffModa
           {/* Store Name & Store Route - Only for SUPER_ADMIN creating Admin */}
           {isCreatingAdmin && (
             <>
-              <div className="border-t border-gray-200 pt-4">
-                <h3 className="text-sm font-semibold text-gray-900 mb-4 flex items-center">
-                  <Store className="w-4 h-4 mr-2" />
+              <div className="border-t border-gray-200 pt-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                  <Store className="w-5 h-5 mr-2" />
                   Store Information
                 </h3>
               </div>
@@ -315,15 +303,20 @@ export default function InviteStaffModal({ onClose, onSuccess }: InviteStaffModa
                     {...register('storeRoute', { required: isCreatingAdmin })}
                     className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent lowercase"
                     placeholder="city-pharmacy"
+                    maxLength={15}
                     onChange={(e) => {
                       // Auto-lowercase and replace spaces with hyphens
-                      const value = e.target.value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+                      // Limit to 15 characters
+                      let value = e.target.value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+                      if (value.length > 15) {
+                        value = value.substring(0, 15);
+                      }
                       setValue('storeRoute', value);
                     }}
                   />
                 </div>
                 <p className="mt-1 text-xs text-gray-500">
-                  This will be used in the storefront URL. Only lowercase letters, numbers, and hyphens allowed.
+                  This will be used in the storefront URL. Only lowercase letters, numbers, and hyphens allowed. Maximum 15 characters.
                 </p>
                 {errors.storeRoute && (
                   <p className="mt-1 text-sm text-red-600">{errors.storeRoute.message}</p>
@@ -418,15 +411,15 @@ export default function InviteStaffModal({ onClose, onSuccess }: InviteStaffModa
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 pt-4 border-t border-gray-200">
             <button
               type="button"
-              onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition text-sm sm:text-base"
+              onClick={() => router.back()}
+              className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
               disabled={mutation.isPending}
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-sm sm:text-base"
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
               disabled={mutation.isPending}
             >
               {mutation.isPending ? (

@@ -1,30 +1,74 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Search, Edit, Trash2, Eye, Upload } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Eye, Upload, Store } from 'lucide-react';
 import api from '@/lib/api';
 import { formatCurrency } from '@/lib/utils';
 import Link from 'next/link';
 import PermissionGuard from '@/components/permissions/PermissionGuard';
-import { Permission } from '@/lib/permissions';
+import { Permission, getUserRole, isSuperAdmin } from '@/lib/permissions';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+
+interface Admin {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  tenants?: {
+    id: string;
+    name: string;
+    slug: string;
+  };
+}
 
 export default function ProductsPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
+  const [selectedTenantId, setSelectedTenantId] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
 
-  const { data, isLoading } = useQuery({
-    queryKey: ['products', { search, page }],
+  useEffect(() => {
+    setMounted(true);
+    setUserRole(getUserRole());
+  }, []);
+
+  const isSuperAdminUser = mounted && isSuperAdmin();
+
+  // Fetch admins list for SUPER_ADMIN
+  const { data: adminsData } = useQuery<{ data: Admin[] }>({
+    queryKey: ['staff'],
     queryFn: async () => {
-      const response = await api.get('/products', {
-        params: { search, page, limit: 10 },
-      });
+      const response = await api.get('/staff');
       return response.data.data;
     },
+    enabled: isSuperAdminUser,
+  });
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['products', { search, page, tenantId: selectedTenantId }],
+    queryFn: async () => {
+      const params: any = { search, page, limit: 10 };
+      const config: any = {};
+      
+      // For SUPER_ADMIN, include tenantId if selected
+      if (isSuperAdminUser && selectedTenantId) {
+        params.tenantId = selectedTenantId;
+        // Get tenant slug from selected admin for header
+        const selectedAdmin = adminsData?.data?.find(admin => admin.tenants?.id === selectedTenantId);
+        if (selectedAdmin?.tenants?.slug) {
+          config.headers = { 'X-Tenant-Slug': selectedAdmin.tenants.slug };
+        }
+      }
+      
+      const response = await api.get('/products', { ...config, params });
+      return response.data.data;
+    },
+    enabled: !isSuperAdminUser || !!selectedTenantId, // SUPER_ADMIN must select a tenant
   });
 
   // Delete product mutation
@@ -58,27 +102,75 @@ export default function ProductsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Products</h1>
-          <p className="text-sm sm:text-base text-gray-500 mt-1">Manage your product inventory</p>
+          <p className="text-sm sm:text-base text-gray-500 mt-1">
+            {isSuperAdminUser ? 'Manage products on behalf of admins' : 'Manage your product inventory'}
+          </p>
         </div>
-        <PermissionGuard permission={Permission.PRODUCTS_CREATE}>
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
-            <Link
-              href="/dashboard/products/new"
-              className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm sm:text-base"
-            >
-              <Plus className="w-5 h-5 mr-2" />
-              Add Product
-            </Link>
-            <Link
-              href="/dashboard/products/bulk-import"
-              className="inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm sm:text-base"
-            >
-              <Upload className="w-5 h-5 mr-2" />
-              Import Products
-            </Link>
-          </div>
-        </PermissionGuard>
+        {!isSuperAdminUser && (
+          <PermissionGuard permission={Permission.PRODUCTS_CREATE}>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
+              <Link
+                href="/dashboard/products/new"
+                className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm sm:text-base"
+              >
+                <Plus className="w-5 h-5 mr-2" />
+                Add Product
+              </Link>
+              <Link
+                href="/dashboard/products/bulk-import"
+                className="inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm sm:text-base"
+              >
+                <Upload className="w-5 h-5 mr-2" />
+                Import Products
+              </Link>
+            </div>
+          </PermissionGuard>
+        )}
+        {isSuperAdminUser && selectedTenantId && (
+          <PermissionGuard permission={Permission.PRODUCTS_CREATE}>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
+              <Link
+                href={`/dashboard/products/new?tenantId=${selectedTenantId}`}
+                className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm sm:text-base"
+              >
+                <Plus className="w-5 h-5 mr-2" />
+                Add Product on Behalf of Admin
+              </Link>
+            </div>
+          </PermissionGuard>
+        )}
       </div>
+
+      {/* Tenant Selector for SUPER_ADMIN */}
+      {isSuperAdminUser && (
+        <div className="bg-white rounded-xl border border-gray-200 p-4">
+          <label htmlFor="tenant-select" className="block text-sm font-medium text-gray-700 mb-2">
+            <Store className="w-4 h-4 inline mr-2" />
+            Select Admin/Store
+          </label>
+          <select
+            id="tenant-select"
+            value={selectedTenantId || ''}
+            onChange={(e) => {
+              setSelectedTenantId(e.target.value || null);
+              setPage(1); // Reset to first page when tenant changes
+            }}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+          >
+            <option value="">-- Select an Admin/Store --</option>
+            {adminsData?.data?.map((admin) => (
+              <option key={admin.id} value={admin.tenants?.id || ''}>
+                {admin.firstName} {admin.lastName} ({admin.tenants?.name || 'No Store'})
+              </option>
+            ))}
+          </select>
+          {!selectedTenantId && (
+            <p className="mt-2 text-sm text-gray-500">
+              Please select an admin/store to view and manage their products.
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Search and Filters */}
       <div className="bg-white rounded-xl border border-gray-200 p-4">
@@ -101,10 +193,19 @@ export default function ProductsPage() {
 
       {/* Products Table */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        {isLoading ? (
+        {isSuperAdminUser && !selectedTenantId ? (
+          <div className="p-12 text-center">
+            <Store className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-500">Please select an admin/store to view products.</p>
+          </div>
+        ) : isLoading ? (
           <div className="p-12 text-center">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
             <p className="text-gray-500 mt-4">Loading products...</p>
+          </div>
+        ) : data?.data?.length === 0 ? (
+          <div className="p-12 text-center">
+            <p className="text-gray-500">No products found.</p>
           </div>
         ) : (
           <>

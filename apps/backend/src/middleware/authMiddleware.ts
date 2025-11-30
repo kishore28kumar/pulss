@@ -54,6 +54,11 @@ export const optionalAuthenticateUser = (req: Request, _res: Response, next: Nex
 };
 
 export const authenticateUser = (req: Request, _res: Response, next: NextFunction) => {
+  // Skip authentication for OPTIONS requests (CORS preflight)
+  if (req.method === 'OPTIONS') {
+    return next();
+  }
+
   try {
     const token = req.headers.authorization?.replace('Bearer ', '');
 
@@ -140,6 +145,11 @@ export const authorize = (...roles: string[]) => {
  * Ensure user is authenticated and has admin/staff role (not customer)
  */
 export const requireAdminOrStaff = (req: Request, _res: Response, next: NextFunction) => {
+  // Skip for OPTIONS requests (CORS preflight)
+  if (req.method === 'OPTIONS') {
+    return next();
+  }
+
   if (!req.user) {
     return next(new AppError('Authentication required', 401));
   }

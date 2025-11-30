@@ -133,6 +133,11 @@ export const hasPermission = (userRole: string, permission: Permission): boolean
  */
 export const requirePermission = (...permissions: Permission[]) => {
   return (req: Request, _res: Response, next: NextFunction) => {
+    // Skip for OPTIONS requests (CORS preflight)
+    if (req.method === 'OPTIONS') {
+      return next();
+    }
+
     if (!req.user) {
       return next(new AppError('Authentication required', 401));
     }

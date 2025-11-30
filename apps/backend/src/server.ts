@@ -19,14 +19,38 @@ const PORT = process.env.BACKEND_PORT || 5000;
 // MIDDLEWARE
 // ============================================
 
-// Security
-app.use(helmet());
+// Security - Configure helmet to work with CORS
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+    crossOriginEmbedderPolicy: false,
+  })
+);
 
 // CORS - Uses environment-based URL configuration
 app.use(
   cors({
-    origin: getCorsOrigins(),
+    origin: (origin, callback) => {
+      const allowedOrigins = getCorsOrigins();
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+      
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        // In development, allow localhost with any port
+        if (process.env.NODE_ENV !== 'production' && origin?.includes('localhost')) {
+          callback(null, true);
+        } else {
+          callback(new Error('Not allowed by CORS'));
+        }
+      }
+    },
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Tenant-Slug', 'X-Requested-With'],
+    exposedHeaders: ['Content-Type', 'Authorization'],
+    maxAge: 86400, // 24 hours
   })
 );
 
@@ -71,6 +95,17 @@ app.use(errorHandler);
 app.listen(PORT, () => {
   console.log(`🚀 Pulss Backend API running on port ${PORT}`);
   console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
+});
+
+// Handle uncaught exceptions and unhandled rejections
+process.on('uncaughtException', (error) => {
+  console.error('❌ Uncaught Exception:', error);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1);
 });
 
 export default app;

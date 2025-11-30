@@ -10,10 +10,6 @@ import { hashPassword } from '../utils/password';
 
 export const getStaff = asyncHandler(
   async (req: Request, res: Response) => {
-    if (!req.tenantId) {
-      throw new AppError('Tenant not found', 400);
-    }
-
     if (!req.user) {
       throw new AppError('Authentication required', 401);
     }
@@ -24,10 +20,13 @@ export const getStaff = asyncHandler(
     // Determine which roles to show based on current user's role
     let allowedRoles: string[];
     if (req.user.role === 'SUPER_ADMIN') {
-      // Super Admin can see Admin users they created
+      // Super Admin can see Admin users across all tenants
       allowedRoles = ['ADMIN'];
     } else if (req.user.role === 'ADMIN') {
-      // Admin can see Staff users they created
+      // Admin can see Staff users in their own tenant
+      if (!req.tenantId) {
+        throw new AppError('Tenant not found', 400);
+      }
       allowedRoles = ['STAFF'];
     } else {
       // Staff cannot view other staff
@@ -35,9 +34,17 @@ export const getStaff = asyncHandler(
     }
 
     const where: any = {
-      tenantId: req.tenantId,
       role: { in: allowedRoles },
     };
+
+    // SUPER_ADMIN can see admins from all tenants, others are filtered by tenant
+    if (req.user.role !== 'SUPER_ADMIN') {
+      if (!req.tenantId) {
+        throw new AppError('Tenant not found', 400);
+      }
+      where.tenantId = req.tenantId;
+    }
+    // For SUPER_ADMIN, don't filter by tenantId - show all admins
 
     if (search) {
       where.OR = [
@@ -62,6 +69,14 @@ export const getStaff = asyncHandler(
           emailVerified: true,
           lastLoginAt: true,
           createdAt: true,
+          tenantId: true,
+          tenants: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+            },
+          },
         },
         skip,
         take: parseInt(limit),
@@ -93,15 +108,11 @@ export const getStaff = asyncHandler(
 
 export const inviteStaff = asyncHandler(
   async (req: Request, res: Response) => {
-    if (!req.tenantId) {
-      throw new AppError('Tenant not found', 400);
-    }
-
     if (!req.user) {
       throw new AppError('Authentication required', 401);
     }
 
-    const { email, firstName, lastName, phone, role, password } = req.body;
+    const { email, firstName, lastName, phone, role, password, storeName, storeRoute } = req.body;
 
     if (!email || !firstName || !lastName) {
       throw new AppError('Email, first name, and last name are required', 400);
@@ -109,18 +120,70 @@ export const inviteStaff = asyncHandler(
 
     // Determine allowed role based on current user's role
     let allowedRole: string;
+    let targetTenantId: string | undefined;
+    
     if (req.user.role === 'SUPER_ADMIN') {
-      // Super Admin can only create Admin users
+      // Super Admin can create Admin users
       allowedRole = 'ADMIN';
       if (role && role !== 'ADMIN') {
         throw new AppError('Super Admin can only create Admin users', 400);
       }
+      
+      // If storeName and storeRoute are provided, create a new tenant
+      if (storeName && storeRoute) {
+        // Validate store route length
+        if (storeRoute.length > 15) {
+          throw new AppError('Store route must be at most 15 characters', 400);
+        }
+        
+        if (storeRoute.length < 2) {
+          throw new AppError('Store route must be at least 2 characters', 400);
+        }
+        
+        // Validate store route format (lowercase, alphanumeric, hyphens only)
+        if (!/^[a-z0-9-]+$/.test(storeRoute)) {
+          throw new AppError('Store route must contain only lowercase letters, numbers, and hyphens', 400);
+        }
+        
+        // Check if tenant slug already exists
+        const existingTenant = await prisma.tenants.findUnique({
+          where: { slug: storeRoute },
+        });
+        
+        if (existingTenant) {
+          throw new AppError('Store route already exists. Please choose a different one.', 400);
+        }
+        
+        // Create new tenant
+        const tenant = await prisma.tenants.create({
+          data: {
+            id: `tenant_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            name: storeName,
+            slug: storeRoute,
+            status: 'ACTIVE',
+            subscriptionPlan: 'FREE',
+            updatedAt: new Date(),
+          },
+        });
+        
+        targetTenantId = tenant.id;
+      } else {
+        // Use current tenant if no store info provided (fallback)
+        if (!req.tenantId) {
+          throw new AppError('Tenant not found. Please provide store name and store route.', 400);
+        }
+        targetTenantId = req.tenantId;
+      }
     } else if (req.user.role === 'ADMIN') {
-      // Admin can only create Staff users
+      // Admin can only create Staff users in their own tenant
+      if (!req.tenantId) {
+        throw new AppError('Tenant not found', 400);
+      }
       allowedRole = 'STAFF';
+      targetTenantId = req.tenantId;
       if (role && role !== 'STAFF') {
         throw new AppError('Admin can only create Staff users', 400);
-    }
+      }
     } else {
       throw new AppError('You do not have permission to invite users', 403);
     }
@@ -134,7 +197,7 @@ export const inviteStaff = asyncHandler(
     });
 
     if (existingUser) {
-      if (existingUser.tenantId === req.tenantId) {
+      if (existingUser.tenantId === targetTenantId) {
         throw new AppError('User already exists in this tenant', 400);
       }
       throw new AppError('User with this email already exists', 400);
@@ -155,7 +218,7 @@ export const inviteStaff = asyncHandler(
         lastName,
         phone,
         role: userRole as any,
-        tenantId: req.tenantId,
+        tenantId: targetTenantId,
         isActive: true,
         emailVerified: false,
         updatedAt: new Date(),
@@ -177,8 +240,11 @@ export const inviteStaff = asyncHandler(
     const roleLabel = userRole === 'ADMIN' ? 'Admin' : 'Staff';
     const response: ApiResponse = {
       success: true,
-      data: user,
-      message: `${roleLabel} user created successfully`,
+      data: {
+        ...user,
+        storeRoute: storeRoute || undefined, // Include store route in response
+      },
+      message: `${roleLabel} user created successfully${storeRoute ? ` with store route: ${storeRoute}` : ''}`,
     };
 
     res.status(201).json(response);
@@ -194,17 +260,27 @@ export const updateStaff = asyncHandler(
     const { id } = req.params;
     const { firstName, lastName, phone, role, isActive } = req.body;
 
-    if (!req.tenantId) {
-      throw new AppError('Tenant not found', 400);
+    if (!req.user) {
+      throw new AppError('Authentication required', 401);
     }
 
-    // Check if staff member exists and belongs to tenant
+    // Build where clause based on user role
+    const whereClause: any = {
+      id,
+      role: { in: ['ADMIN', 'STAFF'] },
+    };
+
+    // SUPER_ADMIN can update any Admin, others can only update from their tenant
+    if (req.user.role !== 'SUPER_ADMIN') {
+      if (!req.tenantId) {
+        throw new AppError('Tenant not found', 400);
+      }
+      whereClause.tenantId = req.tenantId;
+    }
+
+    // Check if staff member exists
     const staffMember = await prisma.users.findFirst({
-      where: {
-        id,
-        tenantId: req.tenantId,
-        role: { in: ['ADMIN', 'STAFF'] },
-      },
+      where: whereClause,
     });
 
     if (!staffMember) {
@@ -277,17 +353,27 @@ export const deleteStaff = asyncHandler(
   async (req: Request, res: Response) => {
     const { id } = req.params;
 
-    if (!req.tenantId) {
-      throw new AppError('Tenant not found', 400);
+    if (!req.user) {
+      throw new AppError('Authentication required', 401);
     }
 
-    // Check if staff member exists and belongs to tenant
+    // Build where clause based on user role
+    const whereClause: any = {
+      id,
+      role: { in: ['ADMIN', 'STAFF'] },
+    };
+
+    // SUPER_ADMIN can delete any Admin, others can only delete from their tenant
+    if (req.user.role !== 'SUPER_ADMIN') {
+      if (!req.tenantId) {
+        throw new AppError('Tenant not found', 400);
+      }
+      whereClause.tenantId = req.tenantId;
+    }
+
+    // Check if staff member exists
     const staffMember = await prisma.users.findFirst({
-      where: {
-        id,
-        tenantId: req.tenantId,
-        role: { in: ['ADMIN', 'STAFF'] },
-      },
+      where: whereClause,
     });
 
     if (!staffMember) {
@@ -295,12 +381,15 @@ export const deleteStaff = asyncHandler(
     }
 
     // Prevent deleting yourself
-    if (req.user?.userId === id) {
+    if (req.user.userId === id) {
       throw new AppError('You cannot delete yourself', 400);
     }
 
     // Prevent deleting the last admin (unless requester is SUPER_ADMIN)
-    if (staffMember.role === 'ADMIN' && req.user?.role !== 'SUPER_ADMIN') {
+    if (staffMember.role === 'ADMIN' && req.user.role !== 'SUPER_ADMIN') {
+      if (!req.tenantId) {
+        throw new AppError('Tenant not found', 400);
+      }
       const adminCount = await prisma.users.count({
         where: {
           tenantId: req.tenantId,

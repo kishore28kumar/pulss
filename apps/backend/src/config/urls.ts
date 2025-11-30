@@ -69,7 +69,8 @@ export const getCorsOrigins = (): string[] => {
   
   // Add frontend/storefront URL
   if (process.env.FRONTEND_URL || process.env.STOREFRONT_URL) {
-    origins.push(process.env.FRONTEND_URL || process.env.STOREFRONT_URL || '');
+    const frontendUrl = process.env.FRONTEND_URL || process.env.STOREFRONT_URL || '';
+    if (frontendUrl) origins.push(frontendUrl);
   } else if (env === 'development') {
     origins.push(config.FRONTEND_URL);
   } else {
@@ -79,9 +80,12 @@ export const getCorsOrigins = (): string[] => {
   // Always include localhost for local development
   if (process.env.NODE_ENV !== 'production') {
     origins.push(LOCAL_URLS.ADMIN_URL, LOCAL_URLS.FRONTEND_URL);
+    // Also add localhost with any port for development flexibility
+    origins.push('http://localhost:3000', 'http://localhost:3001', 'http://localhost:5000');
   }
   
-  return origins.filter(Boolean);
+  // Remove duplicates and filter out empty strings
+  return [...new Set(origins.filter(Boolean))];
 };
 
 export default config;

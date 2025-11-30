@@ -2,15 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Search, Edit, Trash2, UserPlus, Mail, Phone, CheckCircle, XCircle } from 'lucide-react';
+import { Search, Edit, Trash2, UserPlus, Mail, Phone, CheckCircle, XCircle, ExternalLink, Store } from 'lucide-react';
 import api from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 import { toast } from 'sonner';
 import PermissionGuard from '@/components/permissions/PermissionGuard';
 import { Permission } from '@/lib/permissions';
 import { getUserRole } from '@/lib/permissions';
-import InviteStaffModal from './InviteStaffModal';
+import { authService } from '@/lib/auth';
 import EditStaffModal from './EditStaffModal';
+import { useRouter } from 'next/navigation';
 
 interface StaffMember {
   id: string;
@@ -24,20 +25,43 @@ interface StaffMember {
   emailVerified: boolean;
   lastLoginAt?: string;
   createdAt: string;
+  tenantId?: string;
+  tenants?: {
+    id: string;
+    name: string;
+    slug: string;
+  };
 }
 
 export default function StaffPage() {
+  const router = useRouter();
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
-  const [showInviteModal, setShowInviteModal] = useState(false);
   const [editingStaff, setEditingStaff] = useState<StaffMember | null>(null);
   const [mounted, setMounted] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [tenantSlug, setTenantSlug] = useState<string | null>(null);
+  const [storefrontUrl, setStorefrontUrl] = useState<string>('');
+  const [user, setUser] = useState<any>(null);
   const queryClient = useQueryClient();
 
   useEffect(() => {
     setMounted(true);
     setUserRole(getUserRole());
+    
+    // Get tenant slug from logged-in user
+    const currentUser = authService.getStoredUser();
+    setUser(currentUser);
+    if (currentUser?.tenant?.slug) {
+      setTenantSlug(currentUser.tenant.slug);
+      // Construct storefront URL
+      // Use NEXT_PUBLIC_STOREFRONT_URL if available, otherwise construct from current origin
+      const storefrontBase = process.env.NEXT_PUBLIC_STOREFRONT_URL || 
+        (typeof window !== 'undefined' 
+          ? window.location.origin.replace(':3001', ':3000') // Replace admin port with storefront port for local dev
+          : 'http://localhost:3000');
+      setStorefrontUrl(`${storefrontBase}/${currentUser.tenant.slug}`);
+    }
   }, []);
 
   const { data, isLoading } = useQuery({
@@ -92,7 +116,7 @@ export default function StaffPage() {
         </div>
         <PermissionGuard permission={Permission.STAFF_INVITE}>
           <button
-            onClick={() => setShowInviteModal(true)}
+            onClick={() => router.push('/dashboard/staff/new')}
             className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm sm:text-base"
           >
             <UserPlus className="w-5 h-5 mr-2" />
@@ -136,6 +160,11 @@ export default function StaffPage() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Contact
                     </th>
+                    {mounted && userRole === 'SUPER_ADMIN' && (
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Store
+                      </th>
+                    )}
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Role
                     </th>
@@ -198,6 +227,18 @@ export default function StaffPage() {
                           </div>
                         )}
                       </td>
+                      {mounted && userRole === 'SUPER_ADMIN' && (
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {member.tenants ? (
+                            <div>
+                              <div className="text-sm font-medium text-gray-900">{member.tenants.name}</div>
+                              <div className="text-xs text-gray-500">@{member.tenants.slug}</div>
+                            </div>
+                          ) : (
+                            <span className="text-sm text-gray-400">N/A</span>
+                          )}
+                        </td>
+                      )}
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                           member.role === 'ADMIN'
@@ -221,6 +262,35 @@ export default function StaffPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex items-center justify-end space-x-2">
+                          {/* View Storefront Link - Show for all staff members */}
+                          {(() => {
+                            // For SUPER_ADMIN viewing admins, use the admin's tenant
+                            // For others, use the logged-in user's tenant
+                            const memberTenantSlug = mounted && userRole === 'SUPER_ADMIN' && member.tenants?.slug
+                              ? member.tenants.slug
+                              : tenantSlug;
+                            
+                            const memberStorefrontUrl = memberTenantSlug
+                              ? (process.env.NEXT_PUBLIC_STOREFRONT_URL || 
+                                 (typeof window !== 'undefined' 
+                                   ? window.location.origin.replace(':3001', ':3000')
+                                   : 'http://localhost:3000')) + `/${memberTenantSlug}`
+                              : null;
+                            
+                            return memberStorefrontUrl ? (
+                              <a
+                                href={memberStorefrontUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center px-2 py-1 text-xs font-medium text-green-700 bg-green-50 rounded-md hover:bg-green-100 transition"
+                                title={`View ${member.tenants?.name || 'Store'} Storefront`}
+                              >
+                                <Store className="w-3 h-3 mr-1" />
+                                <span className="hidden sm:inline">Store</span>
+                                <ExternalLink className="w-3 h-3 ml-1" />
+                              </a>
+                            ) : null;
+                          })()}
                           <PermissionGuard permission={Permission.STAFF_UPDATE}>
                             <button
                               onClick={() => handleEdit(member)}
@@ -290,7 +360,7 @@ export default function StaffPage() {
             {!search && (
               <PermissionGuard permission={Permission.STAFF_INVITE}>
                 <button
-                  onClick={() => setShowInviteModal(true)}
+                  onClick={() => router.push('/dashboard/staff/new')}
                   className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
                 >
                   <UserPlus className="w-5 h-5 mr-2" />
@@ -301,17 +371,6 @@ export default function StaffPage() {
           </div>
         )}
       </div>
-
-      {/* Invite Modal */}
-      {showInviteModal && (
-        <InviteStaffModal
-          onClose={() => setShowInviteModal(false)}
-          onSuccess={() => {
-            setShowInviteModal(false);
-            queryClient.invalidateQueries({ queryKey: ['staff'] });
-          }}
-        />
-      )}
 
       {/* Edit Modal */}
       {editingStaff && (
