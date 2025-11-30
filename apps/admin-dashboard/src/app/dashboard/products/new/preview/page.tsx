@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, CheckCircle, AlertCircle, XCircle, Edit2, Save, X } from 'lucide-react';
@@ -40,7 +40,7 @@ interface Category {
   slug: string;
 }
 
-export default function BulkUploadPreviewPage() {
+function BulkUploadPreviewPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [product, setProduct] = useState<BulkProduct | null>(null);
@@ -717,6 +717,21 @@ export default function BulkUploadPreviewPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function BulkUploadPreviewPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <p className="text-gray-500 mt-4">Loading...</p>
+        </div>
+      </div>
+    }>
+      <BulkUploadPreviewPageContent />
+    </Suspense>
   );
 }
 

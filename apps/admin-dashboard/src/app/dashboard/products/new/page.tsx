@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, Suspense } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Loader2, Store, Upload, ChevronDown, ChevronUp, Plus } from 'lucide-react';
@@ -59,7 +59,7 @@ interface Admin {
   };
 }
 
-export default function NewProductPage() {
+function NewProductPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -1432,6 +1432,21 @@ export default function NewProductPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function NewProductPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <p className="text-gray-500 mt-4">Loading...</p>
+        </div>
+      </div>
+    }>
+      <NewProductPageContent />
+    </Suspense>
   );
 }
 
