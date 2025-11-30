@@ -1,7 +1,29 @@
+'use client';
+
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import { Facebook, Twitter, Instagram, Mail } from 'lucide-react';
 
 export default function Footer() {
+  const params = useParams();
+  const storeName = params?.['store-name'] as string | undefined;
+  
+  // Helper to get tenant-aware path
+  const getPath = (path: string) => {
+    if (storeName) {
+      return `/${storeName}${path}`;
+    }
+    // Fallback: try to get from window location if params not available
+    if (typeof window !== 'undefined') {
+      const pathSegments = window.location.pathname.split('/').filter(Boolean);
+      const slug = pathSegments[0];
+      if (slug) {
+        return `/${slug}${path}`;
+      }
+    }
+    return path;
+  };
+
   return (
     <footer className="bg-gray-900 text-gray-300">
       <div className="container mx-auto px-4 py-12">
@@ -29,10 +51,10 @@ export default function Footer() {
           <div>
             <h3 className="text-white font-semibold mb-4">Quick Links</h3>
             <ul className="space-y-2 text-sm">
-              <li><Link href="/products" className="hover:text-white transition">Shop</Link></li>
-              <li><Link href="/about" className="hover:text-white transition">About Us</Link></li>
-              <li><Link href="/contact" className="hover:text-white transition">Contact</Link></li>
-              <li><Link href="/faq" className="hover:text-white transition">FAQ</Link></li>
+              <li><Link href={getPath('/products')} className="hover:text-white transition">Shop</Link></li>
+              <li><Link href={getPath('/about')} className="hover:text-white transition">About Us</Link></li>
+              <li><Link href={getPath('/contact')} className="hover:text-white transition">Contact</Link></li>
+              <li><Link href={getPath('/faq')} className="hover:text-white transition">FAQ</Link></li>
             </ul>
           </div>
 
@@ -40,10 +62,10 @@ export default function Footer() {
           <div>
             <h3 className="text-white font-semibold mb-4">Customer Service</h3>
             <ul className="space-y-2 text-sm">
-              <li><Link href="/shipping" className="hover:text-white transition">Shipping Info</Link></li>
-              <li><Link href="/returns" className="hover:text-white transition">Returns</Link></li>
-              <li><Link href="/privacy" className="hover:text-white transition">Privacy Policy</Link></li>
-              <li><Link href="/terms" className="hover:text-white transition">Terms & Conditions</Link></li>
+              <li><Link href={getPath('/shipping')} className="hover:text-white transition">Shipping Info</Link></li>
+              <li><Link href={getPath('/returns')} className="hover:text-white transition">Returns</Link></li>
+              <li><Link href={getPath('/privacy')} className="hover:text-white transition">Privacy Policy</Link></li>
+              <li><Link href={getPath('/terms')} className="hover:text-white transition">Terms & Conditions</Link></li>
             </ul>
           </div>
 

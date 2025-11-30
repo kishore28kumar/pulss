@@ -54,6 +54,10 @@ function OrderDetailContent() {
   const params = useParams();
   const router = useRouter();
   const orderId = params.orderId as string;
+  const storeName = params['store-name'] as string;
+  
+  // Helper to get tenant-aware path
+  const getPath = (path: string) => `/${storeName}${path}`;
 
   const { data: order, isLoading } = useQuery<Order>({
     queryKey: ['order', orderId],
@@ -82,7 +86,7 @@ function OrderDetailContent() {
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Order Not Found</h2>
           <p className="text-gray-600 mb-6">The order you're looking for doesn't exist.</p>
           <Link
-            href="/account"
+            href={getPath('/account')}
             className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
           >
             <ArrowLeft className="w-5 h-5 mr-2" />
@@ -148,7 +152,7 @@ function OrderDetailContent() {
         {/* Header */}
         <div className="mb-8">
           <Link
-            href="/account"
+            href={getPath('/account')}
             className="inline-flex items-center text-gray-600 hover:text-blue-600 mb-4"
           >
             <ArrowLeft className="w-5 h-5 mr-2" />
@@ -211,7 +215,7 @@ function OrderDetailContent() {
                     </div>
                     <div className="flex-1">
                       <Link
-                        href={`/products/${item.products?.slug || '#'}`}
+                        href={getPath(`/products/${item.products?.slug || '#'}`)}
                         className="font-semibold text-gray-900 hover:text-blue-600 transition"
                       >
                         {item.name}
@@ -346,13 +350,13 @@ function OrderDetailContent() {
               {/* Actions */}
               <div className="space-y-3">
                 <Link
-                  href="/products"
+                  href={getPath('/products')}
                   className="w-full block text-center px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition"
                 >
                   Continue Shopping
                 </Link>
                 <Link
-                  href="/account/orders"
+                  href={getPath('/account/orders')}
                   className="w-full block text-center px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:border-blue-600 hover:text-blue-600 transition"
                 >
                   View All Orders

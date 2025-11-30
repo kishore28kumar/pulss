@@ -2,6 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import { 
   Pill, 
   ShoppingBasket, 
@@ -51,6 +52,12 @@ const categoryConfig = {
 };
 
 function CategoriesPageContent() {
+  const params = useParams();
+  const storeName = params['store-name'] as string;
+  
+  // Helper to get tenant-aware path
+  const getPath = (path: string) => `/${storeName}${path}`;
+
   const { data: categories, isLoading } = useQuery({
     queryKey: ['categories'],
     queryFn: async () => {
@@ -118,7 +125,7 @@ function CategoriesPageContent() {
                     return (
                       <Link
                         key={name}
-                        href={`/products?category=${encodeURIComponent(name)}`}
+                        href={getPath(`/products?category=${encodeURIComponent(name)}`)}
                         className="group"
                       >
                         <div className="bg-white rounded-2xl shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden h-full transform hover:-translate-y-2">
@@ -160,7 +167,7 @@ function CategoriesPageContent() {
                     {categories.map((category: any) => (
                       <Link
                         key={category.id}
-                        href={`/products?categoryId=${category.id}`}
+                        href={getPath(`/products?categoryId=${category.id}`)}
                         className="group bg-white rounded-xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 text-center border border-gray-100 hover:border-blue-300"
                       >
                         <div className="text-3xl mb-3">
@@ -197,13 +204,13 @@ function CategoriesPageContent() {
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4">
             <Link
-              href="/products"
+              href={getPath('/products')}
               className="px-8 py-3 bg-white text-blue-600 rounded-lg font-semibold hover:bg-gray-100 transition w-full sm:w-auto"
             >
               View All Products
             </Link>
             <Link
-              href="/contact"
+              href={getPath('/contact')}
               className="px-8 py-3 border-2 border-white text-white rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition w-full sm:w-auto"
             >
               Contact Us

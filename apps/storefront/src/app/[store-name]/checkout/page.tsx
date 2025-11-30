@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Image from 'next/image';
 import {
@@ -51,6 +51,12 @@ interface AddressFormData {
 
 function CheckoutPageContent() {
   const router = useRouter();
+  const params = useParams();
+  const storeName = params['store-name'] as string;
+  
+  // Helper to get tenant-aware path
+  const getPath = (path: string) => `/${storeName}${path}`;
+
   const queryClient = useQueryClient();
   const { customer } = useAuth();
   const [sameAsShipping, setSameAsShipping] = useState(true);
@@ -172,7 +178,7 @@ function CheckoutPageContent() {
     onSuccess: (order) => {
       queryClient.invalidateQueries({ queryKey: ['cart'] });
       toast.success('Order placed successfully!');
-      router.push(`/orders/${order.id}`);
+      router.push(getPath(`/orders/${order.id}`));
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.error || 'Failed to place order. Please try again.');
@@ -224,7 +230,7 @@ function CheckoutPageContent() {
                 Add some items to your cart before checkout.
               </p>
               <Link
-                href="/products"
+                href={getPath('/products')}
                 className="inline-block px-8 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition"
               >
                 Browse Products
@@ -246,7 +252,7 @@ function CheckoutPageContent() {
         {/* Header */}
         <div className="mb-8">
           <Link
-            href="/cart"
+            href={getPath('/cart')}
             className="inline-flex items-center text-gray-600 hover:text-blue-600 mb-4"
           >
             <ArrowLeft className="w-5 h-5 mr-2" />

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import { 
   Heart, 
   Shield, 
@@ -16,6 +17,12 @@ import {
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 
 function AboutPageContent() {
+  const params = useParams();
+  const storeName = params['store-name'] as string;
+  
+  // Helper to get tenant-aware path
+  const getPath = (path: string) => `/${storeName}${path}`;
+
   const values = [
     {
       icon: Heart,
@@ -123,7 +130,7 @@ function AboutPageContent() {
               Connecting communities with quality products through innovative technology and trusted local partnerships.
             </p>
             <Link
-              href="/contact"
+              href={getPath('/contact')}
               className="inline-flex items-center space-x-2 px-8 py-3 bg-white text-blue-600 rounded-lg font-semibold hover:bg-gray-100 transition"
             >
               <span>Get in Touch</span>
@@ -317,13 +324,13 @@ function AboutPageContent() {
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4">
             <Link
-              href="/products"
+              href={getPath('/products')}
               className="px-8 py-3 bg-white text-blue-600 rounded-lg font-semibold hover:bg-gray-100 transition w-full sm:w-auto"
             >
               Browse Products
             </Link>
             <Link
-              href="/categories"
+              href={getPath('/categories')}
               className="px-8 py-3 border-2 border-white text-white rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition w-full sm:w-auto"
             >
               View Categories

@@ -78,7 +78,7 @@ export const authService = {
         window.location.href = `/${storeName}/login`;
       } else {
         // No tenant context, redirect to home (QR message)
-        window.location.href = '/';
+      window.location.href = '/';
       }
     }
   },

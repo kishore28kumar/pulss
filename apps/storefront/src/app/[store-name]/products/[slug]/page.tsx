@@ -27,6 +27,10 @@ import ProductCard from '@/components/products/ProductCard';
 function ProductDetailContent() {
   const params = useParams();
   const slug = params.slug as string;
+  const storeName = params['store-name'] as string;
+  
+  // Helper to get tenant-aware path
+  const getPath = (path: string) => `/${storeName}${path}`;
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
 
@@ -121,7 +125,7 @@ function ProductDetailContent() {
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Product Not Found</h2>
           <p className="text-gray-600 mb-6">The product you're looking for doesn't exist.</p>
           <Link
-            href="/products"
+            href={getPath('/products')}
             className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
           >
             <ArrowLeft className="w-5 h-5 mr-2" />
@@ -137,11 +141,11 @@ function ProductDetailContent() {
       <div className="container mx-auto px-4">
         {/* Breadcrumb */}
         <div className="flex items-center space-x-2 text-sm text-gray-600 mb-6">
-          <Link href="/" className="hover:text-blue-600 transition">
+          <Link href={getPath('/')} className="hover:text-blue-600 transition">
             Home
           </Link>
           <span>/</span>
-          <Link href="/products" className="hover:text-blue-600 transition">
+          <Link href={getPath('/products')} className="hover:text-blue-600 transition">
             Products
           </Link>
           <span>/</span>
@@ -213,7 +217,7 @@ function ProductDetailContent() {
               <div className="mb-4">
                 {product.categories && (
                   <Link
-                    href={`/categories?id=${product.categoryId}`}
+                    href={getPath(`/categories?id=${product.categoryId}`)}
                     className="text-sm text-blue-600 hover:text-blue-700 font-medium"
                   >
                     {product.categories.name}
@@ -433,7 +437,7 @@ function ProductDetailContent() {
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-gray-900">Related Products</h2>
               <Link
-                href={`/categories?id=${product.categoryId}`}
+                href={getPath(`/categories?id=${product.categoryId}`)}
                 className="text-blue-600 hover:text-blue-700 font-medium text-sm"
               >
                 View All →

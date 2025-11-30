@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import { ShoppingCart, Heart } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { useCart } from '@/hooks/useCart';
@@ -11,6 +12,25 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
+  const params = useParams();
+  const storeName = params?.['store-name'] as string | undefined;
+  
+  // Helper to get tenant-aware path
+  const getPath = (path: string) => {
+    if (storeName) {
+      return `/${storeName}${path}`;
+    }
+    // Fallback: try to get from window location if params not available
+    if (typeof window !== 'undefined') {
+      const pathSegments = window.location.pathname.split('/').filter(Boolean);
+      const slug = pathSegments[0];
+      if (slug) {
+        return `/${slug}${path}`;
+      }
+    }
+    return path;
+  };
+
   const { addToCart, isAddingToCart } = useCart();
   const { addToWishlist, isInWishlist, removeFromWishlist, isLoaded } = useWishlist();
   const isWishlisted = isLoaded && isInWishlist(product.id);
@@ -40,7 +60,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   };
 
   return (
-    <Link href={`/products/${product.slug}`}>
+    <Link href={getPath(`/products/${product.slug}`)}>
       <div className="group bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-300">
         {/* Image */}
         <div className="relative aspect-square overflow-hidden bg-gray-100">

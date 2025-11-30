@@ -137,22 +137,6 @@ export default function StoreHomePage() {
           </div>
         </div>
       </section>
-
-      {/* CTA Section */}
-      <section className="py-16 bg-gray-900 text-white">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold mb-4">Ready to Start Shopping?</h2>
-          <p className="text-xl text-gray-300 mb-8">
-            Join thousands of happy customers today!
-          </p>
-          <Link
-            href={`/${storeName}/login`}
-            className="inline-block px-8 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition"
-          >
-            Create Account
-          </Link>
-        </div>
-      </section>
     </div>
   );
 }

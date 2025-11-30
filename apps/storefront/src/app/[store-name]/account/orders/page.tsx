@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -51,6 +51,12 @@ interface Order {
 
 function OrdersPageContent() {
   const router = useRouter();
+  const params = useParams();
+  const storeName = params['store-name'] as string;
+  
+  // Helper to get tenant-aware path
+  const getPath = (path: string) => `/${storeName}${path}`;
+  
   const { customer } = useAuth();
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -126,7 +132,7 @@ function OrdersPageContent() {
   };
 
   const handleTrackOrder = (orderId: string) => {
-    router.push(`/orders/${orderId}`);
+    router.push(getPath(`/orders/${orderId}`));
   };
 
   if (isLoading) {
@@ -135,7 +141,7 @@ function OrdersPageContent() {
         <div className="container mx-auto px-4">
           <div className="mb-8">
             <Link
-              href="/account"
+              href={getPath('/account')}
               className="inline-flex items-center text-gray-600 hover:text-blue-600 mb-4"
             >
               <ArrowLeft className="w-5 h-5 mr-2" />
@@ -170,7 +176,7 @@ function OrdersPageContent() {
         {/* Header */}
         <div className="mb-8">
           <Link
-            href="/account"
+            href={getPath('/account')}
             className="inline-flex items-center text-gray-600 hover:text-blue-600 mb-4"
           >
             <ArrowLeft className="w-5 h-5 mr-2" />
@@ -307,7 +313,7 @@ function OrdersPageContent() {
                 : `You don't have any ${statusFilter.toLowerCase()} orders.`}
             </p>
             <Link
-              href="/products"
+              href={getPath('/products')}
               className="inline-block px-8 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition"
             >
               Start Shopping
@@ -404,7 +410,7 @@ function OrdersPageContent() {
                     {/* Actions */}
                     <div className="flex flex-wrap gap-2 lg:flex-col lg:items-end">
                       <Link
-                        href={`/orders/${order.id}`}
+                        href={getPath(`/orders/${order.id}`)}
                         className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition"
                       >
                         <Eye className="w-4 h-4" />

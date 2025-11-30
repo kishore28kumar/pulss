@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useParams } from 'next/navigation';
 import { 
   Trash2, 
   Plus, 
@@ -39,6 +40,12 @@ interface CartData {
 }
 
 function CartPageContent() {
+  const params = useParams();
+  const storeName = params['store-name'] as string;
+  
+  // Helper to get tenant-aware path
+  const getPath = (path: string) => `/${storeName}${path}`;
+
   const queryClient = useQueryClient();
   const [updatingItems, setUpdatingItems] = useState<Set<string>>(new Set());
 
@@ -148,13 +155,13 @@ function CartPageContent() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link
-                  href="/products"
+                  href={getPath('/products')}
                   className="px-8 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition"
                 >
                   Browse Products
                 </Link>
                 <Link
-                  href="/categories"
+                  href={getPath('/categories')}
                   className="px-8 py-3 border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:border-blue-600 hover:text-blue-600 transition"
                 >
                   View Categories
@@ -205,7 +212,7 @@ function CartPageContent() {
                   <div className="flex-1">
                     <div className="flex justify-between mb-2">
                       <Link
-                        href={`/products/${item.productSlug}`}
+                        href={getPath(`/products/${item.productSlug}`)}
                         className="text-lg font-semibold text-gray-900 hover:text-blue-600 transition"
                       >
                         {item.productName}
@@ -306,7 +313,7 @@ function CartPageContent() {
               </div>
 
               <Link
-                href="/checkout"
+                href={getPath('/checkout')}
                 className="w-full flex items-center justify-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition mb-4"
               >
                 <span>Proceed to Checkout</span>
@@ -314,7 +321,7 @@ function CartPageContent() {
               </Link>
 
               <Link
-                href="/products"
+                href={getPath('/products')}
                 className="w-full block text-center px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:border-blue-600 hover:text-blue-600 transition"
               >
                 Continue Shopping

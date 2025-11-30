@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useParams } from 'next/navigation';
 import { 
   Heart, 
   ShoppingCart, 
@@ -15,6 +16,11 @@ import { useWishlist } from '@/hooks/useWishlist';
 import { useCart } from '@/hooks/useCart';
 
 function WishlistPageContent() {
+  const params = useParams();
+  const storeName = params['store-name'] as string;
+  
+  // Helper to get tenant-aware path
+  const getPath = (path: string) => `/${storeName}${path}`;
   const { wishlist, removeFromWishlist, clearWishlist } = useWishlist();
   const { addToCart, isAddingToCart } = useCart();
   const [movingToCart, setMovingToCart] = useState<Set<string>>(new Set());
@@ -70,13 +76,13 @@ function WishlistPageContent() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link
-                  href="/products"
+                  href={getPath('/products')}
                   className="px-8 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition"
                 >
                   Browse Products
                 </Link>
                 <Link
-                  href="/categories"
+                  href={getPath('/categories')}
                   className="px-8 py-3 border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:border-blue-600 hover:text-blue-600 transition"
                 >
                   View Categories
@@ -148,7 +154,7 @@ function WishlistPageContent() {
             >
               {/* Product Image */}
               <div className="relative aspect-square bg-gray-100">
-                <Link href={`/products/${item.slug}`}>
+                <Link href={getPath(`/products/${item.slug}`)}>
                   {item.thumbnail ? (
                     <Image
                       src={item.thumbnail}
@@ -175,7 +181,7 @@ function WishlistPageContent() {
               {/* Product Details */}
               <div className="p-4">
                 <Link 
-                  href={`/products/${item.slug}`}
+                  href={getPath(`/products/${item.slug}`)}
                   className="block mb-2"
                 >
                   <h3 className="font-semibold text-gray-900 line-clamp-2 hover:text-blue-600 transition">
@@ -206,7 +212,7 @@ function WishlistPageContent() {
                   </button>
                   
                   <Link
-                    href={`/products/${item.slug}`}
+                    href={getPath(`/products/${item.slug}`)}
                     className="w-full block text-center px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-lg font-medium hover:border-blue-600 hover:text-blue-600 transition"
                   >
                     View Details
@@ -225,7 +231,7 @@ function WishlistPageContent() {
         {/* Continue Shopping */}
         <div className="mt-12 text-center">
           <Link
-            href="/products"
+            href={getPath('/products')}
             className="inline-flex items-center space-x-2 px-8 py-3 bg-white border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:border-blue-600 hover:text-blue-600 transition"
           >
             <span>Continue Shopping</span>
