@@ -9,7 +9,6 @@ import api from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWishlist } from '@/hooks/useWishlist';
 import { useTenant } from '@/contexts/TenantContext';
-import { getTenantPath } from '@/lib/utils';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);

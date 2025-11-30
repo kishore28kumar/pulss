@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ShoppingBag, TrendingUp, Shield, Truck, LogIn, UserPlus } from 'lucide-react';
+import { ShoppingBag, TrendingUp, Shield, Truck } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import api from '@/lib/api';
 import ProductCard from '@/components/products/ProductCard';

@@ -1,6 +1,6 @@
 'use client';
 
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -52,7 +52,6 @@ interface Order {
 
 function OrderDetailContent() {
   const params = useParams();
-  const router = useRouter();
   const orderId = params.orderId as string;
   const storeName = params['store-name'] as string;
   

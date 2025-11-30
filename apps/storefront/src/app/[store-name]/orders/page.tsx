@@ -23,7 +23,6 @@ import {
 import api from '@/lib/api';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import { useAuth } from '@/contexts/AuthContext';
 
 interface OrderItem {
   id: string;
@@ -57,7 +56,6 @@ function OrdersPageContent() {
   // Helper to get tenant-aware path
   const getPath = (path: string) => `/${storeName}${path}`;
   
-  const { customer } = useAuth();
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const limit = 10;

@@ -4,7 +4,6 @@ import { useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
 import { User, Mail, Phone, ShoppingBag, Heart, Settings, LogOut, Package, ArrowRight } from 'lucide-react';
 import api from '@/lib/api';
