@@ -7,7 +7,6 @@ import Link from 'next/link';
 import {
   CheckCircle,
   Package,
-  Truck,
   MapPin,
   CreditCard,
   Calendar,
