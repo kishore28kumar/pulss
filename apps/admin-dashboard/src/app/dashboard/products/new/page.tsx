@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, Loader2, Store, Upload, X, Download, FileText, CheckCircle, AlertCircle, ChevronDown, ChevronUp, Plus } from 'lucide-react';
+import { ArrowLeft, Loader2, Store, Upload, Download, FileText, CheckCircle, AlertCircle, ChevronDown, ChevronUp, Plus } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';

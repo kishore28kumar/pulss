@@ -9,6 +9,7 @@ import { errorHandler } from './middleware/errorHandler';
 import { tenantMiddleware } from './middleware/tenantMiddleware';
 import routes from './routes';
 import { getCorsOrigins } from './config/urls';
+import { connectWithRetry } from '@pulss/database';
 
 dotenv.config();
 
@@ -91,6 +92,14 @@ app.use(errorHandler);
 // ============================================
 // START SERVER
 // ============================================
+
+// Initialize database connection (non-blocking)
+// Connection will be retried on first query if this fails
+if (process.env.DATABASE_URL) {
+  connectWithRetry(5, 2000).catch((error) => {
+    console.warn('⚠️  Initial database connection failed, will retry on first query:', error.message);
+  });
+}
 
 app.listen(PORT, () => {
   console.log(`🚀 Pulss Backend API running on port ${PORT}`);

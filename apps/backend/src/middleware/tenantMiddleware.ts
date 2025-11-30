@@ -52,15 +52,40 @@ export const tenantMiddleware = async (
       return next();
     }
 
-    // Fetch tenant
-    const tenant = await prisma.tenants.findUnique({
-      where: { slug: tenantSlug, status: 'ACTIVE' },
-      select: {
-        id: true,
-        slug: true,
-        name: true,
-      },
-    });
+    // Fetch tenant with retry logic for connection errors
+    let tenant = null;
+    let retries = 3;
+    
+    while (retries > 0) {
+      try {
+        tenant = await prisma.tenants.findUnique({
+          where: { slug: tenantSlug, status: 'ACTIVE' },
+          select: {
+            id: true,
+            slug: true,
+            name: true,
+          },
+        });
+        break; // Success, exit retry loop
+      } catch (error: any) {
+        retries--;
+        const errorMessage = error?.message || String(error);
+        const isConnectionError = 
+          errorMessage.includes('Closed') ||
+          errorMessage.includes('connection') ||
+          errorMessage.includes('P1001') ||
+          errorMessage.includes('ECONNREFUSED');
+        
+        if (isConnectionError && retries > 0) {
+          console.warn(`⚠️  Database connection error in tenant middleware, retrying... (${retries} attempts left)`);
+          await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
+          continue;
+        } else {
+          // Not a connection error or out of retries
+          throw error;
+        }
+      }
+    }
 
     if (tenant) {
       req.tenant = tenant;
@@ -68,8 +93,16 @@ export const tenantMiddleware = async (
     }
 
     next();
-  } catch (error) {
-    console.error('Tenant middleware error:', error);
+  } catch (error: any) {
+    const errorMessage = error?.message || String(error);
+    console.error('Tenant middleware error:', errorMessage);
+    
+    // If it's a connection error, log it but don't fail the request
+    // The request will proceed without tenant context
+    if (errorMessage.includes('Closed') || errorMessage.includes('connection')) {
+      console.error('⚠️  Database connection issue - request proceeding without tenant context');
+    }
+    
     next();
   }
 };
