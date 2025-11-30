@@ -41,8 +41,6 @@ export default function StaffPage() {
   const [mounted, setMounted] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [tenantSlug, setTenantSlug] = useState<string | null>(null);
-  const [storefrontUrl, setStorefrontUrl] = useState<string>('');
-  const [user, setUser] = useState<any>(null);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -51,16 +49,8 @@ export default function StaffPage() {
     
     // Get tenant slug from logged-in user
     const currentUser = authService.getStoredUser();
-    setUser(currentUser);
     if (currentUser?.tenant?.slug) {
       setTenantSlug(currentUser.tenant.slug);
-      // Construct storefront URL
-      // Use NEXT_PUBLIC_STOREFRONT_URL if available, otherwise construct from current origin
-      const storefrontBase = process.env.NEXT_PUBLIC_STOREFRONT_URL || 
-        (typeof window !== 'undefined' 
-          ? window.location.origin.replace(':3001', ':3000') // Replace admin port with storefront port for local dev
-          : 'http://localhost:3000');
-      setStorefrontUrl(`${storefrontBase}/${currentUser.tenant.slug}`);
     }
   }, []);
 

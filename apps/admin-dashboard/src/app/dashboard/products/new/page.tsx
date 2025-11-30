@@ -10,7 +10,7 @@ import { z } from 'zod';
 import Link from 'next/link';
 import api from '@/lib/api';
 import { toast } from 'sonner';
-import { getUserRole, isSuperAdmin } from '@/lib/permissions';
+import { isSuperAdmin } from '@/lib/permissions';
 import BulkUploadSection from './BulkUploadSection';
 
 const productSchema = z.object({
@@ -66,7 +66,6 @@ export default function NewProductPage() {
   const [imageUrl, setImageUrl] = useState('');
   const [uploading, setUploading] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [userRole, setUserRole] = useState<string | null>(null);
   const [selectedTenantId, setSelectedTenantId] = useState<string | null>(
     searchParams?.get('tenantId') || null
   );
@@ -77,7 +76,6 @@ export default function NewProductPage() {
 
   useEffect(() => {
     setMounted(true);
-    setUserRole(getUserRole());
   }, []);
 
   // Close tenant dropdown when clicking outside

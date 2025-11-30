@@ -7,7 +7,7 @@ import api from '@/lib/api';
 import { formatCurrency } from '@/lib/utils';
 import Link from 'next/link';
 import PermissionGuard from '@/components/permissions/PermissionGuard';
-import { Permission, getUserRole, isSuperAdmin } from '@/lib/permissions';
+import { Permission, isSuperAdmin } from '@/lib/permissions';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 
@@ -30,11 +30,9 @@ export default function ProductsPage() {
   const [page, setPage] = useState(1);
   const [selectedTenantId, setSelectedTenantId] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
-  const [userRole, setUserRole] = useState<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
-    setUserRole(getUserRole());
   }, []);
 
   const isSuperAdminUser = mounted && isSuperAdmin();

@@ -67,7 +67,6 @@ export default function InviteStaffModal({ onClose, onSuccess }: InviteStaffModa
   const [userRole, setUserRole] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [storefrontUrl, setStorefrontUrl] = useState<string>('');
-  const [createdStoreRoute, setCreatedStoreRoute] = useState<string>('');
 
   useEffect(() => {
     setMounted(true);
@@ -145,7 +144,6 @@ export default function InviteStaffModal({ onClose, onSuccess }: InviteStaffModa
       
       // If store route was provided, save it and show storefront link
       if (isCreatingAdmin && variables.storeRoute) {
-        setCreatedStoreRoute(variables.storeRoute);
         const storefrontBase = process.env.NEXT_PUBLIC_STOREFRONT_URL || 
           (typeof window !== 'undefined' 
             ? window.location.origin.replace(':3001', ':3000')
