@@ -113,18 +113,18 @@ function OrdersPageContent() {
     }
   };
 
-  const handleCancelOrder = async (orderId: string) => {
+  const handleCancelOrder = async (_orderId: string) => {
     if (!confirm('Are you sure you want to cancel this order?')) return;
     // TODO: Implement cancel order API call
     alert('Cancel order functionality will be implemented');
   };
 
-  const handleReorder = async (order: Order) => {
+  const handleReorder = async (_order: Order) => {
     // TODO: Implement reorder functionality
     alert('Reorder functionality will be implemented');
   };
 
-  const handleDownloadInvoice = async (orderId: string) => {
+  const handleDownloadInvoice = async (_orderId: string) => {
     // TODO: Implement download invoice
     alert('Download invoice functionality will be implemented');
   };

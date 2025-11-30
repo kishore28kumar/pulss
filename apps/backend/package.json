@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "nodemon --exec ts-node src/server.ts",
     "build": "tsc",
-    "start": "npm run db:migrate; node dist/server.js",
+    "start": "npm run db:migrate && node dist/server.js",
     "db:setup": "cd ../../packages/database && npx prisma db push --accept-data-loss && npx prisma db seed || echo 'Database setup complete'",
     "db:migrate": "sh scripts/migrate.sh || echo 'Migration check complete'",
     "lint": "eslint src --ext .ts",
