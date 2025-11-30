@@ -41,7 +41,8 @@ export default function AccountPage() {
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      router.push('/login');
+      // Redirect to home (QR message) since account page is root route
+      router.push('/');
     }
   }, [isAuthenticated, isLoading, router]);
 

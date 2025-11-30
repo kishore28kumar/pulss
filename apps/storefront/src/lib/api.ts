@@ -57,7 +57,17 @@ api.interceptors.response.use(
         localStorage.removeItem('customerToken');
         localStorage.removeItem('refreshToken');
         localStorage.removeItem('customer');
-        window.location.href = '/login';
+        
+        // Check if we have tenant context from the request
+        const tenantSlug = error.config?.headers?.['X-Tenant-Slug'] || getTenantSlugFromPath();
+        
+        if (tenantSlug) {
+          // Redirect to tenant-specific login
+          window.location.href = `/${tenantSlug}/login`;
+        } else {
+          // No tenant context, redirect to home (QR message)
+          window.location.href = '/';
+        }
       }
     }
     return Promise.reject(error);

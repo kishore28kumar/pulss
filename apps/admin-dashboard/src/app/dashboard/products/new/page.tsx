@@ -217,7 +217,7 @@ export default function NewProductPage() {
       if (isSuperAdminUser && selectedTenantId) {
         router.push(`/dashboard/products?tenantId=${selectedTenantId}`);
       } else {
-        router.push('/dashboard/products');
+      router.push('/dashboard/products');
       }
     },
     onError: (error: any) => {
@@ -474,7 +474,7 @@ export default function NewProductPage() {
               )}
             </button>
 
-            {/* Form */}
+      {/* Form */}
             {showSingleUpload && (
               <form onSubmit={handleSubmit(onSubmit)} className="p-4 sm:p-6 space-y-4 sm:space-y-6 border-t border-gray-200">
         {/* Basic Information */}
@@ -1206,178 +1206,178 @@ export default function NewProductPage() {
                 className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Add URL
-              </button>
-            </div>
-
-            {watch('images') && watch('images')!.length > 0 && (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                {watch('images')!.map((image, index) => (
-                  <div key={index} className="relative">
-                    <img
-                      src={image}
-                      alt={`Product image ${index + 1}`}
-                      className="w-full h-32 object-cover rounded-lg"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveImage(index)}
-                      className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Additional Information */}
-          <div className="border-b border-gray-200 pb-4 sm:pb-6">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Additional Information</h2>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="manufacturer" className="block text-sm font-medium text-gray-700 mb-2">
-                  Manufacturer
-                </label>
-                <input
-                  id="manufacturer"
-                  type="text"
-                  {...register('manufacturer')}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Manufacturer name"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="weight" className="block text-sm font-medium text-gray-700 mb-2">
-                  Weight
-                </label>
-                <div className="flex space-x-2">
-                  <input
-                    id="weight"
-                    type="number"
-                    step="0.01"
-                    {...register('weight', { valueAsNumber: true })}
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="0.00"
-                    min="0"
-                  />
-                  <select
-                    {...register('weightUnit')}
-                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="kg">kg</option>
-                    <option value="g">g</option>
-                    <option value="lb">lb</option>
-                    <option value="oz">oz</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-              <div className="flex items-center">
-                <input
-                  id="isActive"
-                  type="checkbox"
-                  {...register('isActive')}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                />
-                <label htmlFor="isActive" className="ml-2 text-sm font-medium text-gray-700">
-                  Active
-                </label>
-              </div>
-
-              <div className="flex items-center">
-                <input
-                  id="isFeatured"
-                  type="checkbox"
-                  {...register('isFeatured')}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                />
-                <label htmlFor="isFeatured" className="ml-2 text-sm font-medium text-gray-700">
-                  Featured
-                </label>
-              </div>
-
-              <div className="flex items-center">
-                <input
-                  id="requiresPrescription"
-                  type="checkbox"
-                  {...register('requiresPrescription')}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                />
-                <label htmlFor="requiresPrescription" className="ml-2 text-sm font-medium text-gray-700">
-                  Requires Prescription
-                </label>
-              </div>
-
-              <div className="flex items-center">
-                <input
-                  id="isOTC"
-                  type="checkbox"
-                  {...register('isOTC')}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                />
-                <label htmlFor="isOTC" className="ml-2 text-sm font-medium text-gray-700">
-                  Over-the-Counter (OTC)
-                </label>
-              </div>
-            </div>
-          </div>
-
-          {/* SEO */}
-          <div className="pb-4 sm:pb-6">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">SEO</h2>
-            
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="metaTitle" className="block text-sm font-medium text-gray-700 mb-2">
-                  Meta Title
-                </label>
-                <input
-                  id="metaTitle"
-                  type="text"
-                  {...register('metaTitle')}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="SEO title"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="metaDescription" className="block text-sm font-medium text-gray-700 mb-2">
-                  Meta Description
-                </label>
-                <textarea
-                  id="metaDescription"
-                  {...register('metaDescription')}
-                  rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="SEO description"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Actions */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 pt-4 sm:pt-6 border-t border-gray-200">
-            <Link
-              href="/dashboard/products"
-              className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition text-center text-sm sm:text-base"
-            >
-              Cancel
-            </Link>
-            <button
-              type="submit"
-              disabled={mutation.isPending}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-sm sm:text-base"
-            >
-              {mutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Create Product
             </button>
           </div>
-        </form>
+
+          {watch('images') && watch('images')!.length > 0 && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              {watch('images')!.map((image, index) => (
+                <div key={index} className="relative">
+                  <img
+                    src={image}
+                    alt={`Product image ${index + 1}`}
+                    className="w-full h-32 object-cover rounded-lg"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveImage(index)}
+                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Additional Information */}
+        <div className="border-b border-gray-200 pb-4 sm:pb-6">
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Additional Information</h2>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="manufacturer" className="block text-sm font-medium text-gray-700 mb-2">
+                Manufacturer
+              </label>
+              <input
+                id="manufacturer"
+                type="text"
+                {...register('manufacturer')}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Manufacturer name"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="weight" className="block text-sm font-medium text-gray-700 mb-2">
+                Weight
+              </label>
+              <div className="flex space-x-2">
+                <input
+                  id="weight"
+                  type="number"
+                  step="0.01"
+                  {...register('weight', { valueAsNumber: true })}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="0.00"
+                  min="0"
+                />
+                <select
+                  {...register('weightUnit')}
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="kg">kg</option>
+                  <option value="g">g</option>
+                  <option value="lb">lb</option>
+                  <option value="oz">oz</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+            <div className="flex items-center">
+              <input
+                id="isActive"
+                type="checkbox"
+                {...register('isActive')}
+                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              />
+              <label htmlFor="isActive" className="ml-2 text-sm font-medium text-gray-700">
+                Active
+              </label>
+            </div>
+
+            <div className="flex items-center">
+              <input
+                id="isFeatured"
+                type="checkbox"
+                {...register('isFeatured')}
+                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              />
+              <label htmlFor="isFeatured" className="ml-2 text-sm font-medium text-gray-700">
+                Featured
+              </label>
+            </div>
+
+            <div className="flex items-center">
+              <input
+                id="requiresPrescription"
+                type="checkbox"
+                {...register('requiresPrescription')}
+                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              />
+              <label htmlFor="requiresPrescription" className="ml-2 text-sm font-medium text-gray-700">
+                Requires Prescription
+              </label>
+            </div>
+
+            <div className="flex items-center">
+              <input
+                id="isOTC"
+                type="checkbox"
+                {...register('isOTC')}
+                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              />
+              <label htmlFor="isOTC" className="ml-2 text-sm font-medium text-gray-700">
+                Over-the-Counter (OTC)
+              </label>
+            </div>
+          </div>
+        </div>
+
+        {/* SEO */}
+        <div className="pb-4 sm:pb-6">
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">SEO</h2>
+          
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="metaTitle" className="block text-sm font-medium text-gray-700 mb-2">
+                Meta Title
+              </label>
+              <input
+                id="metaTitle"
+                type="text"
+                {...register('metaTitle')}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="SEO title"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="metaDescription" className="block text-sm font-medium text-gray-700 mb-2">
+                Meta Description
+              </label>
+              <textarea
+                id="metaDescription"
+                {...register('metaDescription')}
+                rows={3}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="SEO description"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 pt-4 sm:pt-6 border-t border-gray-200">
+          <Link
+            href="/dashboard/products"
+            className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition text-center text-sm sm:text-base"
+          >
+            Cancel
+          </Link>
+          <button
+            type="submit"
+            disabled={mutation.isPending}
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-sm sm:text-base"
+          >
+            {mutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+            Create Product
+          </button>
+        </div>
+      </form>
         </div>
       )}
     </div>
