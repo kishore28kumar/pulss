@@ -492,6 +492,8 @@ enum PaymentMethod {
   NET_BANKING
   COD
   WALLET
+  ONL
+  CREDIT
 }
 
 enum SubscriptionPlan {

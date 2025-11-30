@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Package, ShoppingCart, Users, DollarSign, TrendingUp, TrendingDown, Building2, Store } from 'lucide-react';
+import { Package, ShoppingCart, Users, DollarSign, TrendingUp, TrendingDown, Building2, Store, IndianRupee } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { formatCurrency } from '@/lib/utils';
@@ -122,7 +122,7 @@ export default function DashboardPage() {
           value: formatCurrency(statsData.totalRevenue),
           change: `${statsData.revenueChange >= 0 ? '+' : ''}${statsData.revenueChange.toFixed(1)}%`,
           trending: statsData.revenueChange >= 0 ? 'up' : 'down',
-      icon: DollarSign,
+      icon: IndianRupee,
       color: 'bg-green-500',
     },
     {

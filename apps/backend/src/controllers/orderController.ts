@@ -113,11 +113,19 @@ export const getOrder = asyncHandler(
       throw new AppError('Tenant not found', 400);
     }
 
+    // Build where clause - customers can only see their own orders
+    const where: any = {
+      id,
+      tenantId: req.tenantId,
+    };
+
+    // If customer is making the request, only show their orders
+    if (req.customerId) {
+      where.customerId = req.customerId;
+    }
+
     const order = await prisma.orders.findFirst({
-      where: {
-        id,
-        tenantId: req.tenantId,
-      },
+      where,
       include: {
         customers: {
           include: {
@@ -225,6 +233,9 @@ export const createOrder = asyncHandler(
     });
     const orderNumber = `ORD-${new Date().getFullYear()}-${String(orderCount + 1).padStart(6, '0')}`;
 
+    // Use billing address if provided, otherwise use shipping address
+    const billingAddress = data.billingAddress || data.shippingAddress;
+
     // Create order
     const order = await prisma.orders.create({
       data: {
@@ -238,8 +249,9 @@ export const createOrder = asyncHandler(
         total,
         status: 'PENDING',
         paymentStatus: 'PENDING',
-        shippingAddress: data.shippingAddressId || {},
-        billingAddress: data.billingAddressId || {},
+        paymentMethod: data.paymentMethod as any,
+        shippingAddress: data.shippingAddress,
+        billingAddress: billingAddress,
         customerNotes: data.customerNote,
         prescriptionUrl: data.prescriptionUrl,
         updatedAt: new Date(),

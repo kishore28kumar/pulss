@@ -12,9 +12,10 @@ import { requirePermission, Permission } from '../middleware/permissionMiddlewar
 
 const router = Router();
 
-// Customer routes
+// Customer routes (must come before admin routes)
 router.post('/', authenticateCustomer, requireTenant, createOrder);
-router.get('/my-orders', authenticateCustomer, getCustomerOrders);
+router.get('/my-orders', authenticateCustomer, requireTenant, getCustomerOrders);
+router.get('/customer/:id', authenticateCustomer, requireTenant, getOrder);
 
 // Admin/Staff routes
 router.get(

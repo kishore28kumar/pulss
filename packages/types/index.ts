@@ -202,8 +202,26 @@ export interface CreateOrderDTO {
     quantity: number;
     variantOptions?: Record<string, string>;
   }>;
-  shippingAddressId: string;
-  billingAddressId: string;
+  shippingAddress: {
+    name: string;
+    phone: string;
+    line1: string;
+    line2?: string;
+    city: string;
+    state: string;
+    country: string;
+    pincode: string;
+  };
+  billingAddress?: {
+    name: string;
+    phone: string;
+    line1: string;
+    line2?: string;
+    city: string;
+    state: string;
+    country: string;
+    pincode: string;
+  };
   paymentMethod: string;
   customerNote?: string;
   prescriptionUrl?: string;

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
-import { Store, Mail, Lock, User, Phone, Eye, EyeOff } from 'lucide-react';
+import { Store, Mail, Lock, User, Phone, Eye, EyeOff, MapPin } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -27,6 +27,14 @@ export default function LoginPage() {
     firstName: '',
     lastName: '',
     phone: '',
+    address: {
+      line1: '',
+      line2: '',
+      city: '',
+      state: '',
+      country: 'India',
+      pincode: '',
+    },
   });
 
   // Redirect if already authenticated
@@ -63,6 +71,16 @@ export default function LoginPage() {
         lastName: registerData.lastName,
         phone: registerData.phone || undefined,
       });
+      
+      // Store address in localStorage for use in checkout
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('customerAddress', JSON.stringify({
+          name: `${registerData.firstName} ${registerData.lastName}`,
+          phone: registerData.phone || '',
+          ...registerData.address,
+        }));
+      }
+      
       router.push('/account');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Registration failed. Please try again.');
@@ -267,6 +285,121 @@ export default function LoginPage() {
                   </button>
                 </div>
                 <p className="mt-1 text-xs text-gray-500">Must be at least 6 characters</p>
+              </div>
+
+              {/* Address Section */}
+              <div className="pt-4 border-t border-gray-200">
+                <div className="flex items-center gap-2 mb-4">
+                  <MapPin className="w-5 h-5 text-gray-400" />
+                  <h3 className="text-sm font-semibold text-gray-900">Shipping Address</h3>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Address Line 1
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={registerData.address.line1}
+                      onChange={(e) => setRegisterData({
+                        ...registerData,
+                        address: { ...registerData.address, line1: e.target.value }
+                      })}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Street address, house number"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Address Line 2 (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={registerData.address.line2}
+                      onChange={(e) => setRegisterData({
+                        ...registerData,
+                        address: { ...registerData.address, line2: e.target.value }
+                      })}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Apartment, suite, etc."
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        City
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={registerData.address.city}
+                        onChange={(e) => setRegisterData({
+                          ...registerData,
+                          address: { ...registerData.address, city: e.target.value }
+                        })}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="City"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        State
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={registerData.address.state}
+                        onChange={(e) => setRegisterData({
+                          ...registerData,
+                          address: { ...registerData.address, state: e.target.value }
+                        })}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="State"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Pincode
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={registerData.address.pincode}
+                        onChange={(e) => setRegisterData({
+                          ...registerData,
+                          address: { ...registerData.address, pincode: e.target.value }
+                        })}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="123456"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Country
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={registerData.address.country}
+                        onChange={(e) => setRegisterData({
+                          ...registerData,
+                          address: { ...registerData.address, country: e.target.value }
+                        })}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Country"
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <button
