@@ -1,0 +1,20 @@
+apps/backend/src/controllers/staffController.ts
+  bc0e089 186,275-276,368-369
+apps/backend/src/routes/productRoutes.ts
+  bc0e089 42
+apps/storefront/src/app/page.tsx
+  edc88b3 97
+apps/admin-dashboard/src/app/dashboard/products/page.tsx
+  a0c8b1c 111,119-126
+  bc0e089 110,127
+  b087607 114
+apps/admin-dashboard/src/app/dashboard/products/new/page.tsx
+  a0c8b1c 477
+  edc88b3 6,14,66,74-80,362-368,387-476,478-479,904-906,921-1382
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.18",
+  "base_commit_sha": "0abd42628534b1f6d31145d8f5bf2db997db54fb",
+  "prompts": {}
+}
