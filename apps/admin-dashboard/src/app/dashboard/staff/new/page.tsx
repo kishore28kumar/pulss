@@ -96,11 +96,11 @@ export default function NewStaffPage() {
 
   useEffect(() => {
     if (isCreatingAdmin && storeRoute) {
-      // Construct storefront URL
-      const storefrontBase = process.env.NEXT_PUBLIC_STOREFRONT_URL || 
-        (typeof window !== 'undefined' 
-          ? window.location.origin.replace(':3001', ':3000')
-          : 'http://localhost:3000');
+      // Construct storefront URL using config
+      const { getStorefrontUrl } = require('@/lib/config/urls');
+      const storefrontBase = typeof window !== 'undefined' 
+        ? getStorefrontUrl()
+        : (process.env.NEXT_PUBLIC_STOREFRONT_URL || 'http://localhost:3000');
       setStorefrontUrl(`${storefrontBase}/${storeRoute}`);
     } else {
       setStorefrontUrl('');
@@ -141,9 +141,14 @@ export default function NewStaffPage() {
       toast.success(`${roleLabel} user created successfully`);
       
       // If store route was provided, copy URL to clipboard
-      if (isCreatingAdmin && variables.storeRoute && storefrontUrl) {
+      if (isCreatingAdmin && variables.storeRoute) {
+        const { getStorefrontUrl } = require('@/lib/config/urls');
+        const storefrontBase = typeof window !== 'undefined' 
+          ? getStorefrontUrl()
+          : (process.env.NEXT_PUBLIC_STOREFRONT_URL || 'http://localhost:3000');
+        const url = `${storefrontBase}/${variables.storeRoute}`;
         if (typeof window !== 'undefined' && navigator.clipboard) {
-          navigator.clipboard.writeText(storefrontUrl);
+          navigator.clipboard.writeText(url);
           toast.success('Storefront URL copied to clipboard!');
         }
       }

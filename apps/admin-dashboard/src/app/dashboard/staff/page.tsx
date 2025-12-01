@@ -12,6 +12,7 @@ import { getUserRole } from '@/lib/permissions';
 import { authService } from '@/lib/auth';
 import EditStaffModal from './EditStaffModal';
 import { useRouter } from 'next/navigation';
+import { getStorefrontUrl } from '@/lib/config/urls';
 
 interface StaffMember {
   id: string;
@@ -261,10 +262,12 @@ export default function StaffPage() {
                               : tenantSlug;
                             
                             const memberStorefrontUrl = memberTenantSlug
-                              ? (process.env.NEXT_PUBLIC_STOREFRONT_URL || 
-                                 (typeof window !== 'undefined' 
-                                   ? window.location.origin.replace(':3001', ':3000')
-                                   : 'http://localhost:3000')) + `/${memberTenantSlug}`
+                              ? (() => {
+                                  const baseUrl = typeof window !== 'undefined' 
+                                    ? getStorefrontUrl()
+                                    : (process.env.NEXT_PUBLIC_STOREFRONT_URL || 'http://localhost:3000');
+                                  return `${baseUrl}/${memberTenantSlug}`;
+                                })()
                               : null;
                             
                             return memberStorefrontUrl ? (
