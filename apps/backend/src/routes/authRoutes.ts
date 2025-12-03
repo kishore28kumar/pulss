@@ -5,6 +5,7 @@ import {
   registerCustomer,
   getCurrentUser,
   getCurrentCustomer,
+  updateCustomerProfile,
   refreshToken,
 } from '../controllers/authController';
 import { authenticateUser, authenticateCustomer } from '../middleware/authMiddleware';
@@ -19,6 +20,7 @@ router.get('/me', authenticateUser, getCurrentUser);
 router.post('/customer/login', loginCustomer);
 router.post('/customer/register', registerCustomer);
 router.get('/customer/me', authenticateCustomer, getCurrentCustomer);
+router.put('/customer/profile', authenticateCustomer, updateCustomerProfile);
 
 // Token Refresh
 router.post('/refresh', refreshToken);

@@ -8,6 +8,8 @@ export interface Customer {
   phone: string;
   avatar?: string;
   emailVerified?: boolean;
+  dateOfBirth?: string;
+  gender?: string;
 }
 
 export interface LoginCredentials {

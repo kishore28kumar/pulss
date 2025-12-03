@@ -354,8 +354,105 @@ export const getCurrentCustomer = asyncHandler(
         phone: customer.phone || customer.users.phone || '',
         avatar: customer.users.avatar || '',
         emailVerified: customer.users.emailVerified,
+        dateOfBirth: customer.dateOfBirth ? customer.dateOfBirth.toISOString() : undefined,
+        gender: customer.gender || undefined,
         tenant: customer.tenants,
       },
+    };
+
+    res.json(response);
+  }
+);
+
+// ============================================
+// UPDATE CUSTOMER PROFILE
+// ============================================
+
+export const updateCustomerProfile = asyncHandler(
+  async (req: Request, res: Response) => {
+    if (!req.customerId) {
+      throw new AppError('Not authenticated', 401);
+    }
+
+    const { firstName, lastName, phone, dateOfBirth, gender } = req.body;
+
+    // Get customer with user relation
+    const customer = await prisma.customers.findUnique({
+      where: { id: req.customerId },
+      include: {
+        users: true,
+      },
+    });
+
+    if (!customer) {
+      throw new AppError('Customer not found', 404);
+    }
+
+    // Update user fields
+    const updateUserData: any = {};
+    if (firstName !== undefined) updateUserData.firstName = firstName;
+    if (lastName !== undefined) updateUserData.lastName = lastName;
+    if (phone !== undefined) updateUserData.phone = phone;
+    updateUserData.updatedAt = new Date();
+
+    // Update customer fields
+    const updateCustomerData: any = {};
+    if (phone !== undefined) updateCustomerData.phone = phone;
+    if (dateOfBirth !== undefined) {
+      updateCustomerData.dateOfBirth = dateOfBirth ? new Date(dateOfBirth) : null;
+    }
+    if (gender !== undefined) updateCustomerData.gender = gender || null;
+    updateCustomerData.updatedAt = new Date();
+
+    // Update both user and customer in a transaction
+    await prisma.$transaction([
+      prisma.users.update({
+        where: { id: customer.userId },
+        data: updateUserData,
+      }),
+      prisma.customers.update({
+        where: { id: req.customerId },
+        data: updateCustomerData,
+      }),
+    ]);
+
+    // Fetch updated customer with tenant info
+    const updatedCustomerWithRelations = await prisma.customers.findUnique({
+      where: { id: req.customerId },
+      include: {
+        users: true,
+        tenants: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            logoUrl: true,
+            primaryColor: true,
+            secondaryColor: true,
+          },
+        },
+      },
+    });
+
+    if (!updatedCustomerWithRelations) {
+      throw new AppError('Failed to fetch updated customer', 500);
+    }
+
+    const response: ApiResponse = {
+      success: true,
+      data: {
+        id: updatedCustomerWithRelations.id,
+        email: updatedCustomerWithRelations.users.email,
+        firstName: updatedCustomerWithRelations.users.firstName || '',
+        lastName: updatedCustomerWithRelations.users.lastName || '',
+        phone: updatedCustomerWithRelations.phone || updatedCustomerWithRelations.users.phone || '',
+        avatar: updatedCustomerWithRelations.users.avatar || '',
+        emailVerified: updatedCustomerWithRelations.users.emailVerified,
+        dateOfBirth: updatedCustomerWithRelations.dateOfBirth ? updatedCustomerWithRelations.dateOfBirth.toISOString() : undefined,
+        gender: updatedCustomerWithRelations.gender || undefined,
+        tenant: updatedCustomerWithRelations.tenants,
+      },
+      message: 'Profile updated successfully',
     };
 
     res.json(response);
