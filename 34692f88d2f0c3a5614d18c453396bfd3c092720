@@ -1,0 +1,274 @@
+apps/admin-dashboard/src/contexts/ThemeContext.tsx
+  382d845 1-126
+apps/admin-dashboard/src/components/theme/ThemeToggle.tsx
+  382d845 1-76
+apps/admin-dashboard/src/app/dashboard/layout.tsx
+  382d845 32
+  b087607 36,43
+apps/admin-dashboard/src/app/globals.css
+  382d845 12-17,20-22,26-27,44,48,52
+apps/admin-dashboard/src/components/dashboard/Header.tsx
+  382d845 8,58,63,73,87-88,96-98,100,109,111,115,118,123,126
+apps/admin-dashboard/src/components/providers/Providers.tsx
+  382d845 5,21-22,24-25
+apps/admin-dashboard/src/components/dashboard/Sidebar.tsx
+  382d845 28-29,34-35,84,86,88,92-93,99,109-114,128-129,151-153
+  a0c8b1c 41
+apps/admin-dashboard/tailwind.config.js
+  382d845 3,29-30
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.18",
+  "base_commit_sha": "34692f88d2f0c3a5614d18c453396bfd3c092720",
+  "prompts": {
+    "382d845": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "2d81f686-df1a-4a5d-b23e-16cd7ae126bc",
+        "model": "composer-1"
+      },
+      "human_author": "kishore28kumar <kishore28kks@gmail.com>",
+      "messages": [
+        {
+          "type": "user",
+          "text": "understand @admin-dashboard code line by line",
+          "timestamp": "2025-12-03T16:43:45.892Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Reviewing the admin-dashboard code line by line. Starting with configuration files, then the source code.",
+          "timestamp": "2025-12-03T16:43:47.858Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "/Users/em997/Documents/Learning/react-app/pulss/apps/admin-dashboard/package.json"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "/Users/em997/Documents/Learning/react-app/pulss/apps/admin-dashboard/next.config.js"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "/Users/em997/Documents/Learning/react-app/pulss/apps/admin-dashboard/tsconfig.json"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "/Users/em997/Documents/Learning/react-app/pulss/apps/admin-dashboard/tailwind.config.js"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "/Users/em997/Documents/Learning/react-app/pulss/apps/admin-dashboard/postcss.config.js"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "/Users/em997/Documents/Learning/react-app/pulss/apps/admin-dashboard/Dockerfile"
+          }
+        },
+        {
+          "type": "assistant",
+          "text": "Reading the source code files:",
+          "timestamp": "2025-12-03T16:43:50.458Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "/Users/em997/Documents/Learning/react-app/pulss/apps/admin-dashboard/src/lib/config/urls.ts"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "/Users/em997/Documents/Learning/react-app/pulss/apps/admin-dashboard/src/lib/api.ts"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "/Users/em997/Documents/Learning/react-app/pulss/apps/admin-dashboard/src/lib/auth.ts"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "/Users/em997/Documents/Learning/react-app/pulss/apps/admin-dashboard/src/lib/utils.ts"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "/Users/em997/Documents/Learning/react-app/pulss/apps/admin-dashboard/src/lib/permissions.ts"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "/Users/em997/Documents/Learning/react-app/pulss/apps/admin-dashboard/src/app/layout.tsx"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "/Users/em997/Documents/Learning/react-app/pulss/apps/admin-dashboard/src/app/page.tsx"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "/Users/em997/Documents/Learning/react-app/pulss/apps/admin-dashboard/src/app/globals.css"
+          }
+        },
+        {
+          "type": "assistant",
+          "text": "Reading component files:",
+          "timestamp": "2025-12-03T16:43:53.210Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "/Users/em997/Documents/Learning/react-app/pulss/apps/admin-dashboard/src/components/providers/Providers.tsx"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "/Users/em997/Documents/Learning/react-app/pulss/apps/admin-dashboard/src/components/dashboard/Header.tsx"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "/Users/em997/Documents/Learning/react-app/pulss/apps/admin-dashboard/src/components/dashboard/Sidebar.tsx"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "/Users/em997/Documents/Learning/react-app/pulss/apps/admin-dashboard/src/components/permissions/PermissionGuard.tsx"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "/Users/em997/Documents/Learning/react-app/pulss/apps/admin-dashboard/src/components/permissions/RoleBadge.tsx"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "/Users/em997/Documents/Learning/react-app/pulss/apps/admin-dashboard/src/app/login/page.tsx"
+          }
+        },
+        {
+          "type": "assistant",
+          "text": "Reading dashboard layout and main pages:",
+          "timestamp": "2025-12-03T16:43:55.337Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "/Users/em997/Documents/Learning/react-app/pulss/apps/admin-dashboard/src/app/dashboard/layout.tsx"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "/Users/em997/Documents/Learning/react-app/pulss/apps/admin-dashboard/src/app/dashboard/page.tsx"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "list_dir",
+          "input": {
+            "target_directory": "/Users/em997/Documents/Learning/react-app/pulss/apps/admin-dashboard/src/app/dashboard"
+          }
+        },
+        {
+          "type": "assistant",
+          "text": "Reading a few more key dashboard pages to understand the patterns:",
+          "timestamp": "2025-12-03T16:43:57.047Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "limit": 100,
+            "target_file": "/Users/em997/Documents/Learning/react-app/pulss/apps/admin-dashboard/src/app/dashboard/products/page.tsx"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "limit": 100,
+            "target_file": "/Users/em997/Documents/Learning/react-app/pulss/apps/admin-dashboard/src/app/dashboard/orders/page.tsx"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "limit": 100,
+            "target_file": "/Users/em997/Documents/Learning/react-app/pulss/apps/admin-dashboard/src/app/dashboard/settings/page.tsx"
+          }
+        },
+        {
+          "type": "tool_use",
+          "name": "read_file",
+          "input": {
+            "target_file": "/Users/em997/Documents/Learning/react-app/pulss/apps/admin-dashboard/scripts/verify-env.sh"
+          }
+        },
+        {
+          "type": "assistant",
+          "text": "Creating a line-by-line explanation of the admin-dashboard codebase:",
+          "timestamp": "2025-12-03T16:43:59.345Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "write",
+          "input": {
+            "file_path": "/Users/em997/Documents/Learning/react-app/pulss/ADMIN_DASHBOARD_CODE_EXPLANATION.md"
+          }
+        }
+      ],
+      "total_additions": 1610,
+      "total_deletions": 61,
+      "accepted_lines": 1595,
+      "overriden_lines": 0
+    }
+  }
+}
