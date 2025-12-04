@@ -22,13 +22,23 @@ import { Permission, getUserRole } from '@/lib/permissions';
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Products', href: '/dashboard/products', icon: Package },
-  { name: 'Categories', href: '/dashboard/categories', icon: FolderTree },
-  { name: 'Orders', href: '/dashboard/orders', icon: ShoppingCart },
+  { 
+    name: 'Categories', 
+    href: '/dashboard/categories', 
+    icon: FolderTree,
+    requireAdminOrStaff: true, // Only ADMIN and STAFF can see Categories
+  },
+  { 
+    name: 'Orders', 
+    href: '/dashboard/orders', 
+    icon: ShoppingCart,
+    requireAdminOrStaff: true, // Only ADMIN and STAFF can see Orders
+  },
   { 
     name: 'Customers', 
     href: '/dashboard/customers', 
     icon: Users,
-    requireSuperAdmin: true, // Only SUPER_ADMIN can see Customers
+    requireAdminOrStaff: true, // Only ADMIN and STAFF can see Customers
   },
   { 
     name: 'Tenants', 
@@ -71,22 +81,22 @@ export default function Sidebar({ onClose }: SidebarProps) {
   }, [pathname, onClose]);
 
   return (
-    <div className="w-64 bg-white border-r border-gray-200 flex flex-col h-full">
+    <div className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col h-full transition-colors">
       {/* Logo */}
-      <div className="h-16 flex items-center justify-between px-6 border-b border-gray-200">
+      <div className="h-16 flex items-center justify-between px-6 border-b border-gray-200 dark:border-gray-700 transition-colors">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+          <div className="w-10 h-10 bg-blue-600 dark:bg-blue-500 rounded-lg flex items-center justify-center transition-colors">
             <Store className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-bold text-gray-900">Pulss</h1>
-            <p className="text-xs text-gray-500">Admin Panel</p>
+            <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">Pulss</h1>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Admin Panel</p>
           </div>
         </div>
         {/* Close button for mobile */}
         <button
           onClick={onClose}
-          className="lg:hidden p-2 text-gray-400 hover:text-gray-600 transition"
+          className="lg:hidden p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
           aria-label="Close menu"
         >
           <X className="w-5 h-5" />
@@ -96,7 +106,12 @@ export default function Sidebar({ onClose }: SidebarProps) {
       {/* Navigation */}
       <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
         {navigation.map((item) => {
-          // Skip Customers tab if user is not SUPER_ADMIN
+          // Skip items that require Admin or Staff if user is SUPER_ADMIN
+          if (item.requireAdminOrStaff && (!mounted || userRole === 'SUPER_ADMIN')) {
+            return null;
+          }
+
+          // Skip items that require Super Admin if user is not SUPER_ADMIN
           if (item.requireSuperAdmin && (!mounted || userRole !== 'SUPER_ADMIN')) {
             return null;
           }
@@ -110,8 +125,8 @@ export default function Sidebar({ onClose }: SidebarProps) {
               className={cn(
                 'flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors',
                 isActive
-                  ? 'bg-blue-50 text-blue-600'
-                  : 'text-gray-700 hover:bg-gray-50'
+                  ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
               )}
             >
               <item.icon className="w-5 h-5 flex-shrink-0" />
@@ -133,9 +148,9 @@ export default function Sidebar({ onClose }: SidebarProps) {
       </nav>
 
       {/* Footer */}
-      <div className="p-4 border-t border-gray-200">
-        <div className="px-4 py-3 bg-gray-50 rounded-lg">
-          <p className="text-xs text-gray-500">Version 1.0.0</p>
+      <div className="p-4 border-t border-gray-200 dark:border-gray-700 transition-colors">
+        <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg transition-colors">
+          <p className="text-xs text-gray-500 dark:text-gray-400">Version 1.0.0</p>
         </div>
       </div>
     </div>
