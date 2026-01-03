@@ -1,13 +1,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { authService } from '@/lib/auth';
 import { toast } from 'sonner';
 import { Store } from 'lucide-react';
+
+// Force dynamic rendering to prevent static generation
+export const dynamic = 'force-dynamic';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -18,7 +21,6 @@ type LoginForm = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
 
   const {
@@ -31,10 +33,11 @@ export default function LoginPage() {
 
   // Clear URL parameters on mount to prevent credentials from appearing in URL
   useEffect(() => {
-    if (searchParams.toString()) {
+    // Use window.location instead of useSearchParams to avoid SSR issues
+    if (typeof window !== 'undefined' && window.location.search) {
       router.replace('/login', { scroll: false });
     }
-  }, [searchParams, router]);
+  }, [router]);
 
   const onSubmit = async (data: LoginForm, e?: React.BaseSyntheticEvent) => {
     // Prevent default form submission to avoid URL parameters
