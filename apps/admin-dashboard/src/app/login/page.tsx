@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -18,6 +18,7 @@ type LoginForm = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
 
   const {
@@ -28,14 +29,58 @@ export default function LoginPage() {
     resolver: zodResolver(loginSchema),
   });
 
-  const onSubmit = async (data: LoginForm) => {
+  // Clear URL parameters on mount to prevent credentials from appearing in URL
+  useEffect(() => {
+    if (searchParams.toString()) {
+      router.replace('/login', { scroll: false });
+    }
+  }, [searchParams, router]);
+
+  const onSubmit = async (data: LoginForm, e?: React.BaseSyntheticEvent) => {
+    // Prevent default form submission to avoid URL parameters
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
     setIsLoading(true);
     try {
       await authService.login(data);
-      toast.success('Login successful!');
-      router.push('/dashboard');
+      toast.success('Login successful!', { duration: 3000 });
+      // Small delay to ensure toast is visible before navigation
+      setTimeout(() => {
+        router.push('/dashboard');
+      }, 500);
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Login failed');
+      // Handle different error scenarios
+      let errorMessage = 'Login failed. Please try again.';
+      
+      if (error.response) {
+        // Server responded with an error
+        const status = error.response.status;
+        const serverError = error.response?.data?.error || error.response?.data?.message;
+        
+        if (serverError) {
+          errorMessage = serverError;
+        } else if (status === 401) {
+          errorMessage = 'Invalid email or password. Please check your credentials and try again.';
+        } else if (status === 400) {
+          errorMessage = 'Invalid request. Please check your email and password.';
+        } else if (status === 404) {
+          errorMessage = 'Service not found. Please contact support.';
+        } else if (status >= 500) {
+          errorMessage = 'Server error. Please try again later.';
+        }
+      } else if (error.request) {
+        // Request was made but no response received
+        errorMessage = 'Unable to connect to the server. Please check your internet connection.';
+      } else {
+        // Something else happened
+        errorMessage = error.message || 'An unexpected error occurred. Please try again.';
+      }
+      
+      // Show error toast with longer duration (5 seconds)
+      toast.error(errorMessage, { duration: 5000 });
     } finally {
       setIsLoading(false);
     }
@@ -55,7 +100,12 @@ export default function LoginPage() {
 
         {/* Login Form */}
         <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
+          <form 
+            method="post" 
+            onSubmit={handleSubmit(onSubmit)} 
+            className="space-y-4 sm:space-y-6"
+            noValidate
+          >
             {/* Email Field */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">

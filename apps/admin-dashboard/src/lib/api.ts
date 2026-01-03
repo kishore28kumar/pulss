@@ -64,7 +64,12 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Skip interceptor logic for login/auth endpoints to prevent redirect loops
+    const isAuthEndpoint = originalRequest?.url?.includes('/auth/login') || 
+                          originalRequest?.url?.includes('/auth/refresh') ||
+                          originalRequest?.url?.includes('/auth/customer/login');
+
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
       originalRequest._retry = true;
 
       try {
@@ -87,7 +92,11 @@ api.interceptors.response.use(
       } catch (err) {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
-        window.location.href = '/login';
+        localStorage.removeItem('user');
+        // Only redirect if not already on login page
+        if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
+          window.location.href = '/login';
+        }
         return Promise.reject(err);
       }
     }
