@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Search, Edit, Trash2, UserPlus, Mail, Phone, CheckCircle, XCircle, ExternalLink, Store } from 'lucide-react';
+import { Search, Edit, Trash2, UserPlus, Mail, Phone, CheckCircle, XCircle, ExternalLink, Store, Download } from 'lucide-react';
 import api from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -89,6 +89,43 @@ export default function StaffPage() {
 
   const handleEdit = (member: StaffMember) => {
     setEditingStaff(member);
+  };
+
+  const handleDownloadCustomers = async (tenantId: string, tenantName: string) => {
+    try {
+      toast.loading('Preparing customer data export...', { id: 'export-customers' });
+      
+      const response = await api.get(`/customers/export/${tenantId}`, {
+        responseType: 'blob', // Important for file download
+      });
+
+      // Create blob and download
+      const blob = new Blob([response.data], { type: 'text/csv;charset=utf-8;' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // Extract filename from Content-Disposition header or use default
+      const contentDisposition = response.headers['content-disposition'];
+      let filename = `customers_${tenantName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`;
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="?(.+)"?/i);
+        if (filenameMatch) {
+          filename = filenameMatch[1];
+        }
+      }
+      
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success('Customer data exported successfully', { id: 'export-customers' });
+    } catch (error: any) {
+      console.error('Export error:', error);
+      toast.error(error.response?.data?.error || 'Failed to export customer data', { id: 'export-customers' });
+    }
   };
 
   return (
@@ -284,6 +321,16 @@ export default function StaffPage() {
                               </a>
                             ) : null;
                           })()}
+                          {/* Download Customers - SUPER_ADMIN only */}
+                          {mounted && userRole === 'SUPER_ADMIN' && member.tenants?.id && (
+                            <button
+                              onClick={() => handleDownloadCustomers(member.tenants!.id, member.tenants!.name)}
+                              className="p-2 text-gray-400 hover:text-purple-600 transition"
+                              title="Download Customer Data"
+                            >
+                              <Download className="w-4 h-4" />
+                            </button>
+                          )}
                           <PermissionGuard permission={Permission.STAFF_UPDATE}>
                             <button
                               onClick={() => handleEdit(member)}

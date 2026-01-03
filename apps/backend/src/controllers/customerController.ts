@@ -331,3 +331,128 @@ export const getCustomerStats = asyncHandler(
   }
 );
 
+// ============================================
+// EXPORT CUSTOMERS AS CSV (SUPER_ADMIN ONLY)
+// ============================================
+
+export const exportCustomersCSV = asyncHandler(
+  async (req: Request, res: Response) => {
+    if (!req.user) {
+      throw new AppError('Authentication required', 401);
+    }
+
+    // Only SUPER_ADMIN can export customer data
+    if (req.user.role !== 'SUPER_ADMIN') {
+      throw new AppError('Only super admin can export customer data', 403);
+    }
+
+    const { tenantId } = req.params;
+
+    if (!tenantId) {
+      throw new AppError('Tenant ID is required', 400);
+    }
+
+    // Verify tenant exists
+    const tenant = await prisma.tenants.findUnique({
+      where: { id: tenantId },
+      select: { id: true, name: true, slug: true },
+    });
+
+    if (!tenant) {
+      throw new AppError('Tenant not found', 404);
+    }
+
+    // Fetch all customers for the tenant
+    const customers = await prisma.customers.findMany({
+      where: {
+        tenantId: tenantId,
+      },
+      include: {
+        users: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            phone: true,
+            emailVerified: true,
+            isActive: true,
+            createdAt: true,
+            lastLoginAt: true,
+          },
+        },
+        _count: {
+          select: {
+            orders: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    // CSV Headers
+    const headers = [
+      'Name',
+      'Email',
+      'Phone',
+      'Joined Date',
+      'Last Login',
+      'Segment',
+      'Lifetime Value',
+      'Total Orders',
+      'Status',
+      'Email Verified',
+    ];
+
+    // Convert customers to CSV rows
+    const csvRows = customers.map((customer) => {
+      const name = `${customer.users.firstName || ''} ${customer.users.lastName || ''}`.trim() || 'N/A';
+      const email = customer.users.email || 'N/A';
+      const phone = customer.users.phone || customer.phone || 'N/A';
+      const joinedDate = customer.users.createdAt ? new Date(customer.users.createdAt).toISOString().split('T')[0] : 'N/A';
+      const lastLogin = customer.users.lastLoginAt ? new Date(customer.users.lastLoginAt).toISOString().split('T')[0] : 'Never';
+      const segment = customer.segment || 'N/A';
+      const lifetimeValue = customer.lifetimeValue?.toFixed(2) || '0.00';
+      const totalOrders = customer._count?.orders || 0;
+      const status = customer.users.isActive ? 'Active' : 'Inactive';
+      const emailVerified = customer.users.emailVerified ? 'Yes' : 'No';
+
+      // Escape CSV values (handle commas and quotes)
+      const escapeCSV = (value: string | number) => {
+        const str = String(value);
+        if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+          return `"${str.replace(/"/g, '""')}"`;
+        }
+        return str;
+      };
+
+      return [
+        escapeCSV(name),
+        escapeCSV(email),
+        escapeCSV(phone),
+        escapeCSV(joinedDate),
+        escapeCSV(lastLogin),
+        escapeCSV(segment),
+        escapeCSV(lifetimeValue),
+        escapeCSV(totalOrders),
+        escapeCSV(status),
+        escapeCSV(emailVerified),
+      ].join(',');
+    });
+
+    // Combine headers and rows
+    const csvContent = [headers.join(','), ...csvRows].join('\n');
+
+    // Set response headers for CSV download
+    const filename = `customers_${tenant.slug}_${new Date().toISOString().split('T')[0]}.csv`;
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Cache-Control', 'no-cache');
+
+    // Send CSV content
+    res.send('\ufeff' + csvContent); // BOM for Excel UTF-8 support
+  }
+);
+

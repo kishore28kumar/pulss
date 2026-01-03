@@ -99,18 +99,21 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   const setTheme = (newTheme: Theme) => {
     setThemeState(newTheme);
-    localStorage.setItem(THEME_STORAGE_KEY, newTheme);
-    const resolved = resolveTheme(newTheme);
-    applyTheme(resolved);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(THEME_STORAGE_KEY, newTheme);
+      const resolved = resolveTheme(newTheme);
+      applyTheme(resolved);
+    }
   };
 
-  // Prevent hydration mismatch by not rendering until mounted
-  if (!mounted) {
-    return <>{children}</>;
-  }
+  // Always provide context, even before mount, to prevent errors
+  // Use default values during SSR/initial render
+  const contextValue = mounted
+    ? { theme, resolvedTheme, setTheme }
+    : { theme: 'system' as Theme, resolvedTheme: 'light' as const, setTheme };
 
   return (
-    <ThemeContext.Provider value={{ theme, resolvedTheme, setTheme }}>
+    <ThemeContext.Provider value={contextValue}>
       {children}
     </ThemeContext.Provider>
   );

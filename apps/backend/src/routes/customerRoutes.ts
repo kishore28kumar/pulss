@@ -5,6 +5,7 @@ import {
   updateCustomer,
   toggleCustomerStatus,
   getCustomerStats,
+  exportCustomersCSV,
 } from '../controllers/customerController';
 import { authenticateUser, requireAdminOrStaff } from '../middleware/authMiddleware';
 import { requireTenant, ensureTenantAccess } from '../middleware/tenantMiddleware';
@@ -21,6 +22,7 @@ router.use(ensureTenantAccess);
 // Customer management routes
 router.get('/', requirePermission(Permission.CUSTOMERS_VIEW), getCustomers);
 router.get('/stats', requirePermission(Permission.CUSTOMERS_VIEW), getCustomerStats);
+router.get('/export/:tenantId', exportCustomersCSV); // SUPER_ADMIN only - checked in controller (must be before /:id)
 router.get('/:id', requirePermission(Permission.CUSTOMERS_VIEW), getCustomer);
 router.put('/:id', requirePermission(Permission.CUSTOMERS_EDIT), updateCustomer);
 router.patch('/:id/status', requirePermission(Permission.CUSTOMERS_EDIT), toggleCustomerStatus);
