@@ -157,7 +157,7 @@ export const inviteStaff = asyncHandler(
         // Create new tenant
         const tenant = await prisma.tenants.create({
           data: {
-            id: `tenant_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            id: `tenant_${Date.now()}`,
             name: storeName,
             slug: storeRoute,
             status: 'ACTIVE',
