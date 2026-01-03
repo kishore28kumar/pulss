@@ -469,9 +469,6 @@ export const getTopSearchLocations = asyncHandler(
         createdAt: {
           gte: startDate,
         },
-        shippingAddress: {
-          not: null,
-        },
       },
       select: {
         customerId: true,
@@ -479,22 +476,24 @@ export const getTopSearchLocations = asyncHandler(
       },
     });
 
-    // Group by city
+    // Group by city (filter out orders without shipping addresses)
     const locationMap = new Map<string, { count: number; uniqueUsers: Set<string> }>();
 
-    orders.forEach((order) => {
-      const shippingAddress = order.shippingAddress as any;
-      const city = shippingAddress?.city || 'Unknown';
-      
-      if (!locationMap.has(city)) {
-        locationMap.set(city, { count: 0, uniqueUsers: new Set() });
-      }
-      const entry = locationMap.get(city)!;
-      entry.count += 1;
-      if (order.customerId) {
-        entry.uniqueUsers.add(order.customerId);
-      }
-    });
+    orders
+      .filter((order) => order.shippingAddress !== null && order.shippingAddress !== undefined)
+      .forEach((order) => {
+        const shippingAddress = order.shippingAddress as any;
+        const city = shippingAddress?.city || 'Unknown';
+        
+        if (!locationMap.has(city)) {
+          locationMap.set(city, { count: 0, uniqueUsers: new Set() });
+        }
+        const entry = locationMap.get(city)!;
+        entry.count += 1;
+        if (order.customerId) {
+          entry.uniqueUsers.add(order.customerId);
+        }
+      });
 
     // Convert to array and sort
     const topLocations = Array.from(locationMap.entries())

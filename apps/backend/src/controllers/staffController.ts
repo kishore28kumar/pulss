@@ -112,7 +112,7 @@ export const inviteStaff = asyncHandler(
       throw new AppError('Authentication required', 401);
     }
 
-    const { email, firstName, lastName, phone, role, password, storeName, storeRoute } = req.body;
+    const { email, firstName, lastName, phone, role, password, storeName, storeRoute, address, city, state, country, pincode } = req.body;
 
     if (!email || !firstName || !lastName) {
       throw new AppError('Email, first name, and last name are required', 400);
@@ -145,6 +145,16 @@ export const inviteStaff = asyncHandler(
           throw new AppError('Store route must contain only lowercase letters, numbers, and hyphens', 400);
         }
         
+        // Validate address fields
+        if (!address || !city || !state || !pincode) {
+          throw new AppError('Address, city, state, and pincode are required when creating a tenant', 400);
+        }
+        
+        // Validate pincode format (6 digits)
+        if (!/^\d{6}$/.test(pincode)) {
+          throw new AppError('Pincode must be exactly 6 digits', 400);
+        }
+        
         // Check if tenant slug already exists
         const existingTenant = await prisma.tenants.findUnique({
           where: { slug: storeRoute },
@@ -162,6 +172,11 @@ export const inviteStaff = asyncHandler(
             slug: storeRoute,
             status: 'ACTIVE',
             subscriptionPlan: 'FREE',
+            address: address,
+            city: city,
+            state: state,
+            country: country || 'India',
+            pincode: pincode,
             updatedAt: new Date(),
           },
         });
@@ -183,13 +198,18 @@ export const inviteStaff = asyncHandler(
       targetTenantId = req.tenantId;
       if (role && role !== 'STAFF') {
         throw new AppError('Admin can only create Staff users', 400);
-    }
+      }
     } else {
       throw new AppError('You do not have permission to invite users', 403);
     }
 
     // Use the determined role (or default from request if valid)
     const userRole = role || allowedRole;
+
+    // Ensure targetTenantId is set
+    if (!targetTenantId) {
+      throw new AppError('Tenant ID is required', 400);
+    }
 
     // Check if user already exists
     const existingUser = await prisma.users.findUnique({

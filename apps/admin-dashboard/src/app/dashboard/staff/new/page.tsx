@@ -24,6 +24,12 @@ const inviteSchema = z.object({
     .max(15, 'Store route must be at most 15 characters')
     .regex(/^[a-z0-9-]+$/, 'Store route must contain only lowercase letters, numbers, and hyphens')
     .optional(),
+  // Address fields - only required when SUPER_ADMIN creates Admin
+  address: z.string().min(5, 'Address must be at least 5 characters').optional(),
+  city: z.string().min(2, 'City must be at least 2 characters').optional(),
+  state: z.string().min(2, 'State must be at least 2 characters').optional(),
+  country: z.string().default('India'),
+  pincode: z.string().min(6, 'Pincode must be at least 6 characters').max(6, 'Pincode must be 6 characters').optional(),
 });
 
 type InviteFormData = z.infer<typeof inviteSchema>;
@@ -88,6 +94,11 @@ export default function NewStaffPage() {
       password: '',
       storeName: '',
       storeRoute: '',
+      address: '',
+      city: '',
+      state: '',
+      country: 'India',
+      pincode: '',
     },
   });
 
@@ -101,6 +112,11 @@ export default function NewStaffPage() {
       password: '',
       storeName: '',
       storeRoute: '',
+      address: '',
+      city: '',
+      state: '',
+      country: 'India',
+      pincode: '',
     });
   }, [reset]);
 
@@ -144,8 +160,17 @@ export default function NewStaffPage() {
         if (!data.storeName || !data.storeRoute) {
           throw new Error('Store name and store route are required when creating an Admin');
         }
+        if (!data.address || !data.city || !data.state || !data.pincode) {
+          throw new Error('All address fields are required when creating an Admin');
+        }
         payload.storeName = data.storeName;
         payload.storeRoute = data.storeRoute;
+        // Include address fields
+        payload.address = data.address;
+        payload.city = data.city;
+        payload.state = data.state;
+        payload.country = data.country || 'India';
+        payload.pincode = data.pincode;
       }
 
       return await api.post('/staff/invite', payload);
@@ -371,6 +396,102 @@ export default function NewStaffPage() {
                     </div>
                   </div>
                 )}
+              </div>
+
+              {/* Address Fields */}
+              <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Store Address</h3>
+              </div>
+
+              {/* Address */}
+              <div>
+                <label htmlFor="address" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Address *
+                </label>
+                <input
+                  id="address"
+                  type="text"
+                  {...register('address', { required: isCreatingAdmin })}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                  placeholder="123 Main Street, Suite 100"
+                />
+                {errors.address && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.address.message}</p>
+                )}
+              </div>
+
+              {/* City and State */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="city" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    City *
+                  </label>
+                  <input
+                    id="city"
+                    type="text"
+                    {...register('city', { required: isCreatingAdmin })}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                    placeholder="Mumbai"
+                  />
+                  {errors.city && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.city.message}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label htmlFor="state" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    State *
+                  </label>
+                  <input
+                    id="state"
+                    type="text"
+                    {...register('state', { required: isCreatingAdmin })}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                    placeholder="Maharashtra"
+                  />
+                  {errors.state && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.state.message}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Country and Pincode */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="country" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Country *
+                  </label>
+                  <input
+                    id="country"
+                    type="text"
+                    {...register('country')}
+                    value="India"
+                    disabled
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-700/50 text-gray-900 dark:text-gray-100 cursor-not-allowed"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="pincode" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Pincode *
+                  </label>
+                  <input
+                    id="pincode"
+                    type="text"
+                    {...register('pincode', { required: isCreatingAdmin })}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                    placeholder="400001"
+                    maxLength={6}
+                    onChange={(e) => {
+                      // Only allow numbers
+                      const value = e.target.value.replace(/\D/g, '');
+                      setValue('pincode', value);
+                    }}
+                  />
+                  {errors.pincode && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.pincode.message}</p>
+                  )}
+                </div>
               </div>
             </>
           )}
