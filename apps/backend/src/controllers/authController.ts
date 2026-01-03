@@ -17,17 +17,11 @@ export const loginUser = asyncHandler(
       throw new AppError('Email and password are required', 400);
     }
 
-    if (!req.tenantId) {
-      throw new AppError('Tenant not found', 400);
-    }
-
-    // Find user (using findFirst since email is globally unique but we still verify tenantId)
-    const user = await prisma.users.findFirst({
+    // First, find the user by email (email is globally unique)
+    // We'll verify tenant after finding the user
+    const user = await prisma.users.findUnique({
       where: {
         email,
-        tenantId: req.tenantId,
-        role: { not: 'CUSTOMER' }, // Admin/Staff only
-        isActive: true,
       },
       include: {
         tenants: {
@@ -40,7 +34,8 @@ export const loginUser = asyncHandler(
       },
     });
 
-    if (!user || !user.isActive) {
+    // Check if user exists, is active, and is not a customer
+    if (!user || !user.isActive || user.role === 'CUSTOMER') {
       throw new AppError('Invalid credentials', 401);
     }
 
@@ -48,6 +43,14 @@ export const loginUser = asyncHandler(
     const isValidPassword = await comparePassword(password, user.password);
     if (!isValidPassword) {
       throw new AppError('Invalid credentials', 401);
+    }
+
+    // If tenant slug was provided in header, verify it matches the user's tenant
+    // This allows login to work even if wrong/no tenant slug is sent
+    if (req.tenantId && user.tenantId && req.tenantId !== user.tenantId) {
+      // Tenant mismatch - but we'll still allow login if password is correct
+      // The user's actual tenant will be returned in the response
+      console.warn(`Tenant mismatch for user ${email}: provided ${req.tenantId}, user has ${user.tenantId}`);
     }
 
     // Generate tokens
