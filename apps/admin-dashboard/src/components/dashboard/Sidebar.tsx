@@ -21,6 +21,12 @@ import { Permission, getUserRole } from '@/lib/permissions';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { 
+    name: 'Tenants', 
+    href: '/dashboard/staff', 
+    icon: UserCog,
+    permission: Permission.STAFF_VIEW,
+  },
   { name: 'Products', href: '/dashboard/products', icon: Package },
   { 
     name: 'Categories', 
@@ -39,12 +45,6 @@ const navigation = [
     href: '/dashboard/customers', 
     icon: Users,
     requireAdminOrStaff: true, // Only ADMIN and STAFF can see Customers
-  },
-  { 
-    name: 'Tenants', 
-    href: '/dashboard/staff', 
-    icon: UserCog,
-    permission: Permission.STAFF_VIEW,
   },
   { 
     name: 'Analytics', 

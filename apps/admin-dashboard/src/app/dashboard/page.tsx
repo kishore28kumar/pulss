@@ -126,7 +126,7 @@ export default function DashboardPage() {
       color: 'bg-green-500',
     },
     {
-      name: 'Orders',
+      name: 'Total Orders',
           value: statsData.totalOrders.toLocaleString(),
           change: `${statsData.ordersChange >= 0 ? '+' : ''}${statsData.ordersChange.toFixed(1)}%`,
           trending: statsData.ordersChange >= 0 ? 'up' : 'down',

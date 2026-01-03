@@ -1,15 +1,23 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { IndianRupee, ShoppingBag, Users, Package, TrendingUp, TrendingDown } from 'lucide-react';
+import { IndianRupee, ShoppingBag, Users, Package, TrendingUp, TrendingDown, Search, MapPin, Building2 } from 'lucide-react';
 import api from '@/lib/api';
 import { formatCurrency } from '@/lib/utils';
 import PermissionGuard from '@/components/permissions/PermissionGuard';
 import { Permission } from '@/lib/permissions';
+import { getUserRole } from '@/lib/permissions';
 
 export default function AnalyticsPage() {
   const [period, setPeriod] = useState('30d');
+  const [mounted, setMounted] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+    setUserRole(getUserRole());
+  }, []);
 
   const { data: dashboardStats, isLoading: statsLoading } = useQuery({
     queryKey: ['analytics-dashboard', period],
@@ -29,6 +37,42 @@ export default function AnalyticsPage() {
       });
       return response.data.data;
     },
+  });
+
+  // Global Top Searches (SUPER_ADMIN only)
+  const { data: topSearchesData, isLoading: searchesLoading } = useQuery({
+    queryKey: ['global-top-searches', period],
+    queryFn: async () => {
+      const response = await api.get('/analytics/global-top-searches', {
+        params: { period },
+      });
+      return response.data.data;
+    },
+    enabled: mounted && userRole === 'SUPER_ADMIN',
+  });
+
+  // Top Search Locations (SUPER_ADMIN only)
+  const { data: topLocationsData, isLoading: locationsLoading } = useQuery({
+    queryKey: ['top-search-locations', period],
+    queryFn: async () => {
+      const response = await api.get('/analytics/top-search-locations', {
+        params: { period },
+      });
+      return response.data.data;
+    },
+    enabled: mounted && userRole === 'SUPER_ADMIN',
+  });
+
+  // Tenant Performance (SUPER_ADMIN only)
+  const { data: tenantPerformanceData, isLoading: tenantPerformanceLoading } = useQuery({
+    queryKey: ['tenant-performance', period],
+    queryFn: async () => {
+      const response = await api.get('/analytics/tenant-performance', {
+        params: { period },
+      });
+      return response.data.data;
+    },
+    enabled: mounted && userRole === 'SUPER_ADMIN',
   });
 
   if (statsLoading) {
@@ -172,6 +216,193 @@ export default function AnalyticsPage() {
           )}
         </div>
       </PermissionGuard>
+
+      {/* Super Admin Only Sections */}
+      {mounted && userRole === 'SUPER_ADMIN' && (
+        <>
+          {/* Global Top Searches */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="w-10 h-10 bg-blue-50 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+                <Search className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Global Top Searches</h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Most searched products across all tenants</p>
+              </div>
+            </div>
+            {searchesLoading ? (
+              <div className="text-center py-8">
+                <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+              </div>
+            ) : topSearchesData?.topSearches && topSearchesData.topSearches.length > 0 ? (
+              <div className="space-y-3">
+                {topSearchesData.topSearches.slice(0, 10).map((search: any, index: number) => (
+                  <div key={index} className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-700 last:border-0">
+                    <div className="flex items-center space-x-4">
+                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400 w-6">#{index + 1}</span>
+                      <div>
+                        <p className="font-medium text-gray-900 dark:text-gray-100">{search.searchTerm}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">{search.uniqueUsers} unique users</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-medium text-gray-900 dark:text-gray-100">{search.count.toLocaleString()}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">searches</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 dark:text-gray-400 text-center py-8">No search data available</p>
+            )}
+          </div>
+
+          {/* Top Search Locations */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="w-10 h-10 bg-green-50 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
+                <MapPin className="w-6 h-6 text-green-600 dark:text-green-400" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Top Search Locations</h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Cities with most order activity</p>
+              </div>
+            </div>
+            {locationsLoading ? (
+              <div className="text-center py-8">
+                <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+              </div>
+            ) : topLocationsData?.topLocations && topLocationsData.topLocations.length > 0 ? (
+              <div className="space-y-3">
+                {topLocationsData.topLocations.slice(0, 10).map((location: any, index: number) => (
+                  <div key={index} className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-700 last:border-0">
+                    <div className="flex items-center space-x-4">
+                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400 w-6">#{index + 1}</span>
+                      <div>
+                        <p className="font-medium text-gray-900 dark:text-gray-100">{location.city}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">{location.uniqueUsers} unique users</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-medium text-gray-900 dark:text-gray-100">{location.count.toLocaleString()}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">orders</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 dark:text-gray-400 text-center py-8">No location data available</p>
+            )}
+          </div>
+
+          {/* Tenant Performance */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="w-10 h-10 bg-purple-50 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
+                <Building2 className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Tenant Performance</h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Compare performance across all tenants</p>
+              </div>
+            </div>
+            {tenantPerformanceLoading ? (
+              <div className="text-center py-8">
+                <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+              </div>
+            ) : tenantPerformanceData?.tenantPerformance && tenantPerformanceData.tenantPerformance.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-gray-200 dark:border-gray-700">
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-900 dark:text-gray-100">Tenant</th>
+                      <th className="text-right py-3 px-4 text-sm font-semibold text-gray-900 dark:text-gray-100">Revenue</th>
+                      <th className="text-right py-3 px-4 text-sm font-semibold text-gray-900 dark:text-gray-100">Orders</th>
+                      <th className="text-right py-3 px-4 text-sm font-semibold text-gray-900 dark:text-gray-100">Customers</th>
+                      <th className="text-right py-3 px-4 text-sm font-semibold text-gray-900 dark:text-gray-100">Products</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {tenantPerformanceData.tenantPerformance.map((tenant: any) => (
+                      <tr key={tenant.tenantId} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                        <td className="py-3 px-4">
+                          <div>
+                            <p className="font-medium text-gray-900 dark:text-gray-100">{tenant.tenantName}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">@{tenant.tenantSlug}</p>
+                          </div>
+                        </td>
+                        <td className="py-3 px-4 text-right">
+                          <div>
+                            <p className="font-medium text-gray-900 dark:text-gray-100">{formatCurrency(tenant.metrics.revenue.current)}</p>
+                            <p className={`text-xs flex items-center justify-end ${
+                              tenant.metrics.revenue.change >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                            }`}>
+                              {tenant.metrics.revenue.change >= 0 ? (
+                                <TrendingUp className="w-3 h-3 mr-1" />
+                              ) : (
+                                <TrendingDown className="w-3 h-3 mr-1" />
+                              )}
+                              {Math.abs(tenant.metrics.revenue.change).toFixed(1)}%
+                            </p>
+                          </div>
+                        </td>
+                        <td className="py-3 px-4 text-right">
+                          <div>
+                            <p className="font-medium text-gray-900 dark:text-gray-100">{tenant.metrics.orders.current}</p>
+                            <p className={`text-xs flex items-center justify-end ${
+                              tenant.metrics.orders.change >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                            }`}>
+                              {tenant.metrics.orders.change >= 0 ? (
+                                <TrendingUp className="w-3 h-3 mr-1" />
+                              ) : (
+                                <TrendingDown className="w-3 h-3 mr-1" />
+                              )}
+                              {Math.abs(tenant.metrics.orders.change).toFixed(1)}%
+                            </p>
+                          </div>
+                        </td>
+                        <td className="py-3 px-4 text-right">
+                          <div>
+                            <p className="font-medium text-gray-900 dark:text-gray-100">{tenant.metrics.customers.current}</p>
+                            <p className={`text-xs flex items-center justify-end ${
+                              tenant.metrics.customers.change >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                            }`}>
+                              {tenant.metrics.customers.change >= 0 ? (
+                                <TrendingUp className="w-3 h-3 mr-1" />
+                              ) : (
+                                <TrendingDown className="w-3 h-3 mr-1" />
+                              )}
+                              {Math.abs(tenant.metrics.customers.change).toFixed(1)}%
+                            </p>
+                          </div>
+                        </td>
+                        <td className="py-3 px-4 text-right">
+                          <div>
+                            <p className="font-medium text-gray-900 dark:text-gray-100">{tenant.metrics.products.current}</p>
+                            <p className={`text-xs flex items-center justify-end ${
+                              tenant.metrics.products.change >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                            }`}>
+                              {tenant.metrics.products.change >= 0 ? (
+                                <TrendingUp className="w-3 h-3 mr-1" />
+                              ) : (
+                                <TrendingDown className="w-3 h-3 mr-1" />
+                              )}
+                              {Math.abs(tenant.metrics.products.change).toFixed(1)}%
+                            </p>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="text-gray-500 dark:text-gray-400 text-center py-8">No tenant performance data available</p>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }
