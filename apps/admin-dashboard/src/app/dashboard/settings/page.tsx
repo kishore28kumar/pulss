@@ -122,7 +122,7 @@ export default function SettingsPage() {
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <p className="text-gray-500 mt-4">Loading settings...</p>
+          <p className="text-gray-500 dark:text-gray-400 mt-4">Loading settings...</p>
         </div>
       </div>
     );
@@ -133,18 +133,18 @@ export default function SettingsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Settings</h1>
-          <p className="text-sm sm:text-base text-gray-500 mt-1">Manage your store configuration</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Settings</h1>
+          <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-1">Manage your store configuration</p>
         </div>
       </div>
 
       {/* Info Banner */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
         <div className="flex items-start space-x-3">
-          <Info className="w-5 h-5 text-blue-600 mt-0.5" />
+          <Info className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
           <div>
-            <h3 className="text-sm font-medium text-blue-900">Settings Information</h3>
-            <p className="text-sm text-blue-700 mt-1">
+            <h3 className="text-sm font-medium text-blue-900 dark:text-blue-300">Settings Information</h3>
+            <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
               Changes to your store settings will be reflected across your storefront and admin dashboard. Make sure to save your changes before navigating away.
             </p>
           </div>
@@ -152,8 +152,8 @@ export default function SettingsPage() {
       </div>
 
       {/* Tabs Navigation */}
-      <div className="bg-white rounded-xl border border-gray-200">
-        <div className="border-b border-gray-200">
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+        <div className="border-b border-gray-200 dark:border-gray-700">
           <nav className="flex overflow-x-auto space-x-4 sm:space-x-8 px-4 sm:px-6" aria-label="Tabs">
             {tabs
               .filter((tab) => {
@@ -173,8 +173,8 @@ export default function SettingsPage() {
                     className={`
                       flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-xs sm:text-sm transition whitespace-nowrap
                       ${isActive
-                        ? 'border-blue-500 text-blue-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                        ? 'border-blue-500 dark:border-blue-400 text-blue-600 dark:text-blue-400'
+                        : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
                       }
                     `}
                   >
@@ -193,7 +193,7 @@ export default function SettingsPage() {
               {tenantDetailsLoading ? (
                 <div className="text-center py-12">
                   <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                  <p className="text-gray-500 mt-4">Loading tenant information...</p>
+                  <p className="text-gray-500 dark:text-gray-400 mt-4">Loading tenant information...</p>
                 </div>
               ) : (
                 <PermissionGuard
@@ -276,9 +276,9 @@ export default function SettingsPage() {
           )}
           {activeTab === 'security' && (
             <div className="text-center py-12">
-              <Shield className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Security Settings</h3>
-              <p className="text-gray-500">
+              <Shield className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">Security Settings</h3>
+              <p className="text-gray-500 dark:text-gray-400">
                 Security settings will be available in a future update.
               </p>
             </div>

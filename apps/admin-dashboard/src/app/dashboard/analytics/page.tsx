@@ -36,7 +36,7 @@ export default function AnalyticsPage() {
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <p className="text-gray-500 mt-4">Loading analytics...</p>
+          <p className="text-gray-500 dark:text-gray-400 mt-4">Loading analytics...</p>
         </div>
       </div>
     );
@@ -47,14 +47,14 @@ export default function AnalyticsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Analytics</h1>
-          <p className="text-sm sm:text-base text-gray-500 mt-1">Track your store performance</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Analytics</h1>
+          <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-1">Track your store performance</p>
         </div>
         <div className="flex items-center space-x-2">
           <select
             value={period}
             onChange={(e) => setPeriod(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
           >
             <option value="7d">Last 7 days</option>
             <option value="30d">Last 30 days</option>
@@ -66,13 +66,13 @@ export default function AnalyticsPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
           <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 bg-green-50 rounded-lg flex items-center justify-center">
-              <IndianRupee className="w-6 h-6 text-green-600" />
+            <div className="w-12 h-12 bg-green-50 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
+              <IndianRupee className="w-6 h-6 text-green-600 dark:text-green-400" />
             </div>
             <div className={`flex items-center text-sm font-medium ${
-              (dashboardStats?.revenueChange || 0) >= 0 ? 'text-green-600' : 'text-red-600'
+              (dashboardStats?.revenueChange || 0) >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
             }`}>
               {(dashboardStats?.revenueChange || 0) >= 0 ? (
                 <TrendingUp className="w-4 h-4 mr-1" />
@@ -82,19 +82,19 @@ export default function AnalyticsPage() {
               {Math.abs(dashboardStats?.revenueChange || 0).toFixed(1)}%
             </div>
           </div>
-          <h3 className="text-2xl font-bold text-gray-900">
+          <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
             {formatCurrency(dashboardStats?.totalRevenue || 0)}
           </h3>
-          <p className="text-sm text-gray-500 mt-1">Total Revenue</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Total Revenue</p>
         </div>
 
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
           <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center">
-              <ShoppingBag className="w-6 h-6 text-blue-600" />
+            <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+              <ShoppingBag className="w-6 h-6 text-blue-600 dark:text-blue-400" />
             </div>
             <div className={`flex items-center text-sm font-medium ${
-              (dashboardStats?.ordersChange || 0) >= 0 ? 'text-green-600' : 'text-red-600'
+              (dashboardStats?.ordersChange || 0) >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
             }`}>
               {(dashboardStats?.ordersChange || 0) >= 0 ? (
                 <TrendingUp className="w-4 h-4 mr-1" />
@@ -104,41 +104,41 @@ export default function AnalyticsPage() {
               {Math.abs(dashboardStats?.ordersChange || 0).toFixed(1)}%
             </div>
           </div>
-          <h3 className="text-2xl font-bold text-gray-900">
+          <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
             {dashboardStats?.totalOrders || 0}
           </h3>
-          <p className="text-sm text-gray-500 mt-1">Total Orders</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Total Orders</p>
         </div>
 
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
           <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 bg-purple-50 rounded-lg flex items-center justify-center">
-              <Users className="w-6 h-6 text-purple-600" />
+            <div className="w-12 h-12 bg-purple-50 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
+              <Users className="w-6 h-6 text-purple-600 dark:text-purple-400" />
             </div>
           </div>
-          <h3 className="text-2xl font-bold text-gray-900">
+          <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
             {dashboardStats?.totalCustomers || 0}
           </h3>
-          <p className="text-sm text-gray-500 mt-1">Total Customers</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Total Customers</p>
         </div>
 
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
           <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 bg-orange-50 rounded-lg flex items-center justify-center">
-              <Package className="w-6 h-6 text-orange-600" />
+            <div className="w-12 h-12 bg-orange-50 dark:bg-orange-900/30 rounded-lg flex items-center justify-center">
+              <Package className="w-6 h-6 text-orange-600 dark:text-orange-400" />
             </div>
           </div>
-          <h3 className="text-2xl font-bold text-gray-900">
+          <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
             {dashboardStats?.totalProducts || 0}
           </h3>
-          <p className="text-sm text-gray-500 mt-1">Total Products</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Total Products</p>
         </div>
       </div>
 
       {/* Top Products */}
       <PermissionGuard permission={Permission.ANALYTICS_VIEW}>
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Top Selling Products</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Top Selling Products</h2>
           {productLoading ? (
             <div className="text-center py-8">
               <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
@@ -146,9 +146,9 @@ export default function AnalyticsPage() {
           ) : productData?.topProducts && productData.topProducts.length > 0 ? (
             <div className="space-y-4">
               {productData.topProducts.map((product: any, index: number) => (
-                <div key={product.id} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
+                <div key={product.id} className="flex items-center justify-between py-3 border-b border-gray-100 dark:border-gray-700 last:border-0">
                   <div className="flex items-center space-x-4">
-                    <span className="text-sm font-medium text-gray-500 w-6">#{index + 1}</span>
+                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400 w-6">#{index + 1}</span>
                     {product.image && (
                       <img
                         src={product.image}
@@ -157,18 +157,18 @@ export default function AnalyticsPage() {
                       />
                     )}
                     <div>
-                      <p className="font-medium text-gray-900">{product.name}</p>
-                      <p className="text-sm text-gray-500">{product.totalSold} sold</p>
+                      <p className="font-medium text-gray-900 dark:text-gray-100">{product.name}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{product.totalSold} sold</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-medium text-gray-900">{formatCurrency(product.revenue)}</p>
+                    <p className="font-medium text-gray-900 dark:text-gray-100">{formatCurrency(product.revenue)}</p>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-gray-500 text-center py-8">No product data available</p>
+            <p className="text-gray-500 dark:text-gray-400 text-center py-8">No product data available</p>
           )}
         </div>
       </PermissionGuard>

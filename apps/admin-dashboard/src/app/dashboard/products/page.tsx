@@ -99,8 +99,8 @@ export default function ProductsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Products</h1>
-          <p className="text-sm sm:text-base text-gray-500 mt-1">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Products</h1>
+          <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-1">
             {isSuperAdminUser ? 'Manage products on behalf of admins' : 'Manage your product inventory'}
           </p>
         </div>
@@ -141,8 +141,8 @@ export default function ProductsPage() {
 
       {/* Tenant Selector for SUPER_ADMIN */}
       {isSuperAdminUser && (
-        <div className="bg-white rounded-xl border border-gray-200 p-4">
-          <label htmlFor="tenant-select" className="block text-sm font-medium text-gray-700 mb-2">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+          <label htmlFor="tenant-select" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             <Store className="w-4 h-4 inline mr-2" />
             Select Admin/Store
           </label>
@@ -153,7 +153,7 @@ export default function ProductsPage() {
               setSelectedTenantId(e.target.value || null);
               setPage(1); // Reset to first page when tenant changes
             }}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
           >
             <option value="">-- Select an Admin/Store --</option>
             {adminsData?.data?.map((admin) => (
@@ -163,7 +163,7 @@ export default function ProductsPage() {
             ))}
           </select>
           {!selectedTenantId && (
-            <p className="mt-2 text-sm text-gray-500">
+            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
               Please select an admin/store to view and manage their products.
             </p>
           )}
@@ -171,26 +171,26 @@ export default function ProductsPage() {
       )}
 
       {/* Search and Filters */}
-      <div className="bg-white rounded-xl border border-gray-200 p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
             <input
               type="text"
               placeholder="Search products..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
             />
           </div>
-          <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition text-sm sm:text-base whitespace-nowrap">
+          <button className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition text-sm sm:text-base whitespace-nowrap bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
             Filters
           </button>
         </div>
       </div>
 
       {/* Products Table */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
         {isSuperAdminUser && !selectedTenantId ? (
           <div className="p-12 text-center">
             <Store className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -209,31 +209,31 @@ export default function ProductsPage() {
           <>
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
+                <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
                   <tr>
-                    <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       Product
                     </th>
-                    <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
+                    <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden sm:table-cell">
                       SKU
                     </th>
-                    <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       Stock
                     </th>
-                    <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       Price
                     </th>
-                    <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                    <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden md:table-cell">
                       Status
                     </th>
-                    <th className="px-4 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                   {data?.data?.map((product: any) => (
-                    <tr key={product.id} className="hover:bg-gray-50 transition">
+                    <tr key={product.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition">
                       <td className="px-4 sm:px-6 py-4">
                         <div className="flex items-center">
                           <div className="h-10 w-10 flex-shrink-0">
@@ -244,16 +244,16 @@ export default function ProductsPage() {
                             />
                           </div>
                           <div className="ml-3 sm:ml-4 min-w-0 flex-1">
-                            <div className="text-sm font-medium text-gray-900 truncate">{product.name}</div>
-                            <div className="text-xs sm:text-sm text-gray-500 truncate">{product.categories?.[0]?.category?.name}</div>
-                            <div className="text-xs text-gray-500 sm:hidden mt-1">
+                            <div className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{product.name}</div>
+                            <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 truncate">{product.categories?.[0]?.category?.name}</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400 sm:hidden mt-1">
                               SKU: {product.sku || 'N/A'}
                             </div>
                             <div className="sm:hidden mt-1">
                               <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                                 product.isActive
-                                  ? 'bg-green-100 text-green-800'
-                                  : 'bg-gray-100 text-gray-800'
+                                  ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
+                                  : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
                               }`}>
                                 {product.isActive ? 'Active' : 'Inactive'}
                               </span>
@@ -261,26 +261,26 @@ export default function ProductsPage() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden sm:table-cell">
+                      <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 hidden sm:table-cell">
                         {product.sku || 'N/A'}
                       </td>
                       <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                         <span className={`text-sm font-medium ${
                           product.stock > product.lowStockThreshold
-                            ? 'text-green-600'
-                            : 'text-red-600'
+                            ? 'text-green-600 dark:text-green-400'
+                            : 'text-red-600 dark:text-red-400'
                         }`}>
                           {product.stock} units
                         </span>
                       </td>
-                      <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+                      <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 font-medium">
                         {formatCurrency(Number(product.price))}
                       </td>
                       <td className="px-4 sm:px-6 py-4 whitespace-nowrap hidden md:table-cell">
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                           product.isActive
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-gray-100 text-gray-800'
+                            ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
+                            : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
                         }`}>
                           {product.isActive ? 'Active' : 'Inactive'}
                         </span>
@@ -322,8 +322,8 @@ export default function ProductsPage() {
             </div>
 
             {/* Pagination */}
-            <div className="bg-gray-50 px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-gray-200">
-              <div className="text-xs sm:text-sm text-gray-500 text-center sm:text-left">
+            <div className="bg-gray-50 dark:bg-gray-700 px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-gray-200 dark:border-gray-600">
+              <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 text-center sm:text-left">
                 Showing {data?.meta?.page * data?.meta?.limit - data?.meta?.limit + 1} to{' '}
                 {Math.min(data?.meta?.page * data?.meta?.limit, data?.meta?.total)} of{' '}
                 {data?.meta?.total} results
@@ -332,14 +332,14 @@ export default function ProductsPage() {
                 <button
                   onClick={() => setPage(page - 1)}
                   disabled={page === 1}
-                  className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg hover:bg-white transition disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                  className="px-3 sm:px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-white dark:hover:bg-gray-600 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                 >
                   Previous
                 </button>
                 <button
                   onClick={() => setPage(page + 1)}
                   disabled={page >= (data?.meta?.totalPages || 1)}
-                  className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg hover:bg-white transition disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                  className="px-3 sm:px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-white dark:hover:bg-gray-600 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                 >
                   Next
                 </button>
