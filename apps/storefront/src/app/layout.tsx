@@ -9,6 +9,9 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata: Metadata = {
   title: 'Pulss - Multi-Tenant E-Commerce Platform',
   description: 'Shop quality products at great prices',
+  icons: {
+    icon: '/favicon.png',
+  },
 };
 
 export default function RootLayout({
