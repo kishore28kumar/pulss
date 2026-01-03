@@ -428,6 +428,7 @@ enum TenantStatus {
   SUSPENDED
   TRIAL
   EXPIRED
+  FROZEN
 }
 
 enum UserRole {

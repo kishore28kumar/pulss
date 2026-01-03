@@ -5,6 +5,8 @@ import {
   createTenant,
   updateTenant,
   updateTenantStatus,
+  freezeTenant,
+  unfreezeTenant,
   deleteTenant,
   getTenantInfo,
 } from '../controllers/tenantController';
@@ -21,6 +23,8 @@ router.get('/info', getTenantInfo);
 router.get('/', authenticateUser, authorize('SUPER_ADMIN'), getTenants);
 router.post('/', authenticateUser, authorize('SUPER_ADMIN'), createTenant);
 router.patch('/:id/status', authenticateUser, authorize('SUPER_ADMIN'), updateTenantStatus);
+router.post('/:id/freeze', authenticateUser, authorize('SUPER_ADMIN'), freezeTenant);
+router.post('/:id/unfreeze', authenticateUser, authorize('SUPER_ADMIN'), unfreezeTenant);
 router.delete('/:id', authenticateUser, authorize('SUPER_ADMIN'), deleteTenant);
 
 // Tenant info - Admin/Staff can view their own tenant
