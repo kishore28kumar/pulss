@@ -100,9 +100,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const setTheme = (newTheme: Theme) => {
     setThemeState(newTheme);
     if (typeof window !== 'undefined') {
-      localStorage.setItem(THEME_STORAGE_KEY, newTheme);
-      const resolved = resolveTheme(newTheme);
-      applyTheme(resolved);
+    localStorage.setItem(THEME_STORAGE_KEY, newTheme);
+    const resolved = resolveTheme(newTheme);
+    applyTheme(resolved);
     }
   };
 

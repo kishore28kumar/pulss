@@ -52,3 +52,24 @@
   @apply bg-gray-400 dark:bg-gray-500;
 }
 
+/* Input placeholder styling */
+input::placeholder {
+  color: #6b7280 !important; /* gray-500 */
+  opacity: 1;
+}
+
+input::-webkit-input-placeholder {
+  color: #6b7280 !important; /* gray-500 */
+  opacity: 1;
+}
+
+input::-moz-placeholder {
+  color: #6b7280 !important; /* gray-500 */
+  opacity: 1;
+}
+
+input:-ms-input-placeholder {
+  color: #6b7280 !important; /* gray-500 */
+  opacity: 1;
+}
+
