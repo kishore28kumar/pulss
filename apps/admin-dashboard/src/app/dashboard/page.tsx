@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { Package, ShoppingCart, Users, IndianRupee, TrendingUp, TrendingDown, Building2, Store, Snowflake, Sun, Search, X } from 'lucide-react';
+import { Package, ShoppingCart, Users, IndianRupee, TrendingUp, TrendingDown, Building2, Store, Snowflake, Sun, Search, X, ArrowRight, Calendar, AlertCircle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { formatCurrency } from '@/lib/utils';
@@ -64,11 +65,9 @@ interface Tenant {
 }
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
-  const [selectedState, setSelectedState] = useState<string>('');
-  const [selectedCity, setSelectedCity] = useState<string>('');
-  const [searchQuery, setSearchQuery] = useState<string>('');
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -111,7 +110,7 @@ export default function DashboardPage() {
     (product) => product.stock <= product.lowStockThreshold && product.stock > 0
   ).slice(0, 5) || [];
 
-  // Fetch tenants (Super Admin only)
+  // Fetch tenants summary (Super Admin only)
   const { data: tenantsData, isLoading: tenantsLoading } = useQuery<Tenant[]>({
     queryKey: ['tenants'],
     queryFn: async () => {
@@ -121,79 +120,38 @@ export default function DashboardPage() {
     enabled: mounted && userRole === 'SUPER_ADMIN',
   });
 
-  // Freeze/Unfreeze mutations
-  const freezeMutation = useMutation({
-    mutationFn: async (tenantId: string) => {
-      return await api.post(`/tenants/${tenantId}/freeze`);
-    },
-    onSuccess: () => {
-      toast.success('Tenant frozen successfully');
-      queryClient.invalidateQueries({ queryKey: ['tenants'] });
-    },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.error || 'Failed to freeze tenant');
-    },
-  });
+  // Calculate tenant summary stats
+  const tenantStats = useMemo(() => {
+    if (!tenantsData) return null;
 
-  const unfreezeMutation = useMutation({
-    mutationFn: async (tenantId: string) => {
-      return await api.post(`/tenants/${tenantId}/unfreeze`);
-    },
-    onSuccess: () => {
-      toast.success('Tenant unfrozen successfully');
-      queryClient.invalidateQueries({ queryKey: ['tenants'] });
-    },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.error || 'Failed to unfreeze tenant');
-    },
-  });
+    const total = tenantsData.length;
+    const active = tenantsData.filter(t => t.status === 'ACTIVE').length;
+    const frozen = tenantsData.filter(t => t.status === 'FROZEN').length;
+    const trial = tenantsData.filter(t => t.status === 'TRIAL').length;
+    const suspended = tenantsData.filter(t => t.status === 'SUSPENDED').length;
+    const expired = tenantsData.filter(t => t.status === 'EXPIRED').length;
 
-  // Get unique states and cities from tenants
-  const { uniqueStates, uniqueCities } = useMemo(() => {
-    if (!tenantsData) return { uniqueStates: [], uniqueCities: [] };
-    
-    const states = new Set<string>();
-    const cities = new Set<string>();
-    
-    tenantsData.forEach(tenant => {
-      if (tenant.state) states.add(tenant.state);
-      if (tenant.city) cities.add(tenant.city);
-    });
-    
+    // Get recent tenants (last 5, sorted by createdAt)
+    const recentTenants = [...tenantsData]
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 5);
+
+    // Get tenants needing attention (frozen, suspended, expiring soon)
+    const needsAttention = tenantsData.filter(
+      t => t.status === 'FROZEN' || t.status === 'SUSPENDED' || t.status === 'EXPIRED'
+    ).slice(0, 3);
+
     return {
-      uniqueStates: Array.from(states).sort(),
-      uniqueCities: Array.from(cities).sort(),
+      total,
+      active,
+      frozen,
+      trial,
+      suspended,
+      expired,
+      recentTenants,
+      needsAttention,
     };
   }, [tenantsData]);
-
-  // Filter tenants based on state, city, and search
-  const filteredTenants = useMemo(() => {
-    if (!tenantsData) return [];
-    
-    return tenantsData.filter(tenant => {
-      // State filter
-      if (selectedState && tenant.state !== selectedState) return false;
-      
-      // City filter
-      if (selectedCity && tenant.city !== selectedCity) return false;
-      
-      // Search filter
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
-        const matchesName = tenant.name.toLowerCase().includes(query);
-        const matchesSlug = tenant.slug.toLowerCase().includes(query);
-        const matchesEmail = tenant.email?.toLowerCase().includes(query);
-        const matchesState = tenant.state?.toLowerCase().includes(query);
-        const matchesCity = tenant.city?.toLowerCase().includes(query);
-        
-        if (!matchesName && !matchesSlug && !matchesEmail && !matchesState && !matchesCity) {
-          return false;
-        }
-      }
-      
-      return true;
-    });
-  }, [tenantsData, selectedState, selectedCity, searchQuery]);
 
   // Format stats
   const stats = statsData
@@ -388,7 +346,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Tenants Section - Super Admin Only */}
+      {/* Tenants Quick Overview - Super Admin Only */}
       {mounted && userRole === 'SUPER_ADMIN' && (
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
           <div className="flex items-center justify-between mb-6">
@@ -397,233 +355,156 @@ export default function DashboardPage() {
                 <Building2 className="w-6 h-6 text-purple-600 dark:text-purple-400" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Tenants</h2>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Manage all tenants on the platform</p>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Tenants Overview</h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Quick summary of all tenants on the platform</p>
               </div>
             </div>
-            {filteredTenants && (
-              <div className="text-right">
-                <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{filteredTenants.length}</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {filteredTenants.length !== tenantsData?.length ? 'Filtered' : 'Total'} Tenants
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* Filters */}
-          <div className="mb-6 space-y-4">
-            {/* Search */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <input
-                type="text"
-                placeholder="Search by name, slug, email, state, or city..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-
-            {/* State and City Filters */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* State Filter */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Filter by State
-                </label>
-                <select
-                  value={selectedState}
-                  onChange={(e) => {
-                    setSelectedState(e.target.value);
-                    setSelectedCity(''); // Reset city when state changes
-                  }}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                >
-                  <option value="">All States</option>
-                  {uniqueStates.map((state) => (
-                    <option key={state} value={state}>
-                      {state}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* City Filter */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Filter by City
-                </label>
-                <select
-                  value={selectedCity}
-                  onChange={(e) => setSelectedCity(e.target.value)}
-                  disabled={!selectedState}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <option value="">All Cities</option>
-                  {uniqueCities
-                    .filter((city) => {
-                      if (!selectedState) return true;
-                      const tenant = tenantsData?.find((t) => t.city === city);
-                      return tenant?.state === selectedState;
-                    })
-                    .map((city) => (
-                      <option key={city} value={city}>
-                        {city}
-                      </option>
-                    ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Clear Filters */}
-            {(selectedState || selectedCity || searchQuery) && (
-              <button
-                onClick={() => {
-                  setSelectedState('');
-                  setSelectedCity('');
-                  setSearchQuery('');
-                }}
-                className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
-              >
-                Clear all filters
-              </button>
-            )}
+            <button
+              onClick={() => router.push('/dashboard/staff')}
+              className="inline-flex items-center px-4 py-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition"
+            >
+              View All
+              <ArrowRight className="w-4 h-4 ml-1" />
+            </button>
           </div>
 
           {tenantsLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 animate-pulse">
-                  <div className="w-32 h-4 bg-gray-200 rounded mb-3"></div>
-                  <div className="w-24 h-3 bg-gray-200 rounded mb-2"></div>
-                  <div className="w-20 h-3 bg-gray-200 rounded"></div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="bg-gray-100 dark:bg-gray-700 rounded-lg p-4 animate-pulse">
+                  <div className="w-16 h-4 bg-gray-200 rounded mb-2"></div>
+                  <div className="w-12 h-6 bg-gray-200 rounded"></div>
                 </div>
               ))}
             </div>
-          ) : filteredTenants && filteredTenants.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredTenants.map((tenant) => {
-                const statusColors: Record<string, string> = {
-                  ACTIVE: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-                  TRIAL: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
-                  SUSPENDED: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-                  EXPIRED: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
-                  FROZEN: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
-                };
+          ) : tenantStats ? (
+            <>
+              {/* Summary Cards */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
+                  <p className="text-xs text-blue-600 dark:text-blue-400 mb-1">Total Tenants</p>
+                  <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">{tenantStats.total}</p>
+                </div>
+                <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4">
+                  <p className="text-xs text-green-600 dark:text-green-400 mb-1">Active</p>
+                  <p className="text-2xl font-bold text-green-900 dark:text-green-100">{tenantStats.active}</p>
+                </div>
+                <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4">
+                  <p className="text-xs text-purple-600 dark:text-purple-400 mb-1">Frozen</p>
+                  <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">{tenantStats.frozen}</p>
+                </div>
+                <div className="bg-orange-50 dark:bg-orange-900/20 rounded-lg p-4">
+                  <p className="text-xs text-orange-600 dark:text-orange-400 mb-1">Trial</p>
+                  <p className="text-2xl font-bold text-orange-900 dark:text-orange-100">{tenantStats.trial}</p>
+                </div>
+              </div>
 
-                const isFrozen = tenant.status === 'FROZEN';
-
-                return (
-                  <div
-                    key={tenant.id}
-                    className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-md transition bg-white dark:bg-gray-800"
-                  >
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center space-x-2 flex-1 min-w-0">
-                        <Store className="w-5 h-5 text-gray-400 dark:text-gray-500 flex-shrink-0" />
-                        <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate">{tenant.name}</h3>
-                      </div>
-                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium flex-shrink-0 ml-2 ${
-                        statusColors[tenant.status] || 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
-                      }`}>
-                        {tenant.status}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">@{tenant.slug}</p>
-                    {(tenant.state || tenant.city) && (
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-                        {[tenant.city, tenant.state].filter(Boolean).join(', ')}
-                      </p>
-                    )}
-                    <div className="grid grid-cols-2 gap-2 text-xs mb-3">
-                      <div>
-                        <p className="text-gray-500 dark:text-gray-400">Users</p>
-                        <p className="font-semibold text-gray-900 dark:text-gray-100">{tenant._count.users}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500 dark:text-gray-400">Products</p>
-                        <p className="font-semibold text-gray-900 dark:text-gray-100">{tenant._count.products}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500 dark:text-gray-400">Orders</p>
-                        <p className="font-semibold text-gray-900 dark:text-gray-100">{tenant._count.orders}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500 dark:text-gray-400">Customers</p>
-                        <p className="font-semibold text-gray-900 dark:text-gray-100">{tenant._count.customers}</p>
-                      </div>
-                    </div>
-                    <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between">
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Plan: <span className="font-medium text-gray-700 dark:text-gray-300">{tenant.subscriptionPlan}</span>
-                      </p>
-                      {/* Freeze/Unfreeze Button */}
-                      <button
-                        onClick={() => {
-                          if (isFrozen) {
-                            if (confirm(`Are you sure you want to unfreeze ${tenant.name}?`)) {
-                              unfreezeMutation.mutate(tenant.id);
-                            }
-                          } else {
-                            if (confirm(`Are you sure you want to freeze ${tenant.name}? This will block their storefront access.`)) {
-                              freezeMutation.mutate(tenant.id);
-                            }
-                          }
-                        }}
-                        disabled={freezeMutation.isPending || unfreezeMutation.isPending}
-                        className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium transition ${
-                          isFrozen
-                            ? 'bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400'
-                            : 'bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-400'
-                        } disabled:opacity-50 disabled:cursor-not-allowed`}
-                        title={isFrozen ? 'Unfreeze tenant' : 'Freeze tenant'}
-                      >
-                        {isFrozen ? (
-                          <>
-                            <Sun className="w-3 h-3 mr-1" />
-                            Unfreeze
-                          </>
-                        ) : (
-                          <>
-                            <Snowflake className="w-3 h-3 mr-1" />
-                            Freeze
-                          </>
-                        )}
-                      </button>
-                    </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Recent Tenants */}
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center">
+                      <Calendar className="w-4 h-4 mr-2 text-gray-500 dark:text-gray-400" />
+                      Recent Signups
+                    </h3>
                   </div>
-                );
-              })}
-            </div>
+                  {tenantStats.recentTenants.length > 0 ? (
+                    <div className="space-y-3">
+                      {tenantStats.recentTenants.map((tenant) => {
+                        const statusColors: Record<string, string> = {
+                          ACTIVE: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+                          TRIAL: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+                          SUSPENDED: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+                          EXPIRED: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
+                          FROZEN: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
+                        };
+
+                        return (
+                          <div
+                            key={tenant.id}
+                            className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition cursor-pointer"
+                            onClick={() => router.push('/dashboard/staff')}
+                          >
+                            <div className="flex items-center space-x-3 flex-1 min-w-0">
+                              <Store className="w-4 h-4 text-gray-400 dark:text-gray-500 flex-shrink-0" />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                                  {tenant.name}
+                                </p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">
+                                  {new Date(tenant.createdAt).toLocaleDateString()}
+                                </p>
+                              </div>
+                            </div>
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium flex-shrink-0 ml-2 ${
+                              statusColors[tenant.status] || 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
+                            }`}>
+                              {tenant.status}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-500 dark:text-gray-400">No recent tenants</p>
+                  )}
+                </div>
+
+                {/* Tenants Needing Attention */}
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center">
+                      <AlertCircle className="w-4 h-4 mr-2 text-red-500 dark:text-red-400" />
+                      Needs Attention
+                    </h3>
+                  </div>
+                  {tenantStats.needsAttention.length > 0 ? (
+                    <div className="space-y-3">
+                      {tenantStats.needsAttention.map((tenant) => {
+                        const statusColors: Record<string, string> = {
+                          FROZEN: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
+                          SUSPENDED: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+                          EXPIRED: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
+                        };
+
+                        return (
+                          <div
+                            key={tenant.id}
+                            className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900/10 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/20 transition cursor-pointer border border-red-200 dark:border-red-900/30"
+                            onClick={() => router.push('/dashboard/staff')}
+                          >
+                            <div className="flex items-center space-x-3 flex-1 min-w-0">
+                              <Store className="w-4 h-4 text-red-500 dark:text-red-400 flex-shrink-0" />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                                  {tenant.name}
+                                </p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">@{tenant.slug}</p>
+                              </div>
+                            </div>
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium flex-shrink-0 ml-2 ${
+                              statusColors[tenant.status] || 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
+                            }`}>
+                              {tenant.status}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="p-4 bg-green-50 dark:bg-green-900/10 rounded-lg border border-green-200 dark:border-green-900/30">
+                      <p className="text-sm text-green-700 dark:text-green-400">
+                        ✓ All tenants are in good standing
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
           ) : (
             <div className="text-center py-8 text-gray-500 dark:text-gray-400">
               <Building2 className="w-12 h-12 mx-auto mb-2 text-gray-400 dark:text-gray-500" />
-              <p>
-                {tenantsData && tenantsData.length === 0
-                  ? 'No tenants found'
-                  : 'No tenants match your filters'}
-              </p>
-              {(selectedState || selectedCity || searchQuery) && (
-                <button
-                  onClick={() => {
-                    setSelectedState('');
-                    setSelectedCity('');
-                    setSearchQuery('');
-                  }}
-                  className="mt-2 text-sm text-blue-600 dark:text-blue-400 hover:underline"
-                >
-                  Clear filters
-                </button>
-              )}
+              <p>No tenant data available</p>
             </div>
           )}
         </div>
