@@ -111,7 +111,10 @@ export default function Sidebar({ onClose }: SidebarProps) {
             return null;
           }
 
-          const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+          // For Dashboard, only match exact path. For other routes, match exact or sub-routes
+          const isActive = item.href === '/dashboard' 
+            ? pathname === '/dashboard' || pathname === '/dashboard/'
+            : pathname === item.href || pathname.startsWith(item.href + '/');
           const navItem = (
             <Link
               key={item.name}

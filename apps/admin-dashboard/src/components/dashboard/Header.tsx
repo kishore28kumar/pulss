@@ -6,6 +6,7 @@ import { authService } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
 import RoleBadge from '@/components/permissions/RoleBadge';
 import ThemeToggle from '@/components/theme/ThemeToggle';
+import { getUserRole } from '@/lib/permissions';
 
 interface HeaderProps {
   onMenuClick?: () => void;
@@ -16,11 +17,13 @@ export default function Header({ onMenuClick }: HeaderProps) {
   const [showMenu, setShowMenu] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Only access localStorage on the client side
     setUser(authService.getStoredUser());
+    setUserRole(getUserRole());
     setIsLoaded(true);
   }, []);
 
@@ -71,11 +74,10 @@ export default function Header({ onMenuClick }: HeaderProps) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center space-x-2 sm:space-x-3">
             <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 truncate">
-              <span className="hidden sm:inline">Welcome back</span>
+              <span className="hidden sm:inline">
+                Welcome back{isLoaded && userRole === 'SUPER_ADMIN' ? ', Super Admin' : user?.firstName ? `, ${user.firstName}` : ''}
+              </span>
               <span className="sm:hidden">Dashboard</span>
-              {isLoaded && user?.firstName && (
-                <span className="hidden sm:inline">, {user.firstName}</span>
-              )}
             </h2>
             <div className="hidden sm:block">
               <RoleBadge />
