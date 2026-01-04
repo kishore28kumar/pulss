@@ -1,13 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { authService } from '@/lib/auth';
 import { toast } from 'sonner';
 import { Store } from 'lucide-react';
+import api from '@/lib/api';
 
 // Force dynamic rendering to prevent static generation
 export const dynamic = 'force-dynamic';
@@ -19,9 +20,11 @@ const loginSchema = z.object({
 
 type LoginForm = z.infer<typeof loginSchema>;
 
-export default function LoginPage() {
+function LoginPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
+  const [isTokenLogin, setIsTokenLogin] = useState(false);
 
   const {
     register,
@@ -31,13 +34,46 @@ export default function LoginPage() {
     resolver: zodResolver(loginSchema),
   });
 
-  // Clear URL parameters on mount to prevent credentials from appearing in URL
+  // Handle token-based login
   useEffect(() => {
-    // Use window.location instead of useSearchParams to avoid SSR issues
-    if (typeof window !== 'undefined' && window.location.search) {
+    const token = searchParams?.get('token');
+    
+    if (token) {
+      handleTokenLogin(token);
+    }
+  }, [searchParams]);
+
+  const handleTokenLogin = async (token: string) => {
+    setIsTokenLogin(true);
+    setIsLoading(true);
+    
+    try {
+      // Verify token and get user info
+      const response = await api.post('/auth/login-token', { token });
+      const { user, tokens } = response.data.data;
+
+      // Store tokens and user info
+      localStorage.setItem('accessToken', tokens.accessToken);
+      localStorage.setItem('refreshToken', tokens.refreshToken);
+      localStorage.setItem('user', JSON.stringify(user));
+
+      toast.success('Login successful!', { duration: 3000 });
+      
+      // Redirect to dashboard
+      setTimeout(() => {
+        router.push('/dashboard');
+      }, 500);
+    } catch (error: any) {
+      setIsTokenLogin(false);
+      setIsLoading(false);
+      
+      const errorMessage = error.response?.data?.error || 'Invalid or expired login token';
+      toast.error(errorMessage, { duration: 5000 });
+      
+      // Remove token from URL
       router.replace('/login', { scroll: false });
     }
-  }, [router]);
+  };
 
   const onSubmit = async (data: LoginForm, e?: React.BaseSyntheticEvent) => {
     // Prevent default form submission to avoid URL parameters
@@ -149,7 +185,7 @@ export default function LoginPage() {
               disabled={isLoading}
               className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
             >
-              {isLoading ? 'Signing in...' : 'Sign In'}
+              {isLoading ? (isTokenLogin ? 'Logging in...' : 'Signing in...') : 'Sign In'}
             </button>
           </form>
 
@@ -167,6 +203,21 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <p className="text-gray-500 mt-4">Loading...</p>
+        </div>
+      </div>
+    }>
+      <LoginPageContent />
+    </Suspense>
   );
 }
 

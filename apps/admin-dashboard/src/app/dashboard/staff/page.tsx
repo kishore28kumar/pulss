@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Search, Edit, Trash2, UserPlus, Mail, Phone, CheckCircle, XCircle, ExternalLink, Store, Download, X } from 'lucide-react';
+import { Search, Edit, Trash2, UserPlus, Mail, Phone, CheckCircle, XCircle, ExternalLink, Store, Download, X, LayoutDashboard } from 'lucide-react';
 import api from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -165,6 +165,23 @@ export default function StaffPage() {
     } catch (error: any) {
       console.error('Export error:', error);
       toast.error(error.response?.data?.error || 'Failed to export customer data', { id: 'export-customers' });
+    }
+  };
+
+  const handleGenerateDashboardLink = async (adminId: string) => {
+    try {
+      toast.loading('Generating login link...', { id: 'dashboard-link' });
+
+      const response = await api.get(`/auth/login-token/${adminId}`);
+      const { loginUrl } = response.data.data;
+
+      // Open in new tab
+      window.open(loginUrl, '_blank');
+
+      toast.success('Opening admin dashboard...', { id: 'dashboard-link' });
+    } catch (error: any) {
+      console.error('Dashboard link error:', error);
+      toast.error(error.response?.data?.error || 'Failed to generate login link', { id: 'dashboard-link' });
     }
   };
 
@@ -394,6 +411,18 @@ export default function StaffPage() {
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex items-center justify-end space-x-2">
                           {/* View Storefront Link - Show for all staff members */}
+                          {/* Dashboard Link - SUPER_ADMIN only */}
+                          {mounted && userRole === 'SUPER_ADMIN' && (
+                            <button
+                              onClick={() => handleGenerateDashboardLink(member.id)}
+                              className="inline-flex items-center px-2 py-1 text-xs font-medium text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 rounded-md hover:bg-blue-100 dark:hover:bg-blue-900/30 transition"
+                              title={`Login as ${member.firstName} ${member.lastName}`}
+                            >
+                              <LayoutDashboard className="w-3 h-3 mr-1" />
+                              <span className="hidden sm:inline">Dashboard</span>
+                              <ExternalLink className="w-3 h-3 ml-1" />
+                            </button>
+                          )}
                           {(() => {
                             // For SUPER_ADMIN viewing admins, use the admin's tenant
                             // For others, use the logged-in user's tenant
@@ -415,7 +444,7 @@ export default function StaffPage() {
                                 href={memberStorefrontUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center px-2 py-1 text-xs font-medium text-green-700 bg-green-50 rounded-md hover:bg-green-100 transition"
+                                className="inline-flex items-center px-2 py-1 text-xs font-medium text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/20 rounded-md hover:bg-green-100 dark:hover:bg-green-900/30 transition"
                                 title={`View ${member.tenants?.name || 'Store'} Storefront`}
                               >
                                 <Store className="w-3 h-3 mr-1" />
@@ -429,7 +458,7 @@ export default function StaffPage() {
                             <button
                               onClick={() => handleDownloadCustomers(member.tenants!.id, member.tenants!.name)}
                               className="p-2 text-gray-400 hover:text-purple-600 transition"
-                              title="Download Customer Data"
+                              title={`Download Customer Data for ${member.tenants!.name}`}
                             >
                               <Download className="w-4 h-4" />
                             </button>
@@ -438,7 +467,7 @@ export default function StaffPage() {
                             <button
                               onClick={() => handleEdit(member)}
                               className="p-2 text-gray-400 hover:text-blue-600 transition"
-                              title="Edit Staff Member"
+                              title={mounted && userRole === 'SUPER_ADMIN' ? 'Edit Admin' : 'Edit Staff Member'}
                             >
                               <Edit className="w-4 h-4" />
                             </button>
@@ -448,7 +477,7 @@ export default function StaffPage() {
                               onClick={() => handleDelete(member)}
                               className="p-2 text-gray-400 hover:text-red-600 transition"
                               disabled={deleteMutation.isPending}
-                              title="Delete Staff Member"
+                              title={mounted && userRole === 'SUPER_ADMIN' ? 'Delete Admin' : 'Delete Staff Member'}
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
