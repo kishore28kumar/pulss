@@ -4,6 +4,54 @@ import { ApiResponse } from '@pulss/types';
 import { AppError, asyncHandler } from '../middleware/errorHandler';
 
 // ============================================
+// HELPER FUNCTION: Calculate date range from period or dates
+// ============================================
+
+const getDateRange = (period?: string, startDate?: string, endDate?: string): { start: Date; end: Date } => {
+  const now = new Date();
+  let start: Date;
+  let end: Date = new Date();
+
+  // If custom dates are provided, use them
+  if (startDate && endDate) {
+    start = new Date(startDate);
+    end = new Date(endDate);
+    // Set end date to end of day
+    end.setHours(23, 59, 59, 999);
+    return { start, end };
+  }
+
+  // Handle "today" period
+  if (period === 'today') {
+    start = new Date(now);
+    start.setHours(0, 0, 0, 0);
+    end = new Date(now);
+    end.setHours(23, 59, 59, 999);
+    return { start, end };
+  }
+
+  // Calculate based on period
+  switch (period) {
+    case '7d':
+      start = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      break;
+    case '30d':
+      start = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      break;
+    case '90d':
+      start = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+      break;
+    case '1y':
+      start = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+      break;
+    default:
+      start = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  }
+
+  return { start, end };
+};
+
+// ============================================
 // GET DASHBOARD STATS
 // ============================================
 
@@ -13,20 +61,17 @@ export const getDashboardStats = asyncHandler(
       throw new AppError('Tenant not found', 400);
     }
 
-    const { startDate, endDate } = req.query as any;
-
-    // Date range for stats
-    const dateFilter: any = {};
-    if (startDate) dateFilter.gte = new Date(startDate);
-    if (endDate) dateFilter.lte = new Date(endDate);
+    const { period, startDate, endDate } = req.query as any;
+    const { start, end } = getDateRange(period, startDate, endDate);
 
     // Get orders for date range
     const ordersWhere: any = {
       tenantId: req.tenantId,
+      createdAt: {
+        gte: start,
+        lte: end,
+      },
     };
-    if (startDate || endDate) {
-      ordersWhere.createdAt = dateFilter;
-    }
 
     // Calculate stats
     const [
@@ -71,10 +116,8 @@ export const getDashboardStats = asyncHandler(
         where: {
           tenantId: req.tenantId,
           createdAt: {
-            gte: startDate
-              ? new Date(new Date(startDate).getTime() - (new Date(endDate || Date.now()).getTime() - new Date(startDate).getTime()))
-              : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-            lt: startDate ? new Date(startDate) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+            gte: new Date(start.getTime() - (end.getTime() - start.getTime())),
+            lt: start,
           },
         },
         select: {
@@ -119,27 +162,8 @@ export const getRevenueAnalytics = asyncHandler(
       throw new AppError('Tenant not found', 400);
     }
 
-    const { period = '30d' } = req.query as any;
-
-    // Calculate date range based on period
-    const now = new Date();
-    let startDate: Date;
-    switch (period) {
-      case '7d':
-        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        break;
-      case '30d':
-        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-        break;
-      case '90d':
-        startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-        break;
-      case '1y':
-        startDate = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
-        break;
-      default:
-        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-    }
+    const { period, startDate, endDate } = req.query as any;
+    const { start, end } = getDateRange(period, startDate, endDate);
 
     // Get orders grouped by date
     const orders = await prisma.orders.findMany({
@@ -147,7 +171,8 @@ export const getRevenueAnalytics = asyncHandler(
         tenantId: req.tenantId,
         paymentStatus: 'COMPLETED',
         createdAt: {
-          gte: startDate,
+          gte: start,
+          lte: end,
         },
       },
       select: {
@@ -174,7 +199,9 @@ export const getRevenueAnalytics = asyncHandler(
     const response: ApiResponse = {
       success: true,
       data: {
-        period,
+        period: period || 'custom',
+        startDate: start.toISOString().split('T')[0],
+        endDate: end.toISOString().split('T')[0],
         revenueData,
         totalRevenue: orders.reduce((sum, o) => sum + Number(o.total), 0),
       },
@@ -194,7 +221,8 @@ export const getProductAnalytics = asyncHandler(
       throw new AppError('Tenant not found', 400);
     }
 
-    const { limit = 10 } = req.query as any;
+    const { limit = 10, period, startDate, endDate } = req.query as any;
+    const { start, end } = getDateRange(period, startDate, endDate);
 
     // Get top selling products
     const topProducts = await prisma.order_items.groupBy({
@@ -203,6 +231,10 @@ export const getProductAnalytics = asyncHandler(
         orders: {
           tenantId: req.tenantId,
           paymentStatus: 'COMPLETED',
+          createdAt: {
+            gte: start,
+            lte: end,
+          },
         },
       },
       _sum: {
@@ -262,24 +294,8 @@ export const getCustomerAnalytics = asyncHandler(
       throw new AppError('Tenant not found', 400);
     }
 
-    const { period = '30d' } = req.query as any;
-
-    // Calculate date range
-    const now = new Date();
-    let startDate: Date;
-    switch (period) {
-      case '7d':
-        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        break;
-      case '30d':
-        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-        break;
-      case '90d':
-        startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-        break;
-      default:
-        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-    }
+    const { period, startDate, endDate } = req.query as any;
+    const { start, end } = getDateRange(period, startDate, endDate);
 
     // Get customer stats
     const [
@@ -294,7 +310,10 @@ export const getCustomerAnalytics = asyncHandler(
       prisma.customers.count({
         where: {
           tenantId: req.tenantId,
-          createdAt: { gte: startDate },
+          createdAt: { 
+            gte: start,
+            lte: end,
+          },
         },
       }),
       prisma.customers.count({
@@ -355,31 +374,16 @@ export const getGlobalTopSearches = asyncHandler(
       throw new AppError('Super admin access required', 403);
     }
 
-    const { period = '30d' } = req.query as any;
-
-    // Calculate date range
-    const now = new Date();
-    let startDate: Date;
-    switch (period) {
-      case '7d':
-        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        break;
-      case '30d':
-        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-        break;
-      case '90d':
-        startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-        break;
-      default:
-        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-    }
+    const { period, startDate, endDate } = req.query as any;
+    const { start, end } = getDateRange(period, startDate, endDate);
 
     // Get order items with product names (using product names as proxy for searches)
     const orderItems = await prisma.order_items.findMany({
       where: {
         orders: {
           createdAt: {
-            gte: startDate,
+            gte: start,
+            lte: end,
           },
         },
       },
@@ -425,7 +429,9 @@ export const getGlobalTopSearches = asyncHandler(
     const response: ApiResponse = {
       success: true,
       data: {
-        period,
+        period: period || 'custom',
+        startDate: start.toISOString().split('T')[0],
+        endDate: end.toISOString().split('T')[0],
         topSearches,
       },
     };
@@ -444,30 +450,15 @@ export const getTopSearchLocations = asyncHandler(
       throw new AppError('Super admin access required', 403);
     }
 
-    const { period = '30d' } = req.query as any;
-
-    // Calculate date range
-    const now = new Date();
-    let startDate: Date;
-    switch (period) {
-      case '7d':
-        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        break;
-      case '30d':
-        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-        break;
-      case '90d':
-        startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-        break;
-      default:
-        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-    }
+    const { period, startDate, endDate } = req.query as any;
+    const { start, end } = getDateRange(period, startDate, endDate);
 
     // Get orders with shipping addresses
     const orders = await prisma.orders.findMany({
       where: {
         createdAt: {
-          gte: startDate,
+          gte: start,
+          lte: end,
         },
       },
       select: {
@@ -508,7 +499,9 @@ export const getTopSearchLocations = asyncHandler(
     const response: ApiResponse = {
       success: true,
       data: {
-        period,
+        period: period || 'custom',
+        startDate: start.toISOString().split('T')[0],
+        endDate: end.toISOString().split('T')[0],
         topLocations,
       },
     };
@@ -527,24 +520,8 @@ export const getTenantPerformance = asyncHandler(
       throw new AppError('Super admin access required', 403);
     }
 
-    const { period = '30d' } = req.query as any;
-
-    // Calculate date range
-    const now = new Date();
-    let startDate: Date;
-    switch (period) {
-      case '7d':
-        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        break;
-      case '30d':
-        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-        break;
-      case '90d':
-        startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-        break;
-      default:
-        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-    }
+    const { period, startDate, endDate } = req.query as any;
+    const { start, end } = getDateRange(period, startDate, endDate);
 
     // Get all tenants
     const tenants = await prisma.tenants.findMany({
@@ -559,7 +536,9 @@ export const getTenantPerformance = asyncHandler(
     });
 
     // Calculate previous period for comparison
-    const previousPeriodStart = new Date(startDate.getTime() - (now.getTime() - startDate.getTime()));
+    const periodDuration = end.getTime() - start.getTime();
+    const previousPeriodStart = new Date(start.getTime() - periodDuration);
+    const previousPeriodEnd = start;
 
     // Get metrics for each tenant
     const tenantPerformance = await Promise.all(
@@ -569,13 +548,19 @@ export const getTenantPerformance = asyncHandler(
           prisma.orders.count({
             where: {
               tenantId: tenant.id,
-              createdAt: { gte: startDate },
+              createdAt: { 
+                gte: start,
+                lte: end,
+              },
             },
           }),
           prisma.orders.aggregate({
             where: {
               tenantId: tenant.id,
-              createdAt: { gte: startDate },
+              createdAt: { 
+                gte: start,
+                lte: end,
+              },
               paymentStatus: 'COMPLETED',
             },
             _sum: { total: true },
@@ -583,13 +568,19 @@ export const getTenantPerformance = asyncHandler(
           prisma.customers.count({
             where: {
               tenantId: tenant.id,
-              createdAt: { gte: startDate },
+              createdAt: { 
+                gte: start,
+                lte: end,
+              },
             },
           }),
           prisma.products.count({
             where: {
               tenantId: tenant.id,
-              createdAt: { gte: startDate },
+              createdAt: { 
+                gte: start,
+                lte: end,
+              },
             },
           }),
         ]);
@@ -601,7 +592,7 @@ export const getTenantPerformance = asyncHandler(
               tenantId: tenant.id,
               createdAt: {
                 gte: previousPeriodStart,
-                lt: startDate,
+                lt: previousPeriodEnd,
               },
             },
           }),
@@ -610,7 +601,7 @@ export const getTenantPerformance = asyncHandler(
               tenantId: tenant.id,
               createdAt: {
                 gte: previousPeriodStart,
-                lt: startDate,
+                lt: previousPeriodEnd,
               },
               paymentStatus: 'COMPLETED',
             },
@@ -621,7 +612,7 @@ export const getTenantPerformance = asyncHandler(
               tenantId: tenant.id,
               createdAt: {
                 gte: previousPeriodStart,
-                lt: startDate,
+                lt: previousPeriodEnd,
               },
             },
           }),
@@ -630,7 +621,7 @@ export const getTenantPerformance = asyncHandler(
               tenantId: tenant.id,
               createdAt: {
                 gte: previousPeriodStart,
-                lt: startDate,
+                lt: previousPeriodEnd,
               },
             },
           }),
@@ -691,7 +682,9 @@ export const getTenantPerformance = asyncHandler(
     const response: ApiResponse = {
       success: true,
       data: {
-        period,
+        period: period || 'custom',
+        startDate: start.toISOString().split('T')[0],
+        endDate: end.toISOString().split('T')[0],
         tenantPerformance,
       },
     };

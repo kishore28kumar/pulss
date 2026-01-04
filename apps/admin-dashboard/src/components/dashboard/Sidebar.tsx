@@ -22,17 +22,16 @@ import { Permission, getUserRole } from '@/lib/permissions';
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { 
-    name: 'Tenants', 
+    name: 'Tenants', // Will be renamed to 'Staff' for Admin users
     href: '/dashboard/staff', 
     icon: UserCog,
     permission: Permission.STAFF_VIEW,
   },
-  { name: 'Products', href: '/dashboard/products', icon: Package },
   { 
-    name: 'Categories', 
-    href: '/dashboard/categories', 
-    icon: FolderTree,
-    requireAdminOrStaff: true, // Only ADMIN and STAFF can see Categories
+    name: 'Customers', 
+    href: '/dashboard/customers', 
+    icon: Users,
+    requireAdminOrStaff: true, // Only ADMIN and STAFF can see Customers
   },
   { 
     name: 'Orders', 
@@ -40,11 +39,12 @@ const navigation = [
     icon: ShoppingCart,
     requireAdminOrStaff: true, // Only ADMIN and STAFF can see Orders
   },
+  { name: 'Products', href: '/dashboard/products', icon: Package },
   { 
-    name: 'Customers', 
-    href: '/dashboard/customers', 
-    icon: Users,
-    requireAdminOrStaff: true, // Only ADMIN and STAFF can see Customers
+    name: 'Categories', 
+    href: '/dashboard/categories', 
+    icon: FolderTree,
+    requireAdminOrStaff: true, // Only ADMIN and STAFF can see Categories
   },
   { 
     name: 'Analytics', 
@@ -111,6 +111,11 @@ export default function Sidebar({ onClose }: SidebarProps) {
             return null;
           }
 
+          // Determine display name: "Tenants" for SUPER_ADMIN, "Staff" for others
+          const displayName = item.name === 'Tenants' && mounted && userRole !== 'SUPER_ADMIN' 
+            ? 'Staff' 
+            : item.name;
+
           // For Dashboard, only match exact path. For other routes, match exact or sub-routes
           const isActive = item.href === '/dashboard' 
             ? pathname === '/dashboard' || pathname === '/dashboard/'
@@ -128,7 +133,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
               )}
             >
               <item.icon className="w-5 h-5 flex-shrink-0" />
-              <span className="font-medium">{item.name}</span>
+              <span className="font-medium">{displayName}</span>
             </Link>
           );
 

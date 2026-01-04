@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { IndianRupee, ShoppingBag, Users, Package, TrendingUp, TrendingDown, Search, MapPin, Building2 } from 'lucide-react';
+import { IndianRupee, ShoppingBag, Users, Package, TrendingUp, TrendingDown, Search, MapPin, Building2, X, Calendar } from 'lucide-react';
+import { format } from 'date-fns';
 import api from '@/lib/api';
 import { formatCurrency } from '@/lib/utils';
 import PermissionGuard from '@/components/permissions/PermissionGuard';
@@ -10,30 +11,99 @@ import { Permission } from '@/lib/permissions';
 import { getUserRole } from '@/lib/permissions';
 
 export default function AnalyticsPage() {
-  const [period, setPeriod] = useState('30d');
+  const [period, setPeriod] = useState('today');
   const [mounted, setMounted] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [showCustomDateModal, setShowCustomDateModal] = useState(false);
+  const [customStartDate, setCustomStartDate] = useState('');
+  const [customEndDate, setCustomEndDate] = useState('');
 
   useEffect(() => {
     setMounted(true);
     setUserRole(getUserRole());
   }, []);
 
+  // Helper function to get date range params
+  const getDateParams = () => {
+    if (period === 'custom') {
+      return {
+        startDate: customStartDate,
+        endDate: customEndDate,
+      };
+    } else if (period === 'today') {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const endOfToday = new Date();
+      endOfToday.setHours(23, 59, 59, 999);
+      return {
+        startDate: today.toISOString().split('T')[0],
+        endDate: endOfToday.toISOString().split('T')[0],
+      };
+    }
+    return { period };
+  };
+
+  const handlePeriodChange = (value: string) => {
+    if (value === 'custom') {
+      setShowCustomDateModal(true);
+    } else {
+      setPeriod(value);
+      setCustomStartDate('');
+      setCustomEndDate('');
+    }
+  };
+
+  const handleApplyCustomDate = () => {
+    if (!customStartDate || !customEndDate) {
+      return;
+    }
+    if (new Date(customStartDate) > new Date(customEndDate)) {
+      alert('Start date must be before end date');
+      return;
+    }
+    setPeriod('custom');
+    setShowCustomDateModal(false);
+  };
+
+  const formatDateForDisplay = (dateString: string) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return format(date, 'dd/MM/yyyy');
+  };
+
+  const getPeriodDisplay = () => {
+    if (period === 'custom' && customStartDate && customEndDate) {
+      return `${formatDateForDisplay(customStartDate)} - ${formatDateForDisplay(customEndDate)}`;
+    }
+    if (period === 'today') {
+      return 'Today';
+    }
+    const periodMap: Record<string, string> = {
+      '7d': 'Last 7 days',
+      '30d': 'Last 30 days',
+      '90d': 'Last 90 days',
+      '1y': 'Last year',
+    };
+    return periodMap[period] || 'Last 30 days';
+  };
+
+  const dateParams = getDateParams();
+
   const { data: dashboardStats, isLoading: statsLoading } = useQuery({
-    queryKey: ['analytics-dashboard', period],
+    queryKey: ['analytics-dashboard', period, dateParams],
     queryFn: async () => {
       const response = await api.get('/analytics/dashboard', {
-        params: { period },
+        params: dateParams,
       });
       return response.data.data;
     },
   });
 
   const { data: productData, isLoading: productLoading } = useQuery({
-    queryKey: ['analytics-products'],
+    queryKey: ['analytics-products', dateParams],
     queryFn: async () => {
       const response = await api.get('/analytics/products', {
-        params: { limit: 10 },
+        params: { limit: 10, ...dateParams },
       });
       return response.data.data;
     },
@@ -41,10 +111,10 @@ export default function AnalyticsPage() {
 
   // Global Top Searches (SUPER_ADMIN only)
   const { data: topSearchesData, isLoading: searchesLoading } = useQuery({
-    queryKey: ['global-top-searches', period],
+    queryKey: ['global-top-searches', period, dateParams],
     queryFn: async () => {
       const response = await api.get('/analytics/global-top-searches', {
-        params: { period },
+        params: dateParams,
       });
       return response.data.data;
     },
@@ -53,10 +123,10 @@ export default function AnalyticsPage() {
 
   // Top Search Locations (SUPER_ADMIN only)
   const { data: topLocationsData, isLoading: locationsLoading } = useQuery({
-    queryKey: ['top-search-locations', period],
+    queryKey: ['top-search-locations', period, dateParams],
     queryFn: async () => {
       const response = await api.get('/analytics/top-search-locations', {
-        params: { period },
+        params: dateParams,
       });
       return response.data.data;
     },
@@ -65,10 +135,10 @@ export default function AnalyticsPage() {
 
   // Tenant Performance (SUPER_ADMIN only)
   const { data: tenantPerformanceData, isLoading: tenantPerformanceLoading } = useQuery({
-    queryKey: ['tenant-performance', period],
+    queryKey: ['tenant-performance', period, dateParams],
     queryFn: async () => {
       const response = await api.get('/analytics/tenant-performance', {
-        params: { period },
+        params: dateParams,
       });
       return response.data.data;
     },
@@ -94,17 +164,31 @@ export default function AnalyticsPage() {
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Analytics</h1>
           <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-1">Track your store performance</p>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2">
+            <Calendar className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+            <label htmlFor="period-filter" className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
+              Filter by:
+            </label>
+          </div>
           <select
-            value={period}
-            onChange={(e) => setPeriod(e.target.value)}
+            id="period-filter"
+            value={period === 'custom' ? 'custom' : period}
+            onChange={(e) => handlePeriodChange(e.target.value)}
             className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
           >
+            <option value="today">Today</option>
             <option value="7d">Last 7 days</option>
             <option value="30d">Last 30 days</option>
             <option value="90d">Last 90 days</option>
             <option value="1y">Last year</option>
+            <option value="custom">Custom Range</option>
           </select>
+          {period === 'custom' && customStartDate && customEndDate && (
+            <span className="text-sm text-gray-600 dark:text-gray-400 px-3 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg">
+              {formatDateForDisplay(customStartDate)} - {formatDateForDisplay(customEndDate)}
+            </span>
+          )}
         </div>
       </div>
 
@@ -402,6 +486,88 @@ export default function AnalyticsPage() {
             )}
           </div>
         </>
+      )}
+
+      {/* Custom Date Range Modal */}
+      {showCustomDateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-blue-50 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+                  <Calendar className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Custom Date Range</h2>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Select start and end dates</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowCustomDateModal(false)}
+                className="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Start Date *
+                </label>
+                <input
+                  id="startDate"
+                  type="date"
+                  value={customStartDate}
+                  onChange={(e) => setCustomStartDate(e.target.value)}
+                  max={customEndDate || undefined}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  End Date *
+                </label>
+                <input
+                  id="endDate"
+                  type="date"
+                  value={customEndDate}
+                  onChange={(e) => setCustomEndDate(e.target.value)}
+                  min={customStartDate || undefined}
+                  max={new Date().toISOString().split('T')[0]}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                />
+              </div>
+
+              {customStartDate && customEndDate && new Date(customStartDate) > new Date(customEndDate) && (
+                <p className="text-sm text-red-600 dark:text-red-400">Start date must be before end date</p>
+              )}
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowCustomDateModal(false);
+                  setCustomStartDate('');
+                  setCustomEndDate('');
+                }}
+                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleApplyCustomDate}
+                disabled={!customStartDate || !customEndDate || new Date(customStartDate) > new Date(customEndDate)}
+                className="px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Apply
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

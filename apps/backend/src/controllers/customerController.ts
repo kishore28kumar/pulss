@@ -26,14 +26,16 @@ export const getCustomers = asyncHandler(
       tenantId: req.tenantId,
     };
 
-    if (segment) where.segment = segment;
+    if (segment && segment.trim()) {
+      where.segment = segment.trim();
+    }
 
-    if (search) {
+    if (search && search.trim()) {
       where.users = {
         OR: [
-          { email: { contains: search, mode: 'insensitive' } },
-          { firstName: { contains: search, mode: 'insensitive' } },
-          { lastName: { contains: search, mode: 'insensitive' } },
+          { email: { contains: search.trim(), mode: 'insensitive' } },
+          { firstName: { contains: search.trim(), mode: 'insensitive' } },
+          { lastName: { contains: search.trim(), mode: 'insensitive' } },
         ],
       };
     }
