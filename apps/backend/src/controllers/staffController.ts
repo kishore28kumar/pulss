@@ -14,7 +14,7 @@ export const getStaff = asyncHandler(
       throw new AppError('Authentication required', 401);
     }
 
-    const { page = 1, limit = 20, search } = req.query as any;
+    const { page = 1, limit = 20, search, state, city } = req.query as any;
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
     // Determine which roles to show based on current user's role
@@ -47,11 +47,57 @@ export const getStaff = asyncHandler(
     // For SUPER_ADMIN, don't filter by tenantId - show all admins
 
     if (search) {
-      where.OR = [
-        { email: { contains: search, mode: 'insensitive' } },
-        { firstName: { contains: search, mode: 'insensitive' } },
-        { lastName: { contains: search, mode: 'insensitive' } },
-      ];
+      // For SUPER_ADMIN, also search by tenant name
+      if (req.user.role === 'SUPER_ADMIN') {
+        where.OR = [
+          { email: { contains: search, mode: 'insensitive' } },
+          { firstName: { contains: search, mode: 'insensitive' } },
+          { lastName: { contains: search, mode: 'insensitive' } },
+          { tenants: { name: { contains: search, mode: 'insensitive' } } },
+        ];
+      } else {
+        where.OR = [
+          { email: { contains: search, mode: 'insensitive' } },
+          { firstName: { contains: search, mode: 'insensitive' } },
+          { lastName: { contains: search, mode: 'insensitive' } },
+        ];
+      }
+    }
+
+    // Filter by tenant state/city (SUPER_ADMIN only)
+    // First, get tenant IDs that match the state/city filter
+    let filteredTenantIds: string[] | undefined;
+    if (req.user.role === 'SUPER_ADMIN' && (state || city)) {
+      const tenantWhere: any = {};
+      if (state) {
+        tenantWhere.state = state;
+      }
+      if (city) {
+        tenantWhere.city = city;
+      }
+      const matchingTenants = await prisma.tenants.findMany({
+        where: tenantWhere,
+        select: { id: true },
+      });
+      filteredTenantIds = matchingTenants.map((t) => t.id);
+      if (filteredTenantIds.length === 0) {
+        // No tenants match the filter, return empty result
+        const emptyResponse: ApiResponse<PaginatedResponse<any>> = {
+          success: true,
+          data: {
+            data: [],
+            meta: {
+              total: 0,
+              page: parseInt(page),
+              limit: parseInt(limit),
+              totalPages: 0,
+            },
+          },
+        };
+        res.json(emptyResponse);
+        return;
+      }
+      where.tenantId = { in: filteredTenantIds };
     }
 
     const [staff, total] = await Promise.all([
@@ -75,6 +121,8 @@ export const getStaff = asyncHandler(
               id: true,
               name: true,
               slug: true,
+              state: true,
+              city: true,
             },
           },
         },
