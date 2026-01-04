@@ -392,14 +392,14 @@ export default function BulkUploadSection({
   const summary = calculateSummary();
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 space-y-6">
+    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-gray-900">Bulk Upload Products</h2>
+        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Bulk Upload Products</h2>
         <div className="flex items-center space-x-2">
           <button
             type="button"
             onClick={downloadTemplate}
-            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+            className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition text-gray-700 dark:text-gray-300"
           >
             <Download className="w-4 h-4 mr-2" />
             Download Template
@@ -415,7 +415,7 @@ export default function BulkUploadSection({
           onDrop={handleDrop}
           onClick={() => csvFileInputRef.current?.click()}
           className={`border-2 border-dashed rounded-lg p-12 text-center transition-colors cursor-pointer ${
-            isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300'
+            isDragging ? 'border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/30' : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50'
           }`}
         >
           <input
@@ -425,11 +425,11 @@ export default function BulkUploadSection({
             onChange={handleFileChange}
             className="hidden"
           />
-          <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+          <FileText className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
             Upload CSV File
           </h3>
-          <p className="text-gray-600 mb-4">
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
             Drag and drop your CSV file here, or{' '}
             <button
               type="button"
@@ -437,12 +437,12 @@ export default function BulkUploadSection({
                 e.stopPropagation();
                 csvFileInputRef.current?.click();
               }}
-              className="text-blue-600 hover:text-blue-700"
+              className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
             >
               browse
             </button>
           </p>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             Maximum 1000 products per upload
           </p>
         </div>
@@ -454,11 +454,11 @@ export default function BulkUploadSection({
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <div className="text-sm">
-                <span className="font-semibold text-green-600">{summary.valid} Valid</span>
+                <span className="font-semibold text-green-600 dark:text-green-400">{summary.valid} Valid</span>
                 {' / '}
-                <span className="font-semibold text-red-600">{summary.invalid} Invalid</span>
+                <span className="font-semibold text-red-600 dark:text-red-400">{summary.invalid} Invalid</span>
                 {' / '}
-                <span className="text-gray-600">Total: {summary.total}</span>
+                <span className="text-gray-600 dark:text-gray-400">Total: {summary.total}</span>
               </div>
             </div>
             <div className="flex items-center space-x-2">
@@ -469,7 +469,7 @@ export default function BulkUploadSection({
                   sessionStorage.removeItem('bulkUploadProducts');
                   if (csvFileInputRef.current) csvFileInputRef.current.value = '';
                 }}
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition text-gray-700 dark:text-gray-300"
               >
                 Clear
               </button>
@@ -477,7 +477,7 @@ export default function BulkUploadSection({
                 type="button"
                 onClick={handleBulkUpload}
                 disabled={summary.valid === 0 || bulkUploadMutation.isPending}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                className="px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
               >
                 {bulkUploadMutation.isPending ? (
                   <>
@@ -494,24 +494,24 @@ export default function BulkUploadSection({
             </div>
           </div>
 
-          <div className="overflow-x-auto border border-gray-200 rounded-lg">
+          <div className="overflow-x-auto border border-gray-200 dark:border-gray-700 rounded-lg">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-200">
+              <thead className="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
                 <tr>
-                  <th className="px-4 py-3 text-left font-medium text-gray-700">Name</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-700">Slug</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-700">Price</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-700">Category</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-700">Stock</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-700">Status</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-700">Actions</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-700 dark:text-gray-300">Name</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-700 dark:text-gray-300">Slug</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-700 dark:text-gray-300">Price</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-700 dark:text-gray-300">Category</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-700 dark:text-gray-300">Stock</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-700 dark:text-gray-300">Status</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-700 dark:text-gray-300">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                 {products.map((product, index) => (
                   <tr
                     key={product.id}
-                    className={product.isValid ? 'bg-white' : 'bg-red-50'}
+                    className={product.isValid ? 'bg-white dark:bg-gray-800' : 'bg-red-50 dark:bg-red-900/20'}
                   >
                     <td className="px-4 py-3">
                       {editingCell?.row === index && editingCell?.col === 'name' ? (
@@ -524,16 +524,16 @@ export default function BulkUploadSection({
                             if (e.key === 'Enter') handleCellEdit(index, 'name', editValue);
                             if (e.key === 'Escape') setEditingCell(null);
                           }}
-                          className="w-full px-2 py-1 border border-blue-500 rounded"
+                          className="w-full px-2 py-1 border border-blue-500 dark:border-blue-400 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                           autoFocus
                         />
                       ) : (
                         <div
-                          className="flex items-center space-x-2 cursor-pointer hover:bg-gray-100 px-2 py-1 rounded"
+                          className="flex items-center space-x-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 px-2 py-1 rounded"
                           onClick={() => startEditing(index, 'name')}
                         >
-                          <span>{product.name}</span>
-                          <Edit2 className="w-3 h-3 text-gray-400" />
+                          <span className="text-gray-900 dark:text-gray-100">{product.name}</span>
+                          <Edit2 className="w-3 h-3 text-gray-400 dark:text-gray-500" />
                         </div>
                       )}
                     </td>
@@ -548,16 +548,16 @@ export default function BulkUploadSection({
                             if (e.key === 'Enter') handleCellEdit(index, 'slug', editValue);
                             if (e.key === 'Escape') setEditingCell(null);
                           }}
-                          className="w-full px-2 py-1 border border-blue-500 rounded"
+                          className="w-full px-2 py-1 border border-blue-500 dark:border-blue-400 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                           autoFocus
                         />
                       ) : (
                         <div
-                          className="flex items-center space-x-2 cursor-pointer hover:bg-gray-100 px-2 py-1 rounded"
+                          className="flex items-center space-x-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 px-2 py-1 rounded"
                           onClick={() => startEditing(index, 'slug')}
                         >
-                          <span>{product.slug}</span>
-                          <Edit2 className="w-3 h-3 text-gray-400" />
+                          <span className="text-gray-900 dark:text-gray-100">{product.slug}</span>
+                          <Edit2 className="w-3 h-3 text-gray-400 dark:text-gray-500" />
                         </div>
                       )}
                     </td>
@@ -573,16 +573,16 @@ export default function BulkUploadSection({
                             if (e.key === 'Enter') handleCellEdit(index, 'price', parseFloat(editValue) || 0);
                             if (e.key === 'Escape') setEditingCell(null);
                           }}
-                          className="w-full px-2 py-1 border border-blue-500 rounded"
+                          className="w-full px-2 py-1 border border-blue-500 dark:border-blue-400 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                           autoFocus
                         />
                       ) : (
                         <div
-                          className="flex items-center space-x-2 cursor-pointer hover:bg-gray-100 px-2 py-1 rounded"
+                          className="flex items-center space-x-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 px-2 py-1 rounded"
                           onClick={() => startEditing(index, 'price')}
                         >
-                          <span>₹{product.price}</span>
-                          <Edit2 className="w-3 h-3 text-gray-400" />
+                          <span className="text-gray-900 dark:text-gray-100">₹{product.price}</span>
+                          <Edit2 className="w-3 h-3 text-gray-400 dark:text-gray-500" />
                         </div>
                       )}
                     </td>
@@ -596,7 +596,7 @@ export default function BulkUploadSection({
                             if (category) handleCellEdit(index, 'categoryId', category.id);
                           }}
                           onBlur={() => setEditingCell(null)}
-                          className="w-full px-2 py-1 border border-blue-500 rounded"
+                          className="w-full px-2 py-1 border border-blue-500 dark:border-blue-400 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                           autoFocus
                         >
                           <option value="">Select Category</option>
@@ -606,11 +606,11 @@ export default function BulkUploadSection({
                         </select>
                       ) : (
                         <div
-                          className="flex items-center space-x-2 cursor-pointer hover:bg-gray-100 px-2 py-1 rounded"
+                          className="flex items-center space-x-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 px-2 py-1 rounded"
                           onClick={() => startEditing(index, 'categorySlug')}
                         >
-                          <span>{product.categorySlug || 'None'}</span>
-                          <Edit2 className="w-3 h-3 text-gray-400" />
+                          <span className="text-gray-900 dark:text-gray-100">{product.categorySlug || 'None'}</span>
+                          <Edit2 className="w-3 h-3 text-gray-400 dark:text-gray-500" />
                         </div>
                       )}
                     </td>
@@ -625,27 +625,27 @@ export default function BulkUploadSection({
                             if (e.key === 'Enter') handleCellEdit(index, 'stockQuantity', parseInt(editValue) || 0);
                             if (e.key === 'Escape') setEditingCell(null);
                           }}
-                          className="w-full px-2 py-1 border border-blue-500 rounded"
+                          className="w-full px-2 py-1 border border-blue-500 dark:border-blue-400 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                           autoFocus
                         />
                       ) : (
                         <div
-                          className="flex items-center space-x-2 cursor-pointer hover:bg-gray-100 px-2 py-1 rounded"
+                          className="flex items-center space-x-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 px-2 py-1 rounded"
                           onClick={() => startEditing(index, 'stockQuantity')}
                         >
-                          <span>{product.stockQuantity}</span>
-                          <Edit2 className="w-3 h-3 text-gray-400" />
+                          <span className="text-gray-900 dark:text-gray-100">{product.stockQuantity}</span>
+                          <Edit2 className="w-3 h-3 text-gray-400 dark:text-gray-500" />
                         </div>
                       )}
                     </td>
                     <td className="px-4 py-3">
                       {product.isValid ? (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200">
                           <CheckCircle className="w-3 h-3 mr-1" />
                           Valid
                         </span>
                       ) : (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200">
                           <AlertCircle className="w-3 h-3 mr-1" />
                           Invalid
                         </span>
@@ -660,15 +660,15 @@ export default function BulkUploadSection({
                             sessionStorage.setItem('bulkUploadProducts', JSON.stringify(products));
                             router.push(`/dashboard/products/new/preview?index=${index}`);
                           }}
-                          className="text-blue-500 hover:text-blue-700"
+                          className="text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
                           title="Preview product"
                         >
                           <Eye className="w-4 h-4" />
                         </button>
                         {product.errors && product.errors.length > 0 && (
                           <div className="group relative">
-                            <AlertCircle className="w-4 h-4 text-red-500 cursor-help" />
-                            <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block bg-gray-900 text-white text-xs rounded px-2 py-1 z-10 whitespace-nowrap">
+                            <AlertCircle className="w-4 h-4 text-red-500 dark:text-red-400 cursor-help" />
+                            <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block bg-gray-900 dark:bg-gray-800 text-white dark:text-gray-100 text-xs rounded px-2 py-1 z-10 whitespace-nowrap border border-gray-700 dark:border-gray-600">
                               {product.errors.join(', ')}
                             </div>
                           </div>
@@ -681,7 +681,7 @@ export default function BulkUploadSection({
                             // Update sessionStorage
                             sessionStorage.setItem('bulkUploadProducts', JSON.stringify(updated));
                           }}
-                          className="text-red-500 hover:text-red-700"
+                          className="text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
                           title="Remove product"
                         >
                           <XCircle className="w-4 h-4" />
@@ -699,47 +699,47 @@ export default function BulkUploadSection({
       {/* Confirmation Modal */}
       {showConfirmModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl max-w-md w-full shadow-xl">
+          <div className="bg-white dark:bg-gray-800 rounded-xl max-w-md w-full shadow-xl border border-gray-200 dark:border-gray-700">
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-bold text-gray-900">Confirm Upload</h3>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">Confirm Upload</h3>
                 <button
                   onClick={() => setShowConfirmModal(false)}
-                  className="text-gray-400 hover:text-gray-600 transition"
+                  className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
               
               <div className="mb-6">
-                <p className="text-gray-700 mb-4">
-                  Are you sure you want to upload <span className="font-semibold text-blue-600">{summary.valid}</span> products?
+                <p className="text-gray-700 dark:text-gray-300 mb-4">
+                  Are you sure you want to upload <span className="font-semibold text-blue-600 dark:text-blue-400">{summary.valid}</span> products?
                 </p>
                 
-                <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Total Products:</span>
-                    <span className="font-medium text-gray-900">{summary.total}</span>
+                    <span className="text-gray-600 dark:text-gray-400">Total Products:</span>
+                    <span className="font-medium text-gray-900 dark:text-gray-100">{summary.total}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Valid Products:</span>
-                    <span className="font-medium text-green-600">{summary.valid}</span>
+                    <span className="text-gray-600 dark:text-gray-400">Valid Products:</span>
+                    <span className="font-medium text-green-600 dark:text-green-400">{summary.valid}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Invalid Products:</span>
-                    <span className="font-medium text-red-600">{summary.invalid} (will be skipped)</span>
+                    <span className="text-gray-600 dark:text-gray-400">Invalid Products:</span>
+                    <span className="font-medium text-red-600 dark:text-red-400">{summary.invalid} (will be skipped)</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Categories Used:</span>
-                    <span className="font-medium text-gray-900">{summary.categories}</span>
+                    <span className="text-gray-600 dark:text-gray-400">Categories Used:</span>
+                    <span className="font-medium text-gray-900 dark:text-gray-100">{summary.categories}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Estimated Time:</span>
-                    <span className="font-medium text-gray-900">~{summary.estimatedTime} seconds</span>
+                    <span className="text-gray-600 dark:text-gray-400">Estimated Time:</span>
+                    <span className="font-medium text-gray-900 dark:text-gray-100">~{summary.estimatedTime} seconds</span>
                   </div>
                 </div>
                 
-                <p className="text-xs text-gray-500 mt-4">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-4">
                   Note: Invalid products will be skipped and shown in the summary after upload.
                 </p>
               </div>
@@ -747,13 +747,13 @@ export default function BulkUploadSection({
               <div className="flex items-center justify-end space-x-3">
                 <button
                   onClick={() => setShowConfirmModal(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition text-gray-700 dark:text-gray-300"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={confirmBulkUpload}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center"
+                  className="px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition flex items-center"
                 >
                   <Upload className="w-4 h-4 mr-2" />
                   Upload Products
@@ -766,10 +766,10 @@ export default function BulkUploadSection({
 
       {/* Success Summary Section */}
       {showSummary && summaryData && (
-        <div className="bg-green-50 border-2 border-green-200 rounded-xl p-6 space-y-4">
+        <div className="bg-green-50 dark:bg-green-900/20 border-2 border-green-200 dark:border-green-800 rounded-xl p-6 space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-xl font-bold text-gray-900 flex items-center">
-              <CheckCircle className="w-6 h-6 text-green-600 mr-2" />
+            <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center">
+              <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400 mr-2" />
               Upload Summary
             </h3>
             <button
@@ -778,38 +778,38 @@ export default function BulkUploadSection({
                 setProducts([]);
                 if (csvFileInputRef.current) csvFileInputRef.current.value = '';
               }}
-              className="text-gray-400 hover:text-gray-600"
+              className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-white p-4 rounded-lg border border-green-200">
-              <div className="text-3xl font-bold text-green-600">{summaryData.successCount || 0}</div>
-              <div className="text-sm text-gray-600 mt-1">Products Created</div>
+            <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-green-200 dark:border-green-800">
+              <div className="text-3xl font-bold text-green-600 dark:text-green-400">{summaryData.successCount || 0}</div>
+              <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">Products Created</div>
             </div>
-            <div className="bg-white p-4 rounded-lg border border-red-200">
-              <div className="text-3xl font-bold text-red-600">{summaryData.failedCount || 0}</div>
-              <div className="text-sm text-gray-600 mt-1">Products Failed</div>
+            <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-red-200 dark:border-red-800">
+              <div className="text-3xl font-bold text-red-600 dark:text-red-400">{summaryData.failedCount || 0}</div>
+              <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">Products Failed</div>
             </div>
-            <div className="bg-white p-4 rounded-lg border border-gray-200">
-              <div className="text-3xl font-bold text-gray-600">{summaryData.totalCount || 0}</div>
-              <div className="text-sm text-gray-600 mt-1">Total Processed</div>
+            <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+              <div className="text-3xl font-bold text-gray-600 dark:text-gray-400">{summaryData.totalCount || 0}</div>
+              <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">Total Processed</div>
             </div>
           </div>
 
           {summaryData.failedProducts && summaryData.failedProducts.length > 0 && (
-            <div className="bg-white rounded-lg p-4 border border-red-200">
-              <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
-                <AlertCircle className="w-5 h-5 text-red-600 mr-2" />
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-red-200 dark:border-red-800">
+              <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center">
+                <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 mr-2" />
                 Failed Products ({summaryData.failedProducts.length}):
               </h4>
               <div className="max-h-60 overflow-y-auto space-y-2">
                 {summaryData.failedProducts.map((failed: any, idx: number) => (
-                  <div key={idx} className="text-sm bg-red-50 p-2 rounded border border-red-100">
-                    <span className="font-medium text-gray-900">{failed.name}</span>
-                    {' '}({failed.slug}): <span className="text-red-600">{failed.error}</span>
+                  <div key={idx} className="text-sm bg-red-50 dark:bg-red-900/20 p-2 rounded border border-red-100 dark:border-red-800">
+                    <span className="font-medium text-gray-900 dark:text-gray-100">{failed.name}</span>
+                    {' '}({failed.slug}): <span className="text-red-600 dark:text-red-400">{failed.error}</span>
                   </div>
                 ))}
               </div>
@@ -817,17 +817,17 @@ export default function BulkUploadSection({
           )}
 
           {summaryData.successfulProducts && summaryData.successfulProducts.length > 0 && (
-            <div className="bg-white rounded-lg p-4 border border-green-200">
-              <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
-                <CheckCircle className="w-5 h-5 text-green-600 mr-2" />
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-green-200 dark:border-green-800">
+              <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center">
+                <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 mr-2" />
                 Successfully Created Products ({summaryData.successfulProducts.length}):
               </h4>
               <div className="max-h-60 overflow-y-auto">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                   {summaryData.successfulProducts.map((product: any, idx: number) => (
-                    <div key={idx} className="text-sm bg-green-50 p-2 rounded border border-green-100">
-                      <span className="font-medium text-gray-900">{product.name}</span>
-                      <span className="text-gray-500 text-xs ml-2">({product.slug})</span>
+                    <div key={idx} className="text-sm bg-green-50 dark:bg-green-900/20 p-2 rounded border border-green-100 dark:border-green-800">
+                      <span className="font-medium text-gray-900 dark:text-gray-100">{product.name}</span>
+                      <span className="text-gray-500 dark:text-gray-400 text-xs ml-2">({product.slug})</span>
                     </div>
                   ))}
                 </div>
@@ -835,7 +835,7 @@ export default function BulkUploadSection({
             </div>
           )}
 
-          <div className="flex justify-end pt-4 border-t border-green-200">
+          <div className="flex justify-end pt-4 border-t border-green-200 dark:border-green-800">
             <button
               onClick={() => {
                 setShowSummary(false);
@@ -843,7 +843,7 @@ export default function BulkUploadSection({
                 sessionStorage.removeItem('bulkUploadProducts');
                 if (csvFileInputRef.current) csvFileInputRef.current.value = '';
               }}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+              className="px-6 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition"
             >
               Done
             </button>
