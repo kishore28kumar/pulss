@@ -134,7 +134,7 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
       // If we're already refreshing, wait for it to complete
       if (isRefreshing) {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
           addRefreshSubscriber((token: string) => {
             // Update the original request headers with the fresh token
             if (!originalRequest.headers) {
