@@ -71,21 +71,6 @@ export default function AnalyticsPage() {
     return format(date, 'dd/MM/yyyy');
   };
 
-  const getPeriodDisplay = () => {
-    if (period === 'custom' && customStartDate && customEndDate) {
-      return `${formatDateForDisplay(customStartDate)} - ${formatDateForDisplay(customEndDate)}`;
-    }
-    if (period === 'today') {
-      return 'Today';
-    }
-    const periodMap: Record<string, string> = {
-      '7d': 'Last 7 days',
-      '30d': 'Last 30 days',
-      '90d': 'Last 90 days',
-      '1y': 'Last year',
-    };
-    return periodMap[period] || 'Last 30 days';
-  };
 
   const dateParams = getDateParams();
 

@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
-import { Package, ShoppingCart, Users, IndianRupee, TrendingUp, TrendingDown, Building2, Store, Snowflake, Sun, Search, X, ArrowRight, Calendar, AlertCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Package, ShoppingCart, Users, IndianRupee, TrendingUp, TrendingDown, Building2, Store, X, ArrowRight, Calendar, AlertCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import api from '@/lib/api';
 import { formatCurrency } from '@/lib/utils';
@@ -69,7 +69,6 @@ export default function DashboardPage() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
-  const queryClient = useQueryClient();
   const [period, setPeriod] = useState('today');
   const [showCustomDateModal, setShowCustomDateModal] = useState(false);
   const [customStartDate, setCustomStartDate] = useState('');

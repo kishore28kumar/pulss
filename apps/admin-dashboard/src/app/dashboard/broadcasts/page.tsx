@@ -7,7 +7,6 @@ import { Trash2, Plus } from 'lucide-react';
 import { authService } from '@/lib/auth';
 import api from '@/lib/api';
 import { toast } from 'sonner';
-import { useRouter } from 'next/navigation';
 
 export default function BroadcastsPage() {
   const { broadcasts, isLoading, markAsRead, refreshBroadcasts } = useBroadcasts();
@@ -16,7 +15,6 @@ export default function BroadcastsPage() {
   const [formData, setFormData] = useState({ title: '', message: '' });
   const user = authService.getStoredUser();
   const isSuperAdmin = user?.role === 'SUPER_ADMIN';
-  const router = useRouter();
 
   // Mark broadcasts as read when viewing the page (only for Admin/Staff, not Super Admin)
   useEffect(() => {

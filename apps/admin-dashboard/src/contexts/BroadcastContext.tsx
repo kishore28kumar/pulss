@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { usePathname } from 'next/navigation';
 import { useRouter } from 'next/navigation';
@@ -45,7 +45,7 @@ export function BroadcastProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   // Memoize user to prevent unnecessary re-renders
-  const user = React.useMemo(() => authService.getStoredUser(), []);
+  const user = useMemo(() => authService.getStoredUser(), []);
 
   // Get WebSocket URL
   const getWebSocketUrl = () => {
@@ -188,7 +188,6 @@ export function BroadcastProvider({ children }: { children: React.ReactNode }) {
       // Don't add to list or increment unread count if Super Admin sent it themselves
       const isOwnBroadcast = user?.id === newBroadcast.sender.id;
       const isSuperAdmin = user?.role === 'SUPER_ADMIN';
-      const isOnBroadcastsPage = pathname === '/dashboard/broadcasts';
       
       if (isOwnBroadcast) {
         // Still add to list but mark as read immediately

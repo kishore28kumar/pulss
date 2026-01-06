@@ -9,7 +9,6 @@ import RoleBadge from '@/components/permissions/RoleBadge';
 import ThemeToggle from '@/components/theme/ThemeToggle';
 import { getUserRole } from '@/lib/permissions';
 import { useChat } from '@/contexts/ChatContext';
-import { useBroadcasts } from '@/contexts/BroadcastContext';
 import { useMail } from '@/contexts/MailContext';
 
 interface HeaderProps {
