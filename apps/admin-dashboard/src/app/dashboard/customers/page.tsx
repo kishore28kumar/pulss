@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { 
   Search, 
@@ -49,7 +48,6 @@ interface Customer {
 }
 
 export default function CustomersPage() {
-  const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [search, setSearch] = useState('');
