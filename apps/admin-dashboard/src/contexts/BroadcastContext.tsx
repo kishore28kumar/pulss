@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { usePathname } from 'next/navigation';
 import { useRouter } from 'next/navigation';
@@ -45,7 +45,7 @@ export function BroadcastProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   // Memoize user to prevent unnecessary re-renders
-  const user = useMemo(() => authService.getStoredUser(), []);
+  const user = React.useMemo(() => authService.getStoredUser(), []);
 
   // Get WebSocket URL
   const getWebSocketUrl = () => {
