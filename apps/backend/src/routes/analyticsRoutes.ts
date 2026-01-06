@@ -4,6 +4,9 @@ import {
   getRevenueAnalytics,
   getProductAnalytics,
   getCustomerAnalytics,
+  getGlobalTopSearches,
+  getTopSearchLocations,
+  getTenantPerformance,
 } from '../controllers/analyticsController';
 import { authenticateUser, requireAdminOrStaff } from '../middleware/authMiddleware';
 import { requireTenant, ensureTenantAccess } from '../middleware/tenantMiddleware';
@@ -14,8 +17,12 @@ const router = Router();
 // All routes require authentication
 router.use(authenticateUser);
 router.use(requireAdminOrStaff);
-router.use(requireTenant);
-router.use(ensureTenantAccess);
+
+// Routes that require tenant context
+router.use('/dashboard', requireTenant, ensureTenantAccess);
+router.use('/revenue', requireTenant, ensureTenantAccess);
+router.use('/products', requireTenant, ensureTenantAccess);
+router.use('/customers', requireTenant, ensureTenantAccess);
 
 // Dashboard stats - ADMIN and STAFF (read-only for STAFF)
 router.get('/dashboard', requirePermission(Permission.ANALYTICS_VIEW), getDashboardStats);
@@ -24,6 +31,11 @@ router.get('/dashboard', requirePermission(Permission.ANALYTICS_VIEW), getDashbo
 router.get('/revenue', requirePermission(Permission.ANALYTICS_VIEW), getRevenueAnalytics);
 router.get('/products', requirePermission(Permission.ANALYTICS_VIEW), getProductAnalytics);
 router.get('/customers', requirePermission(Permission.ANALYTICS_VIEW), getCustomerAnalytics);
+
+// Super admin only routes (no tenant required)
+router.get('/global-top-searches', getGlobalTopSearches);
+router.get('/top-search-locations', getTopSearchLocations);
+router.get('/tenant-performance', getTenantPerformance);
 
 export default router;
 

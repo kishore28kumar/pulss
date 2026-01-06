@@ -4,6 +4,7 @@ import { ApiResponse, LoginCredentials, RegisterData, AuthUser } from '@pulss/ty
 import { hashPassword, comparePassword } from '../utils/password';
 import { generateTokens, verifyRefreshToken } from '../utils/jwt';
 import { AppError, asyncHandler } from '../middleware/errorHandler';
+import jwt from 'jsonwebtoken';
 
 // ============================================
 // ADMIN/STAFF LOGIN
@@ -493,6 +494,164 @@ export const refreshToken = asyncHandler(
       res.json(response);
     } catch (error) {
       throw new AppError('Invalid refresh token', 401);
+    }
+  }
+);
+
+// ============================================
+// GENERATE TEMPORARY LOGIN TOKEN (SUPER_ADMIN ONLY)
+// ============================================
+
+export const generateLoginToken = asyncHandler(
+  async (req: Request, res: Response) => {
+    // Only SUPER_ADMIN can generate login tokens
+    if (!req.user || req.user.role !== 'SUPER_ADMIN') {
+      throw new AppError('Unauthorized. Only SUPER_ADMIN can generate login tokens.', 403);
+    }
+
+    const { userId } = req.params;
+
+    if (!userId) {
+      throw new AppError('User ID is required', 400);
+    }
+
+    // Find the user
+    const user = await prisma.users.findUnique({
+      where: { id: userId },
+      include: {
+        tenants: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+          },
+        },
+      },
+    });
+
+    if (!user) {
+      throw new AppError('User not found', 404);
+    }
+
+    // Only allow for ADMIN or STAFF roles (not CUSTOMER)
+    if (user.role === 'CUSTOMER') {
+      throw new AppError('Cannot generate login token for customer accounts', 400);
+    }
+
+    // Check if user is active
+    if (!user.isActive) {
+      throw new AppError('Cannot generate login token for inactive user', 400);
+    }
+
+    // Generate a temporary login token (expires in 5 minutes)
+    const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+    const loginToken = jwt.sign(
+      {
+        userId: user.id,
+        email: user.email,
+        role: user.role,
+        tenantId: user.tenantId || '',
+        type: 'login-token',
+      },
+      JWT_SECRET,
+      { expiresIn: '5m' }
+    );
+
+    // Generate the login URL
+    const adminDashboardUrl = process.env.ADMIN_DASHBOARD_URL || 'http://localhost:3001';
+    const loginUrl = `${adminDashboardUrl}/login?token=${loginToken}`;
+
+    const response: ApiResponse = {
+      success: true,
+      data: {
+        loginUrl,
+        token: loginToken,
+        expiresIn: 300, // 5 minutes in seconds
+      },
+      message: 'Login token generated successfully',
+    };
+
+    res.json(response);
+  }
+);
+
+// ============================================
+// VERIFY LOGIN TOKEN AND LOGIN
+// ============================================
+
+export const verifyLoginToken = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { token } = req.body;
+
+    if (!token) {
+      throw new AppError('Token is required', 400);
+    }
+
+    try {
+      // Verify the token
+      const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+      const decoded = jwt.verify(token, JWT_SECRET) as any;
+
+      // Check if it's a login token
+      if (decoded.type !== 'login-token') {
+        throw new AppError('Invalid token type', 401);
+      }
+
+      // Find the user
+      const user = await prisma.users.findUnique({
+        where: { id: decoded.userId },
+        include: {
+          tenants: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+            },
+          },
+        },
+      });
+
+      if (!user || !user.isActive || user.role === 'CUSTOMER') {
+        throw new AppError('Invalid or expired token', 401);
+      }
+
+      // Generate tokens
+      const tokens = generateTokens(user.id, user.email, user.role, user.tenantId || '');
+
+      // Update last login
+      await prisma.users.update({
+        where: { id: user.id },
+        data: { lastLoginAt: new Date() },
+      });
+
+      const authUser: AuthUser = {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        role: user.role,
+        tenantId: user.tenantId || '',
+        tenant: user.tenants || { id: '', name: '', slug: '' },
+      };
+
+      const response: ApiResponse = {
+        success: true,
+        data: {
+          user: authUser,
+          tokens,
+        },
+        message: 'Login successful',
+      };
+
+      res.json(response);
+    } catch (error: any) {
+      if (error.name === 'TokenExpiredError') {
+        throw new AppError('Login token has expired', 401);
+      }
+      if (error.name === 'JsonWebTokenError') {
+        throw new AppError('Invalid login token', 401);
+      }
+      throw error;
     }
   }
 );

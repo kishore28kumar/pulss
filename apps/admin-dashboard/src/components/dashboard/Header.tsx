@@ -1,14 +1,84 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Bell, LogOut, User, Store, Menu } from 'lucide-react';
+import { LogOut, User, Store, Menu, MessageCircle, Mail } from 'lucide-react';
+import NotificationDropdown from './NotificationDropdown';
 import { authService } from '@/lib/auth';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import RoleBadge from '@/components/permissions/RoleBadge';
 import ThemeToggle from '@/components/theme/ThemeToggle';
+import { getUserRole } from '@/lib/permissions';
+import { useChat } from '@/contexts/ChatContext';
+import { useMail } from '@/contexts/MailContext';
 
 interface HeaderProps {
   onMenuClick?: () => void;
+}
+
+function ChatNotificationButton() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const { unreadCount } = useChat();
+  
+  // Only show notification when NOT on chat page and there are unread messages
+  const isOnChatPage = pathname === '/dashboard/chat';
+  const showNotification = !isOnChatPage && unreadCount > 0;
+
+  const handleClick = () => {
+    router.push('/dashboard/chat');
+  };
+
+  return (
+    <button
+      onClick={handleClick}
+      className="relative p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+      title="Chat"
+    >
+      <MessageCircle className="w-5 h-5" />
+      {showNotification && (
+        <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+      )}
+    </button>
+  );
+}
+
+function MailNotificationButton() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const { unreadCount } = useMail();
+  const [mounted, setMounted] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+    setUserRole(getUserRole());
+  }, []);
+
+  // Only show for Super Admin and Admin, but wait for mount to prevent hydration error
+  if (!mounted || !['SUPER_ADMIN', 'ADMIN'].includes(userRole || '')) {
+    return null;
+  }
+  
+  // Only show notification when NOT on mail page and there are unread messages
+  const isOnMailPage = pathname === '/dashboard/mail';
+  const showNotification = !isOnMailPage && unreadCount > 0;
+
+  const handleClick = () => {
+    router.push('/dashboard/mail');
+  };
+
+  return (
+    <button
+      onClick={handleClick}
+      className="relative p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+      title="Mail"
+    >
+      <Mail className="w-5 h-5" />
+      {showNotification && (
+        <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+      )}
+    </button>
+  );
 }
 
 export default function Header({ onMenuClick }: HeaderProps) {
@@ -16,11 +86,13 @@ export default function Header({ onMenuClick }: HeaderProps) {
   const [showMenu, setShowMenu] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Only access localStorage on the client side
     setUser(authService.getStoredUser());
+    setUserRole(getUserRole());
     setIsLoaded(true);
   }, []);
 
@@ -71,11 +143,10 @@ export default function Header({ onMenuClick }: HeaderProps) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center space-x-2 sm:space-x-3">
             <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 truncate">
-              <span className="hidden sm:inline">Welcome back</span>
+              <span className="hidden sm:inline">
+                Welcome back{isLoaded && userRole === 'SUPER_ADMIN' ? ', Super Admin' : user?.firstName ? `, ${user.firstName}` : ''}
+              </span>
               <span className="sm:hidden">Dashboard</span>
-              {isLoaded && user?.firstName && (
-                <span className="hidden sm:inline">, {user.firstName}</span>
-              )}
             </h2>
             <div className="hidden sm:block">
               <RoleBadge />
@@ -96,11 +167,14 @@ export default function Header({ onMenuClick }: HeaderProps) {
         {/* Theme Toggle */}
         <ThemeToggle />
 
+        {/* Chat Notifications */}
+        <ChatNotificationButton />
+
+        {/* Mail Notifications */}
+        <MailNotificationButton />
+
         {/* Notifications */}
-        <button className="relative p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
-          <Bell className="w-5 h-5" />
-          <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-        </button>
+        <NotificationDropdown />
 
         {/* User Menu */}
         <div className="relative" ref={menuRef}>

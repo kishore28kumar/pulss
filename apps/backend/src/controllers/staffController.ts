@@ -14,7 +14,7 @@ export const getStaff = asyncHandler(
       throw new AppError('Authentication required', 401);
     }
 
-    const { page = 1, limit = 20, search } = req.query as any;
+    const { page = 1, limit = 20, search, state, city } = req.query as any;
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
     // Determine which roles to show based on current user's role
@@ -47,11 +47,57 @@ export const getStaff = asyncHandler(
     // For SUPER_ADMIN, don't filter by tenantId - show all admins
 
     if (search) {
-      where.OR = [
-        { email: { contains: search, mode: 'insensitive' } },
-        { firstName: { contains: search, mode: 'insensitive' } },
-        { lastName: { contains: search, mode: 'insensitive' } },
-      ];
+      // For SUPER_ADMIN, also search by tenant name
+      if (req.user.role === 'SUPER_ADMIN') {
+        where.OR = [
+          { email: { contains: search, mode: 'insensitive' } },
+          { firstName: { contains: search, mode: 'insensitive' } },
+          { lastName: { contains: search, mode: 'insensitive' } },
+          { tenants: { name: { contains: search, mode: 'insensitive' } } },
+        ];
+      } else {
+        where.OR = [
+          { email: { contains: search, mode: 'insensitive' } },
+          { firstName: { contains: search, mode: 'insensitive' } },
+          { lastName: { contains: search, mode: 'insensitive' } },
+        ];
+      }
+    }
+
+    // Filter by tenant state/city (SUPER_ADMIN only)
+    // First, get tenant IDs that match the state/city filter
+    let filteredTenantIds: string[] | undefined;
+    if (req.user.role === 'SUPER_ADMIN' && (state || city)) {
+      const tenantWhere: any = {};
+      if (state) {
+        tenantWhere.state = state;
+      }
+      if (city) {
+        tenantWhere.city = city;
+      }
+      const matchingTenants = await prisma.tenants.findMany({
+        where: tenantWhere,
+        select: { id: true },
+      });
+      filteredTenantIds = matchingTenants.map((t) => t.id);
+      if (filteredTenantIds.length === 0) {
+        // No tenants match the filter, return empty result
+        const emptyResponse: ApiResponse<PaginatedResponse<any>> = {
+          success: true,
+          data: {
+            data: [],
+            meta: {
+              total: 0,
+              page: parseInt(page),
+              limit: parseInt(limit),
+              totalPages: 0,
+            },
+          },
+        };
+        res.json(emptyResponse);
+        return;
+      }
+      where.tenantId = { in: filteredTenantIds };
     }
 
     const [staff, total] = await Promise.all([
@@ -75,6 +121,8 @@ export const getStaff = asyncHandler(
               id: true,
               name: true,
               slug: true,
+              state: true,
+              city: true,
             },
           },
         },
@@ -112,7 +160,7 @@ export const inviteStaff = asyncHandler(
       throw new AppError('Authentication required', 401);
     }
 
-    const { email, firstName, lastName, phone, role, password, storeName, storeRoute } = req.body;
+    const { email, firstName, lastName, phone, role, password, storeName, storeRoute, address, city, state, country, pincode } = req.body;
 
     if (!email || !firstName || !lastName) {
       throw new AppError('Email, first name, and last name are required', 400);
@@ -145,6 +193,16 @@ export const inviteStaff = asyncHandler(
           throw new AppError('Store route must contain only lowercase letters, numbers, and hyphens', 400);
         }
         
+        // Validate address fields
+        if (!address || !city || !state || !pincode) {
+          throw new AppError('Address, city, state, and pincode are required when creating a tenant', 400);
+        }
+        
+        // Validate pincode format (6 digits)
+        if (!/^\d{6}$/.test(pincode)) {
+          throw new AppError('Pincode must be exactly 6 digits', 400);
+        }
+        
         // Check if tenant slug already exists
         const existingTenant = await prisma.tenants.findUnique({
           where: { slug: storeRoute },
@@ -162,6 +220,11 @@ export const inviteStaff = asyncHandler(
             slug: storeRoute,
             status: 'ACTIVE',
             subscriptionPlan: 'FREE',
+            address: address,
+            city: city,
+            state: state,
+            country: country || 'India',
+            pincode: pincode,
             updatedAt: new Date(),
           },
         });
@@ -183,13 +246,18 @@ export const inviteStaff = asyncHandler(
       targetTenantId = req.tenantId;
       if (role && role !== 'STAFF') {
         throw new AppError('Admin can only create Staff users', 400);
-    }
+      }
     } else {
       throw new AppError('You do not have permission to invite users', 403);
     }
 
     // Use the determined role (or default from request if valid)
     const userRole = role || allowedRole;
+
+    // Ensure targetTenantId is set
+    if (!targetTenantId) {
+      throw new AppError('Tenant ID is required', 400);
+    }
 
     // Check if user already exists
     const existingUser = await prisma.users.findUnique({

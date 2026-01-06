@@ -8,6 +8,7 @@ interface Tenant {
   id: string;
   name: string;
   slug: string;
+  status?: string;
   logoUrl?: string;
   faviconUrl?: string;
   primaryColor?: string;

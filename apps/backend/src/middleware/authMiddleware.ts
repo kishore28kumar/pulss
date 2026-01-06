@@ -60,15 +60,46 @@ export const authenticateUser = (req: Request, _res: Response, next: NextFunctio
   }
 
   try {
-    const token = req.headers.authorization?.replace('Bearer ', '');
+    // Check both lowercase and capitalized versions (Express normalizes headers)
+    // Express normalizes headers to lowercase, but check both to be safe
+    const authHeaderRaw = req.headers.authorization || req.headers.Authorization;
+    
+    // Normalize to string (Express headers can be string | string[])
+    const authHeader = Array.isArray(authHeaderRaw) ? authHeaderRaw[0] : authHeaderRaw;
+    
+    // Log ALL headers for debugging (only for chat conversations endpoint)
+    if (req.url?.includes('/chat/conversations')) {
+      console.log('[Auth] Request received:', {
+        url: req.url,
+        method: req.method,
+        hasAuthHeader: !!authHeader,
+        authHeaderValue: authHeader ? (typeof authHeader === 'string' ? authHeader.substring(0, 50) + '...' : String(authHeader).substring(0, 50) + '...') : null,
+        allHeaderKeys: Object.keys(req.headers),
+        authorizationHeader: req.headers.authorization,
+        AuthorizationHeader: req.headers.Authorization,
+      });
+    }
+    
+    const token = authHeader && typeof authHeader === 'string' ? authHeader.replace(/^Bearer\s+/i, '') : null;
 
     if (!token) {
+      console.log('[Auth] No token provided:', {
+        url: req.url,
+        method: req.method,
+        hasAuthHeader: !!authHeader,
+        authHeaderPrefix: authHeader && typeof authHeader === 'string' ? authHeader.substring(0, 30) : null,
+        allHeaders: Object.keys(req.headers).filter(h => h.toLowerCase().includes('auth')),
+      });
       throw new AppError('No authentication token provided', 401);
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JWTPayload;
 
     if (decoded.type !== 'access') {
+      console.log('[Auth] Invalid token type:', {
+        url: req.url,
+        tokenType: decoded.type,
+      });
       throw new AppError('Invalid token type', 401);
     }
 
@@ -79,14 +110,31 @@ export const authenticateUser = (req: Request, _res: Response, next: NextFunctio
       tenantId: decoded.tenantId,
     };
 
+    console.log('[Auth] User authenticated:', {
+      url: req.url,
+      userId: decoded.userId,
+      role: decoded.role,
+    });
+
     next();
   } catch (error) {
     if (error instanceof jwt.JsonWebTokenError) {
+      console.log('[Auth] JWT Error:', {
+        url: req.url,
+        error: error.message,
+      });
       return next(new AppError('Invalid token', 401));
     }
     if (error instanceof jwt.TokenExpiredError) {
+      console.log('[Auth] Token expired:', {
+        url: req.url,
+      });
       return next(new AppError('Token expired', 401));
     }
+    console.log('[Auth] Other error:', {
+      url: req.url,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
     next(error);
   }
 };
@@ -125,6 +173,18 @@ export const authenticateCustomer = (req: Request, _res: Response, next: NextFun
     }
     next(error);
   }
+};
+
+export const requireSuperAdmin = (req: Request, _res: Response, next: NextFunction) => {
+  if (!req.user) {
+    return next(new AppError('Authentication required', 401));
+  }
+
+  if (req.user.role !== 'SUPER_ADMIN') {
+    return next(new AppError('Only Super Admin can perform this action', 403));
+  }
+
+  next();
 };
 
 export const authorize = (...roles: string[]) => {

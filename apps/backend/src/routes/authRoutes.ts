@@ -7,6 +7,8 @@ import {
   getCurrentCustomer,
   updateCustomerProfile,
   refreshToken,
+  generateLoginToken,
+  verifyLoginToken,
 } from '../controllers/authController';
 import { authenticateUser, authenticateCustomer } from '../middleware/authMiddleware';
 
@@ -24,6 +26,11 @@ router.put('/customer/profile', authenticateCustomer, updateCustomerProfile);
 
 // Token Refresh
 router.post('/refresh', refreshToken);
+
+// Generate temporary login token (SUPER_ADMIN only)
+router.get('/login-token/:userId', authenticateUser, generateLoginToken);
+// Verify login token and login
+router.post('/login-token', verifyLoginToken);
 
 export default router;
 

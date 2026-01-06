@@ -14,6 +14,9 @@ import {
   UserCog,
   BarChart3,
   X,
+  MessageCircle,
+  Megaphone,
+  Mail,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import PermissionGuard from '@/components/permissions/PermissionGuard';
@@ -21,18 +24,11 @@ import { Permission, getUserRole } from '@/lib/permissions';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Products', href: '/dashboard/products', icon: Package },
   { 
-    name: 'Categories', 
-    href: '/dashboard/categories', 
-    icon: FolderTree,
-    requireAdminOrStaff: true, // Only ADMIN and STAFF can see Categories
-  },
-  { 
-    name: 'Orders', 
-    href: '/dashboard/orders', 
-    icon: ShoppingCart,
-    requireAdminOrStaff: true, // Only ADMIN and STAFF can see Orders
+    name: 'Tenants', // Will be renamed to 'Staff' for Admin users
+    href: '/dashboard/staff', 
+    icon: UserCog,
+    permission: Permission.STAFF_VIEW,
   },
   { 
     name: 'Customers', 
@@ -41,16 +37,46 @@ const navigation = [
     requireAdminOrStaff: true, // Only ADMIN and STAFF can see Customers
   },
   { 
-    name: 'Tenants', 
-    href: '/dashboard/staff', 
-    icon: UserCog,
-    permission: Permission.STAFF_VIEW,
+    name: 'Orders', 
+    href: '/dashboard/orders', 
+    icon: ShoppingCart,
+    requireAdminOrStaff: true, // Only ADMIN and STAFF can see Orders
+  },
+  { name: 'Products', href: '/dashboard/products', icon: Package },
+  { 
+    name: 'Categories', 
+    href: '/dashboard/categories', 
+    icon: FolderTree,
+    requireAdminOrStaff: true, // Only ADMIN and STAFF can see Categories
   },
   { 
     name: 'Analytics', 
     href: '/dashboard/analytics', 
     icon: BarChart3,
     permission: Permission.ANALYTICS_VIEW,
+  },
+  { 
+    name: 'Chat', 
+    href: '/dashboard/chat', 
+    icon: MessageCircle,
+    requireAdminOrStaff: true, // ADMIN, STAFF, and SUPER_ADMIN can see Chat
+    allowSuperAdmin: true, // Explicitly allow SUPER_ADMIN
+  },
+  { 
+    name: 'Broadcasts', 
+    href: '/dashboard/broadcasts', 
+    icon: Megaphone,
+    requireAdminOrStaff: true, // ADMIN, STAFF, and SUPER_ADMIN can see Broadcasts
+    allowSuperAdmin: true, // Explicitly allow SUPER_ADMIN
+  },
+  { 
+    name: 'Mail', 
+    href: '/dashboard/mail', 
+    icon: Mail,
+    requireAdminOrStaff: true, // Only SUPER_ADMIN and ADMIN can see Mail
+    allowSuperAdmin: true,
+    // Only show for SUPER_ADMIN and ADMIN (not STAFF)
+    requireSuperAdminOrAdmin: true,
   },
   { name: 'Settings', href: '/dashboard/settings', icon: Settings },
 ];
@@ -106,12 +132,31 @@ export default function Sidebar({ onClose }: SidebarProps) {
       {/* Navigation */}
       <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
         {navigation.map((item) => {
-          // Skip items that require Admin or Staff if user is SUPER_ADMIN
-          if (item.requireAdminOrStaff && (!mounted || userRole === 'SUPER_ADMIN')) {
+          // For items that require Super Admin or Admin only (like Mail)
+          if ((item as any).requireSuperAdminOrAdmin && (!mounted || !['SUPER_ADMIN', 'ADMIN'].includes(userRole || ''))) {
             return null;
           }
+          
+          // Skip items that require Admin or Staff if user is not ADMIN or STAFF
+          // Exception: if allowSuperAdmin is true, also allow SUPER_ADMIN
+          if (item.requireAdminOrStaff) {
+            const allowedRoles = item.allowSuperAdmin 
+              ? ['ADMIN', 'STAFF', 'SUPER_ADMIN']
+              : ['ADMIN', 'STAFF'];
+            if (!mounted || !allowedRoles.includes(userRole || '')) {
+              return null;
+            }
+          }
 
-          const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+          // Determine display name: "Tenants" for SUPER_ADMIN, "Staff" for others
+          const displayName = item.name === 'Tenants' && mounted && userRole !== 'SUPER_ADMIN' 
+            ? 'Staff' 
+            : item.name;
+
+          // For Dashboard, only match exact path. For other routes, match exact or sub-routes
+          const isActive = item.href === '/dashboard' 
+            ? pathname === '/dashboard' || pathname === '/dashboard/'
+            : pathname === item.href || pathname.startsWith(item.href + '/');
           const navItem = (
             <Link
               key={item.name}
@@ -125,7 +170,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
               )}
             >
               <item.icon className="w-5 h-5 flex-shrink-0" />
-              <span className="font-medium">{item.name}</span>
+              <span className="font-medium">{displayName}</span>
             </Link>
           );
 

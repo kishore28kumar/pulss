@@ -386,6 +386,7 @@ model tenants {
   products           products[]
   subscriptions      subscriptions[]
   users              users[]
+  messages           messages[]
 
   @@index([slug])
   @@index([status])
@@ -417,10 +418,76 @@ model users {
   orders              orders[]
   refresh_tokens      refresh_tokens[]
   tenants             tenants?         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  sentMessages        messages[]       @relation("MessageSender")
+  sentBroadcasts      broadcasts[]     @relation("BroadcastSender")
+  broadcastReads      broadcast_reads[] @relation("BroadcastReader")
+  sentInternalMessages internal_messages[] @relation("InternalMessageSender")
+  receivedInternalMessages internal_messages[] @relation("InternalMessageRecipient")
 
   @@index([email])
   @@index([role])
   @@index([tenantId])
+}
+
+model messages {
+  id          String   @id @default(cuid())
+  tenantId    String
+  senderId    String
+  senderType  String   // 'customer' | 'admin' | 'staff' | 'super_admin'
+  customerId  String?  // For customer messages
+  text        String
+  readAt      DateTime?
+  createdAt   DateTime @default(now())
+  tenants     tenants  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  sender      users    @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, createdAt])
+  @@index([customerId, createdAt])
+  @@index([senderId])
+}
+
+model broadcasts {
+  id          String   @id @default(cuid())
+  title       String
+  message     String
+  senderId    String   // Super Admin who sent it
+  createdAt   DateTime @default(now())
+  deletedAt   DateTime?
+  sender      users    @relation("BroadcastSender", fields: [senderId], references: [id], onDelete: Cascade)
+  readBy      broadcast_reads[]
+
+  @@index([createdAt])
+  @@index([senderId])
+}
+
+model broadcast_reads {
+  id          String    @id @default(cuid())
+  broadcastId String
+  userId      String    // Admin/Staff who read it
+  readAt      DateTime  @default(now())
+  broadcast   broadcasts @relation(fields: [broadcastId], references: [id], onDelete: Cascade)
+  user        users     @relation("BroadcastReader", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([broadcastId, userId])
+  @@index([userId])
+  @@index([broadcastId])
+}
+
+model internal_messages {
+  id          String   @id @default(cuid())
+  subject     String
+  body        String
+  senderId    String   // Super Admin or Admin
+  recipientId String   // Super Admin or Admin
+  isRead      Boolean  @default(false)
+  readAt      DateTime?
+  createdAt   DateTime @default(now())
+  sender      users    @relation("InternalMessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  recipient   users    @relation("InternalMessageRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@index([senderId, createdAt])
+  @@index([recipientId, createdAt])
+  @@index([recipientId, isRead])
 }
 
 enum TenantStatus {
@@ -428,6 +495,7 @@ enum TenantStatus {
   SUSPENDED
   TRIAL
   EXPIRED
+  FROZEN
 }
 
 enum UserRole {

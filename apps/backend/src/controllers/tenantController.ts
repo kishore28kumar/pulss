@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { prisma } from '@pulss/database';
+import { TenantStatus } from '@prisma/client';
 import { ApiResponse, CreateTenantDTO, UpdateTenantDTO } from '@pulss/types';
 import { AppError, asyncHandler } from '../middleware/errorHandler';
 import { hashPassword } from '../utils/password';
@@ -218,7 +219,8 @@ export const updateTenantStatus = asyncHandler(
     const { id } = req.params;
     const { status } = req.body;
 
-    if (!['ACTIVE', 'INACTIVE', 'SUSPENDED', 'PENDING'].includes(status)) {
+    const validStatuses = Object.values(TenantStatus);
+    if (!validStatuses.includes(status as TenantStatus)) {
       throw new AppError('Invalid status', 400);
     }
 
@@ -231,6 +233,73 @@ export const updateTenantStatus = asyncHandler(
       success: true,
       data: tenant,
       message: 'Tenant status updated',
+    };
+
+    res.json(response);
+  }
+);
+
+// ============================================
+// FREEZE/UNFREEZE TENANT
+// ============================================
+
+export const freezeTenant = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { id } = req.params;
+
+    const tenant = await prisma.tenants.findUnique({
+      where: { id },
+    });
+
+    if (!tenant) {
+      throw new AppError('Tenant not found', 404);
+    }
+
+    if (tenant.status === TenantStatus.FROZEN) {
+      throw new AppError('Tenant is already frozen', 400);
+    }
+
+    const updatedTenant = await prisma.tenants.update({
+      where: { id },
+      data: { status: TenantStatus.FROZEN },
+    });
+
+    const response: ApiResponse = {
+      success: true,
+      data: updatedTenant,
+      message: 'Tenant frozen successfully',
+    };
+
+    res.json(response);
+  }
+);
+
+export const unfreezeTenant = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { id } = req.params;
+
+    const tenant = await prisma.tenants.findUnique({
+      where: { id },
+    });
+
+    if (!tenant) {
+      throw new AppError('Tenant not found', 404);
+    }
+
+    if (tenant.status !== TenantStatus.FROZEN) {
+      throw new AppError('Tenant is not frozen', 400);
+    }
+
+    // Unfreeze to ACTIVE status
+    const updatedTenant = await prisma.tenants.update({
+      where: { id },
+      data: { status: TenantStatus.ACTIVE },
+    });
+
+    const response: ApiResponse = {
+      success: true,
+      data: updatedTenant,
+      message: 'Tenant unfrozen successfully',
     };
 
     res.json(response);
@@ -282,6 +351,7 @@ export const getTenantInfo = asyncHandler(
         id: true,
         name: true,
         slug: true,
+        status: true,
         logoUrl: true,
         faviconUrl: true,
         primaryColor: true,
