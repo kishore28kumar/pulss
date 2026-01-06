@@ -1,13 +1,15 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Bell, LogOut, User, Store, Menu, MessageCircle } from 'lucide-react';
+import { LogOut, User, Store, Menu, MessageCircle } from 'lucide-react';
+import NotificationDropdown from './NotificationDropdown';
 import { authService } from '@/lib/auth';
 import { useRouter, usePathname } from 'next/navigation';
 import RoleBadge from '@/components/permissions/RoleBadge';
 import ThemeToggle from '@/components/theme/ThemeToggle';
 import { getUserRole } from '@/lib/permissions';
 import { useChat } from '@/contexts/ChatContext';
+import { useBroadcasts } from '@/contexts/BroadcastContext';
 
 interface HeaderProps {
   onMenuClick?: () => void;
@@ -130,10 +132,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
         <ChatNotificationButton />
 
         {/* Notifications */}
-        <button className="relative p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
-          <Bell className="w-5 h-5" />
-          <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-        </button>
+        <NotificationDropdown />
 
         {/* User Menu */}
         <div className="relative" ref={menuRef}>

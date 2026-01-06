@@ -175,6 +175,18 @@ export const authenticateCustomer = (req: Request, _res: Response, next: NextFun
   }
 };
 
+export const requireSuperAdmin = (req: Request, _res: Response, next: NextFunction) => {
+  if (!req.user) {
+    return next(new AppError('Authentication required', 401));
+  }
+
+  if (req.user.role !== 'SUPER_ADMIN') {
+    return next(new AppError('Only Super Admin can perform this action', 403));
+  }
+
+  next();
+};
+
 export const authorize = (...roles: string[]) => {
   return (req: Request, _res: Response, next: NextFunction) => {
     if (!req.user) {

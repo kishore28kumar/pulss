@@ -15,6 +15,7 @@ import {
   BarChart3,
   X,
   MessageCircle,
+  Megaphone,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import PermissionGuard from '@/components/permissions/PermissionGuard';
@@ -58,6 +59,13 @@ const navigation = [
     href: '/dashboard/chat', 
     icon: MessageCircle,
     requireAdminOrStaff: true, // ADMIN, STAFF, and SUPER_ADMIN can see Chat
+    allowSuperAdmin: true, // Explicitly allow SUPER_ADMIN
+  },
+  { 
+    name: 'Broadcasts', 
+    href: '/dashboard/broadcasts', 
+    icon: Megaphone,
+    requireAdminOrStaff: true, // ADMIN, STAFF, and SUPER_ADMIN can see Broadcasts
     allowSuperAdmin: true, // Explicitly allow SUPER_ADMIN
   },
   { name: 'Settings', href: '/dashboard/settings', icon: Settings },

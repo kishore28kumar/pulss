@@ -66,6 +66,15 @@ const authenticateSocket = async (socket: AuthenticatedSocket, next: (err?: Erro
 /**
  * Initialize Socket.io server
  */
+let ioInstance: SocketIOServer | null = null;
+
+export const getIO = () => {
+  if (!ioInstance) {
+    throw new Error('Socket.IO not initialized');
+  }
+  return ioInstance;
+};
+
 export const initializeSocketIO = (httpServer: HTTPServer) => {
   const io = new SocketIOServer(httpServer, {
     cors: {
@@ -291,6 +300,7 @@ export const initializeSocketIO = (httpServer: HTTPServer) => {
     });
   });
 
+  ioInstance = io;
   return io;
 };
 
