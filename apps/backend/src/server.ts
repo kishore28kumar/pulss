@@ -5,15 +5,18 @@ import morgan from 'morgan';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
+import { createServer } from 'http';
 import { errorHandler } from './middleware/errorHandler';
 import { tenantMiddleware } from './middleware/tenantMiddleware';
 import routes from './routes';
 import { getCorsOrigins } from './config/urls';
 import { connectWithRetry, checkConnection } from '@pulss/database';
+import { initializeSocketIO } from './socket/socketHandler';
 
 dotenv.config();
 
 const app = express();
+const httpServer = createServer(app);
 const PORT = process.env.BACKEND_PORT || 5000;
 
 // ============================================
@@ -106,9 +109,13 @@ if (process.env.DATABASE_URL) {
   });
 }
 
-app.listen(PORT, () => {
+// Initialize Socket.io
+initializeSocketIO(httpServer);
+
+httpServer.listen(PORT, () => {
   console.log(`🚀 Pulss Backend API running on port ${PORT}`);
   console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🔌 Socket.io server initialized`);
 });
 
 // Handle uncaught exceptions and unhandled rejections

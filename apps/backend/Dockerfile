@@ -25,6 +25,10 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# Generate Prisma Client for development
+WORKDIR /app/packages/database
+RUN npx prisma generate || echo "Prisma generate failed, will retry on startup"
+
 WORKDIR /app/apps/backend
 
 EXPOSE 5000

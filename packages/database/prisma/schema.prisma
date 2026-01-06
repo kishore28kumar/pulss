@@ -386,6 +386,7 @@ model tenants {
   products           products[]
   subscriptions      subscriptions[]
   users              users[]
+  messages           messages[]
 
   @@index([slug])
   @@index([status])
@@ -417,10 +418,28 @@ model users {
   orders              orders[]
   refresh_tokens      refresh_tokens[]
   tenants             tenants?         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  sentMessages        messages[]       @relation("MessageSender")
 
   @@index([email])
   @@index([role])
   @@index([tenantId])
+}
+
+model messages {
+  id          String   @id @default(cuid())
+  tenantId    String
+  senderId    String
+  senderType  String   // 'customer' | 'admin' | 'staff' | 'super_admin'
+  customerId  String?  // For customer messages
+  text        String
+  readAt      DateTime?
+  createdAt   DateTime @default(now())
+  tenants     tenants  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  sender      users    @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, createdAt])
+  @@index([customerId, createdAt])
+  @@index([senderId])
 }
 
 enum TenantStatus {

@@ -5,6 +5,7 @@ import { TenantProvider, useTenant } from '@/contexts/TenantContext';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import FrozenStoreMessage from '@/components/store/FrozenStoreMessage';
+import ChatWidget from '@/components/chat/ChatWidget';
 
 function StoreLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -25,6 +26,7 @@ function StoreLayoutContent({ children }: { children: React.ReactNode }) {
       <Header />
       <main className="flex-1">{children}</main>
       <Footer />
+      <ChatWidget />
     </div>
   );
 }

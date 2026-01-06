@@ -11,6 +11,7 @@ import staffRoutes from './staffRoutes';
 import analyticsRoutes from './analyticsRoutes';
 import reportRoutes from './reportRoutes';
 import uploadRoutes from './uploadRoutes';
+import chatRoutes from './chatRoutes';
 
 const router = Router();
 
@@ -27,5 +28,6 @@ router.use('/staff', staffRoutes);
 router.use('/analytics', analyticsRoutes);
 router.use('/reports', reportRoutes);
 router.use('/upload', uploadRoutes);
+router.use('/chat', chatRoutes);
 
 export default router;

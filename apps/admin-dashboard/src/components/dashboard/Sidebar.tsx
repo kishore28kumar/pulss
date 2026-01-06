@@ -14,6 +14,7 @@ import {
   UserCog,
   BarChart3,
   X,
+  MessageCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import PermissionGuard from '@/components/permissions/PermissionGuard';
@@ -51,6 +52,13 @@ const navigation = [
     href: '/dashboard/analytics', 
     icon: BarChart3,
     permission: Permission.ANALYTICS_VIEW,
+  },
+  { 
+    name: 'Chat', 
+    href: '/dashboard/chat', 
+    icon: MessageCircle,
+    requireAdminOrStaff: true, // ADMIN, STAFF, and SUPER_ADMIN can see Chat
+    allowSuperAdmin: true, // Explicitly allow SUPER_ADMIN
   },
   { name: 'Settings', href: '/dashboard/settings', icon: Settings },
 ];
@@ -106,9 +114,15 @@ export default function Sidebar({ onClose }: SidebarProps) {
       {/* Navigation */}
       <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
         {navigation.map((item) => {
-          // Skip items that require Admin or Staff if user is SUPER_ADMIN
-          if (item.requireAdminOrStaff && (!mounted || userRole === 'SUPER_ADMIN')) {
-            return null;
+          // Skip items that require Admin or Staff if user is not ADMIN or STAFF
+          // Exception: if allowSuperAdmin is true, also allow SUPER_ADMIN
+          if (item.requireAdminOrStaff) {
+            const allowedRoles = item.allowSuperAdmin 
+              ? ['ADMIN', 'STAFF', 'SUPER_ADMIN']
+              : ['ADMIN', 'STAFF'];
+            if (!mounted || !allowedRoles.includes(userRole || '')) {
+              return null;
+            }
           }
 
           // Determine display name: "Tenants" for SUPER_ADMIN, "Staff" for others

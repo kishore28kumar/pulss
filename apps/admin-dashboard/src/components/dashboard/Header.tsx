@@ -1,15 +1,43 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Bell, LogOut, User, Store, Menu } from 'lucide-react';
+import { Bell, LogOut, User, Store, Menu, MessageCircle } from 'lucide-react';
 import { authService } from '@/lib/auth';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import RoleBadge from '@/components/permissions/RoleBadge';
 import ThemeToggle from '@/components/theme/ThemeToggle';
 import { getUserRole } from '@/lib/permissions';
+import { useChat } from '@/contexts/ChatContext';
 
 interface HeaderProps {
   onMenuClick?: () => void;
+}
+
+function ChatNotificationButton() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const { unreadCount } = useChat();
+  
+  // Only show notification when NOT on chat page and there are unread messages
+  const isOnChatPage = pathname === '/dashboard/chat';
+  const showNotification = !isOnChatPage && unreadCount > 0;
+
+  const handleClick = () => {
+    router.push('/dashboard/chat');
+  };
+
+  return (
+    <button
+      onClick={handleClick}
+      className="relative p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+      title="Chat"
+    >
+      <MessageCircle className="w-5 h-5" />
+      {showNotification && (
+        <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+      )}
+    </button>
+  );
 }
 
 export default function Header({ onMenuClick }: HeaderProps) {
@@ -97,6 +125,9 @@ export default function Header({ onMenuClick }: HeaderProps) {
       <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
         {/* Theme Toggle */}
         <ThemeToggle />
+
+        {/* Chat Notifications */}
+        <ChatNotificationButton />
 
         {/* Notifications */}
         <button className="relative p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
