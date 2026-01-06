@@ -429,7 +429,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         let isForCurrentConversation = current && newMessage.customerId === current.customerId;
         
         // For Super Admin, also check tenantSlug if available in message
-        if (isForCurrentConversation && user?.role === 'SUPER_ADMIN' && current.tenantSlug) {
+        if (isForCurrentConversation && user?.role === 'SUPER_ADMIN' && current?.tenantSlug) {
           // We can't check tenant from message directly, but if customerId matches and we're viewing
           // that conversation, it should be for this conversation
           // The backend filters by tenant when broadcasting, so this should be correct
