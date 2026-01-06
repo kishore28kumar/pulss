@@ -145,7 +145,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       if (user?.role === 'SUPER_ADMIN') {
         const uniqueTenantSlugs = [...new Set(conversationsData
           .map((c: Conversation) => c.tenantSlug)
-          .filter((slug): slug is string => !!slug)
+          .filter((slug: string | null | undefined): slug is string => !!slug)
         )];
         
         if (socketRef.current?.connected && uniqueTenantSlugs.length > 0) {
@@ -364,7 +364,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         if (currentConversations.length > 0) {
           const uniqueTenantSlugs = [...new Set(currentConversations
             .map((c: Conversation) => c.tenantSlug)
-            .filter((slug): slug is string => !!slug)
+            .filter((slug: string | null | undefined): slug is string => !!slug)
           )];
           
           console.log(`[ChatContext] Super Admin joining ${uniqueTenantSlugs.length} tenant rooms on connect`);
