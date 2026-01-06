@@ -40,7 +40,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
   const [hasMoreHistory, setHasMoreHistory] = useState(false);
-  const [unreadCount] = useState(0);
+  const unreadCount = 0; // Always 0 for customers (not used in storefront)
   const socketRef = useRef<Socket | null>(null);
   const oldestMessageIdRef = useRef<string | null>(null);
 
