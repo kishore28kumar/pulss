@@ -2,6 +2,9 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
+import { usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import api from '@/lib/api';
 import { authService } from '@/lib/auth';
 
@@ -38,6 +41,8 @@ export function BroadcastProvider({ children }: { children: React.ReactNode }) {
   const socketRef = useRef<Socket | null>(null);
   const isLoadingRef = useRef(false);
   const loadedUserIdRef = useRef<string | null>(null);
+  const pathname = usePathname();
+  const router = useRouter();
 
   // Memoize user to prevent unnecessary re-renders
   const user = React.useMemo(() => authService.getStoredUser(), []);
@@ -182,6 +187,8 @@ export function BroadcastProvider({ children }: { children: React.ReactNode }) {
       
       // Don't add to list or increment unread count if Super Admin sent it themselves
       const isOwnBroadcast = user?.id === newBroadcast.sender.id;
+      const isSuperAdmin = user?.role === 'SUPER_ADMIN';
+      const isOnBroadcastsPage = pathname === '/dashboard/broadcasts';
       
       if (isOwnBroadcast) {
         // Still add to list but mark as read immediately
@@ -205,6 +212,26 @@ export function BroadcastProvider({ children }: { children: React.ReactNode }) {
         
         // Increment unread count only if not own broadcast
         setUnreadCount((prev) => prev + 1);
+
+        // Show toast notification for Admin/Staff only, and only when not on broadcasts page
+        if (!isSuperAdmin && pathname !== '/dashboard/broadcasts') {
+          toast(newBroadcast.title, {
+            description: 'New broadcast message received',
+            duration: 5000,
+            action: {
+              label: 'View',
+              onClick: () => {
+                router.push('/dashboard/broadcasts');
+              },
+            },
+            style: {
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              color: 'white',
+              border: 'none',
+            },
+            className: 'broadcast-toast',
+          });
+        }
       }
     });
 
@@ -222,7 +249,7 @@ export function BroadcastProvider({ children }: { children: React.ReactNode }) {
         socketRef.current = null;
       }
     };
-  }, [user?.id]);
+  }, [user?.id, user?.role, pathname, router]);
 
   return (
     <BroadcastContext.Provider

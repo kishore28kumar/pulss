@@ -2,6 +2,9 @@
 
 import React, { createContext, useContext, useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { io, Socket } from 'socket.io-client';
+import { usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { authService } from '@/lib/auth';
 import api from '@/lib/api';
 
@@ -69,6 +72,9 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const isBlockedRef = useRef(false);
   const markAsReadRef = useRef<Set<string>>(new Set());
   const hasAutoSelectedRef = useRef(false);
+  const conversationsRef = useRef<Conversation[]>([]);
+  const pathname = usePathname();
+  const router = useRouter();
   
   // Get user (will be stable unless user actually changes)
   const user = authService.getStoredUser();
@@ -126,6 +132,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       const response = await api.get('/chat/conversations');
       const conversationsData = response.data.data || [];
       setConversations(conversationsData);
+      conversationsRef.current = conversationsData;
 
       // Calculate total unread count
       const totalUnread = conversationsData.reduce(
@@ -133,6 +140,24 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         0
       );
       setUnreadCount(totalUnread);
+
+      // For Super Admin, join all tenant rooms to receive real-time messages
+      if (user?.role === 'SUPER_ADMIN') {
+        const uniqueTenantSlugs = [...new Set(conversationsData
+          .map((c) => c.tenantSlug)
+          .filter((slug): slug is string => !!slug)
+        )];
+        
+        if (socketRef.current?.connected && uniqueTenantSlugs.length > 0) {
+          console.log(`[ChatContext] Super Admin joining ${uniqueTenantSlugs.length} tenant rooms after loading conversations`);
+          uniqueTenantSlugs.forEach((tenantSlug) => {
+            console.log(`[ChatContext] Super Admin joining tenant room: ${tenantSlug}`);
+            socketRef.current?.emit('join-tenant', tenantSlug);
+          });
+        } else if (!socketRef.current?.connected) {
+          console.log('[ChatContext] Socket not connected yet, will join rooms when socket connects');
+        }
+      }
       
       // Auto-select first conversation if none is selected and conversations exist
       // Reset the flag when conversations are reloaded
@@ -213,10 +238,15 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         return;
       }
       
-      // Reverse to show oldest first (messages come newest first from API)
-      const reversedMessages = [...fetchedMessages].reverse();
-      console.log('[ChatContext] Loaded', reversedMessages.length, 'messages');
-      setMessages(reversedMessages);
+      // Sort messages by createdAt (oldest first, newest at bottom)
+      const sortedMessages = [...fetchedMessages].sort((a, b) => {
+        const dateA = new Date(a.createdAt).getTime();
+        const dateB = new Date(b.createdAt).getTime();
+        return dateA - dateB; // Ascending order (oldest first)
+      });
+      
+      console.log('[ChatContext] Loaded', sortedMessages.length, 'messages (oldest first)');
+      setMessages(sortedMessages);
     } catch (error) {
       console.error('Failed to load messages:', error);
       setMessages([]);
@@ -329,10 +359,25 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 
       // Join tenant room(s)
       if (user.role === 'SUPER_ADMIN') {
-        // Super Admin will join tenant rooms dynamically when selecting conversations
-        // For now, we'll join rooms as conversations are loaded
+        // Super Admin: Join all tenant rooms from loaded conversations
+        const currentConversations = conversationsRef.current;
+        if (currentConversations.length > 0) {
+          const uniqueTenantSlugs = [...new Set(currentConversations
+            .map((c) => c.tenantSlug)
+            .filter((slug): slug is string => !!slug)
+          )];
+          
+          console.log(`[ChatContext] Super Admin joining ${uniqueTenantSlugs.length} tenant rooms on connect`);
+          uniqueTenantSlugs.forEach((tenantSlug) => {
+            console.log(`[ChatContext] Super Admin joining tenant room: ${tenantSlug}`);
+            socket.emit('join-tenant', tenantSlug);
+          });
+        } else {
+          console.log('[ChatContext] No conversations loaded yet, will join rooms when conversations load');
+        }
       } else if (user.tenant?.slug) {
         // Regular Admin/Staff join their own tenant
+        console.log(`[ChatContext] Admin/Staff joining tenant room: ${user.tenant.slug}`);
         socket.emit('join-tenant', user.tenant.slug);
       }
     });
@@ -358,12 +403,38 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     const handleMessage = (newMessage: Message) => {
       console.log('[ChatContext] Received message:', newMessage);
       
+      const isCustomerMessage = newMessage.senderType === 'customer';
+      const isOnChatPage = typeof window !== 'undefined' && window.location.pathname === '/dashboard/chat';
+      // For Super Admin, check if message is from their own user account (not customer messages)
+      // Customer messages should always trigger notifications
+      const isOwnMessage = !isCustomerMessage && newMessage.senderId === user?.id;
+      
+      console.log('[ChatContext] Message received:', {
+        senderType: newMessage.senderType,
+        isCustomerMessage,
+        isOnChatPage,
+        isOwnMessage,
+        senderId: newMessage.senderId,
+        userId: user?.id,
+        userRole: user?.role,
+        customerId: newMessage.customerId,
+      });
+      
       // Get current conversation to check if message belongs to it
       setCurrentConversation((current) => {
         // Check if message is for the current conversation
         // For customer messages, check customerId
         // For admin/staff/super_admin messages, also check customerId (they're replying to a customer)
-        const isForCurrentConversation = current && newMessage.customerId === current.customerId;
+        // For Super Admin, also verify tenant matches if available
+        let isForCurrentConversation = current && newMessage.customerId === current.customerId;
+        
+        // For Super Admin, also check tenantSlug if available in message
+        if (isForCurrentConversation && user?.role === 'SUPER_ADMIN' && current.tenantSlug) {
+          // We can't check tenant from message directly, but if customerId matches and we're viewing
+          // that conversation, it should be for this conversation
+          // The backend filters by tenant when broadcasting, so this should be correct
+          isForCurrentConversation = true;
+        }
         
         if (isForCurrentConversation) {
           console.log('[ChatContext] Adding message to current conversation');
@@ -373,37 +444,124 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
               console.log('[ChatContext] Message already exists, skipping');
               return prev;
             }
-            // Add message to the end of the list
-            return [...prev, newMessage];
+            // Add message and sort by createdAt to maintain order (oldest first, newest at bottom)
+            const updated = [...prev, newMessage];
+            return updated.sort((a, b) => {
+              const dateA = new Date(a.createdAt).getTime();
+              const dateB = new Date(b.createdAt).getTime();
+              return dateA - dateB; // Ascending order (oldest first)
+            });
           });
         } else {
           console.log('[ChatContext] Message not for current conversation', {
             currentCustomerId: current?.customerId,
             messageCustomerId: newMessage.customerId,
             senderType: newMessage.senderType,
+            currentTenantSlug: current?.tenantSlug,
           });
         }
         return current;
       });
 
-      // Only reload conversations if message is from a customer (creates/updates conversation)
-      // Admin messages don't need to trigger conversation list reload
-      // Don't reload if we're blocked or already loading
-      if (newMessage.senderType === 'customer' && !isBlockedRef.current && !isLoadingRef.current) {
-        // Update conversations list (debounced to prevent excessive calls)
-        // Clear any existing timeout
-        if (reloadTimeoutRef.current) {
-          clearTimeout(reloadTimeoutRef.current);
-        }
-        
-        // Set a new timeout to reload conversations after 3 seconds (increased from 2)
-        reloadTimeoutRef.current = setTimeout(() => {
-          if (loadConversationsRef.current && !isBlockedRef.current && !isLoadingRef.current) {
-            console.log('[ChatContext] Reloading conversations after customer message');
-            loadConversationsRef.current();
+      // Update conversations list immediately for customer messages
+      if (isCustomerMessage && !isBlockedRef.current) {
+        setConversations((prev) => {
+          const existingIndex = prev.findIndex((c) => {
+            // For Super Admin, also check tenantSlug to match correctly
+            if (user?.role === 'SUPER_ADMIN') {
+              // Need to find conversation by customerId and tenant
+              // Since we don't have tenantId in the message, we'll match by customerId
+              // and update the matching conversation
+              return c.customerId === newMessage.customerId;
+            }
+            return c.customerId === newMessage.customerId;
+          });
+          
+          if (existingIndex >= 0) {
+            // Update existing conversation with new last message and increment unread
+            const updated = [...prev];
+            const existingConv = updated[existingIndex];
+            updated[existingIndex] = {
+              ...existingConv,
+              lastMessage: newMessage,
+              unreadCount: existingConv.unreadCount + 1,
+            };
+            // Move to top
+            const [moved] = updated.splice(existingIndex, 1);
+            updated.unshift(moved);
+            conversationsRef.current = updated;
+            return updated;
+          } else {
+            // New conversation - reload to get full customer data
+            if (loadConversationsRef.current && !isLoadingRef.current) {
+              setTimeout(() => {
+                if (loadConversationsRef.current && !isBlockedRef.current && !isLoadingRef.current) {
+                  loadConversationsRef.current();
+                }
+              }, 500);
+            }
+            return prev;
           }
-          reloadTimeoutRef.current = null;
-        }, 3000);
+        });
+        
+        // Update unread count
+        setUnreadCount((prev) => prev + 1);
+      }
+
+      // Show toast notification for customer messages when not on chat page
+      // Works for all roles including Super Admin
+      if (isCustomerMessage && !isOnChatPage && !isOwnMessage) {
+        console.log('[ChatContext] Preparing toast notification', {
+          isCustomerMessage,
+          isOnChatPage,
+          isOwnMessage,
+          userRole: user?.role,
+          customerId: newMessage.customerId,
+        });
+        
+        // Use a timeout to ensure conversations state is updated
+        setTimeout(() => {
+          const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
+          if (currentPath === '/dashboard/chat') {
+            console.log('[ChatContext] Skipping toast - user is on chat page');
+            return; // Don't show toast if user navigated to chat page
+          }
+          
+          // Find customer name from conversations or use sender info
+          const conversation = conversationsRef.current.find((c) => c.customerId === newMessage.customerId);
+          const customerName = conversation?.customer.firstName && conversation?.customer.lastName
+            ? `${conversation.customer.firstName} ${conversation.customer.lastName}`
+            : conversation?.customer.email || newMessage.sender.email || newMessage.sender.firstName || 'Customer';
+          
+          // Truncate message for toast
+          const messagePreview = newMessage.text.length > 50 
+            ? `${newMessage.text.substring(0, 50)}...` 
+            : newMessage.text;
+          
+          console.log('[ChatContext] Showing toast notification for:', customerName, 'Message:', messagePreview, 'User role:', user?.role);
+          toast(`${customerName}`, {
+            description: messagePreview,
+            duration: 5000,
+            action: {
+              label: 'View',
+              onClick: () => {
+                router.push('/dashboard/chat');
+              },
+            },
+            style: {
+              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+              color: 'white',
+              border: 'none',
+            },
+            className: 'chat-toast',
+          });
+        }, 100);
+      } else {
+        console.log('[ChatContext] Toast conditions not met', {
+          isCustomerMessage,
+          isOnChatPage,
+          isOwnMessage,
+        });
       }
     };
 
@@ -427,7 +585,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         socketRef.current = null;
       }
     };
-  }, [user?.id]); // Only depend on user ID to avoid reconnection loops
+  }, [user?.id, loadConversations, pathname, router]); // Include dependencies for toast notifications
 
   // Mark messages as read
   const markAsRead = useCallback(
