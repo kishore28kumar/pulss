@@ -1,0 +1,377 @@
+import { Request, Response } from 'express';
+import { prisma } from '@pulss/database';
+import { AppError } from '../middleware/errorHandler';
+import { getIO } from '../socket/socketHandler';
+
+/**
+ * Send internal message
+ * POST /api/mail/send
+ */
+export const sendMessage = async (req: Request, res: Response) => {
+  try {
+    const { recipientId, subject, body } = req.body;
+    const senderId = req.user?.userId;
+    const senderRole = req.user?.role;
+
+    if (!senderId || !['SUPER_ADMIN', 'ADMIN'].includes(senderRole || '')) {
+      throw new AppError('Only Super Admin and Admin can send internal messages', 403);
+    }
+
+    if (!recipientId || !subject || !body) {
+      throw new AppError('Recipient ID, subject, and body are required', 400);
+    }
+
+    // Verify recipient exists and is Super Admin or Admin
+    const recipient = await prisma.users.findUnique({
+      where: { id: recipientId },
+      select: { id: true, role: true },
+    });
+
+    if (!recipient || !['SUPER_ADMIN', 'ADMIN'].includes(recipient.role)) {
+      throw new AppError('Invalid recipient. Only Super Admin and Admin can receive internal messages', 400);
+    }
+
+    // Prevent sending to self
+    if (senderId === recipientId) {
+      throw new AppError('Cannot send message to yourself', 400);
+    }
+
+    // For Super Admin: can send to any Admin
+    // For Admin: can only send to Super Admin
+    if (senderRole === 'ADMIN' && recipient.role !== 'SUPER_ADMIN') {
+      throw new AppError('Admin can only send messages to Super Admin', 403);
+    }
+
+    const message = await prisma.internal_messages.create({
+      data: {
+        subject: subject.trim(),
+        body: body.trim(),
+        senderId,
+        recipientId,
+      },
+      include: {
+        sender: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            role: true,
+          },
+        },
+        recipient: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            role: true,
+          },
+        },
+      },
+    });
+
+    // Emit WebSocket event to recipient
+    try {
+      const io = getIO();
+      const formattedMessage = {
+        ...message,
+        createdAt: message.createdAt.toISOString(),
+        readAt: message.readAt?.toISOString() || null,
+      };
+      
+      // Emit to recipient's socket
+      io.to(`user:${recipientId}`).emit('mail:new', formattedMessage);
+    } catch (error) {
+      console.error('Failed to emit mail event:', error);
+      // Don't fail the request if WebSocket emit fails
+    }
+
+    res.status(201).json({
+      success: true,
+      data: {
+        ...message,
+        createdAt: message.createdAt.toISOString(),
+        readAt: message.readAt?.toISOString() || null,
+      },
+      message: 'Message sent successfully',
+    });
+  } catch (error: any) {
+    throw new AppError(error.message || 'Failed to send message', 500);
+  }
+};
+
+/**
+ * Get conversations (list of users you've messaged or received messages from)
+ * GET /api/mail/conversations
+ */
+export const getConversations = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.userId;
+    const userRole = req.user?.role;
+
+    if (!userId || !['SUPER_ADMIN', 'ADMIN'].includes(userRole || '')) {
+      throw new AppError('Unauthorized', 403);
+    }
+
+    // Get all messages where user is sender or recipient
+    const messages = await prisma.internal_messages.findMany({
+      where: {
+        OR: [
+          { senderId: userId },
+          { recipientId: userId },
+        ],
+      },
+      include: {
+        sender: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            role: true,
+          },
+        },
+        recipient: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            role: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      take: 1000, // Limit to prevent excessive memory usage
+    });
+
+    // Group by conversation partner
+    const conversationMap = new Map<string, any>();
+    
+    for (const message of messages) {
+      const partnerId = message.senderId === userId ? message.recipientId : message.senderId;
+      const partner = message.senderId === userId ? message.recipient : message.sender;
+      
+      if (!conversationMap.has(partnerId)) {
+        conversationMap.set(partnerId, {
+          partnerId,
+          partner: {
+            ...partner,
+            role: partner.role, // Ensure role is included
+          },
+          lastMessage: message,
+          unreadCount: 0,
+        });
+      }
+      
+      // Update unread count
+      if (message.recipientId === userId && !message.isRead) {
+        const conv = conversationMap.get(partnerId);
+        conv.unreadCount += 1;
+      }
+    }
+
+    const conversations = Array.from(conversationMap.values())
+      .sort((a, b) => {
+        const dateA = new Date(a.lastMessage.createdAt).getTime();
+        const dateB = new Date(b.lastMessage.createdAt).getTime();
+        return dateB - dateA; // Newest first
+      });
+
+    res.json({
+      success: true,
+      data: conversations,
+    });
+  } catch (error: any) {
+    throw new AppError(error.message || 'Failed to fetch conversations', 500);
+  }
+};
+
+/**
+ * Get messages for a conversation
+ * GET /api/mail/messages/:partnerId
+ */
+export const getMessages = async (req: Request, res: Response) => {
+  try {
+    const { partnerId } = req.params;
+    const userId = req.user?.userId;
+    const userRole = req.user?.role;
+
+    if (!userId || !['SUPER_ADMIN', 'ADMIN'].includes(userRole || '')) {
+      throw new AppError('Unauthorized', 403);
+    }
+
+    const messages = await prisma.internal_messages.findMany({
+      where: {
+        OR: [
+          { senderId: userId, recipientId: partnerId },
+          { senderId: partnerId, recipientId: userId },
+        ],
+      },
+      include: {
+        sender: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            role: true,
+          },
+        },
+        recipient: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            role: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'asc', // Oldest first
+      },
+    });
+
+    res.json({
+      success: true,
+      data: messages.map((msg) => ({
+        ...msg,
+        createdAt: msg.createdAt.toISOString(),
+        readAt: msg.readAt?.toISOString() || null,
+      })),
+    });
+  } catch (error: any) {
+    throw new AppError(error.message || 'Failed to fetch messages', 500);
+  }
+};
+
+/**
+ * Get unread count
+ * GET /api/mail/unread-count
+ */
+export const getUnreadCount = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.userId;
+    const userRole = req.user?.role;
+
+    if (!userId || !['SUPER_ADMIN', 'ADMIN'].includes(userRole || '')) {
+      throw new AppError('Unauthorized', 403);
+    }
+
+    const unreadCount = await prisma.internal_messages.count({
+      where: {
+        recipientId: userId,
+        isRead: false,
+      },
+    });
+
+    res.json({
+      success: true,
+      data: { unreadCount },
+    });
+  } catch (error: any) {
+    throw new AppError(error.message || 'Failed to fetch unread count', 500);
+  }
+};
+
+/**
+ * Mark messages as read
+ * POST /api/mail/mark-read/:partnerId
+ */
+export const markAsRead = async (req: Request, res: Response) => {
+  try {
+    const { partnerId } = req.params;
+    const userId = req.user?.userId;
+    const userRole = req.user?.role;
+
+    if (!userId || !['SUPER_ADMIN', 'ADMIN'].includes(userRole || '')) {
+      throw new AppError('Unauthorized', 403);
+    }
+
+    await prisma.internal_messages.updateMany({
+      where: {
+        senderId: partnerId,
+        recipientId: userId,
+        isRead: false,
+      },
+      data: {
+        isRead: true,
+        readAt: new Date(),
+      },
+    });
+
+    res.json({
+      success: true,
+      message: 'Messages marked as read',
+    });
+  } catch (error: any) {
+    throw new AppError(error.message || 'Failed to mark messages as read', 500);
+  }
+};
+
+/**
+ * Get available recipients for mail
+ * GET /api/mail/recipients
+ */
+export const getRecipients = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.userId;
+    const userRole = req.user?.role;
+
+    if (!userId || !['SUPER_ADMIN', 'ADMIN'].includes(userRole || '')) {
+      throw new AppError('Unauthorized', 403);
+    }
+
+    let recipients: any[];
+
+    if (userRole === 'SUPER_ADMIN') {
+      // Super Admin can message any Admin
+      recipients = await prisma.users.findMany({
+        where: {
+          role: 'ADMIN',
+          id: { not: userId }, // Exclude self
+        },
+        select: {
+          id: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          role: true,
+        },
+        orderBy: {
+          email: 'asc',
+        },
+      });
+    } else {
+      // Admin can only message Super Admin
+      recipients = await prisma.users.findMany({
+        where: {
+          role: 'SUPER_ADMIN',
+          id: { not: userId }, // Exclude self
+        },
+        select: {
+          id: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          role: true,
+        },
+        orderBy: {
+          email: 'asc',
+        },
+      });
+    }
+
+    res.json({
+      success: true,
+      data: recipients,
+    });
+  } catch (error: any) {
+    throw new AppError(error.message || 'Failed to fetch recipients', 500);
+  }
+};
+

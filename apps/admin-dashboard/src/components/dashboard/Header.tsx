@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { LogOut, User, Store, Menu, MessageCircle } from 'lucide-react';
+import { LogOut, User, Store, Menu, MessageCircle, Mail } from 'lucide-react';
 import NotificationDropdown from './NotificationDropdown';
 import { authService } from '@/lib/auth';
 import { useRouter, usePathname } from 'next/navigation';
@@ -10,6 +10,7 @@ import ThemeToggle from '@/components/theme/ThemeToggle';
 import { getUserRole } from '@/lib/permissions';
 import { useChat } from '@/contexts/ChatContext';
 import { useBroadcasts } from '@/contexts/BroadcastContext';
+import { useMail } from '@/contexts/MailContext';
 
 interface HeaderProps {
   onMenuClick?: () => void;
@@ -35,6 +36,45 @@ function ChatNotificationButton() {
       title="Chat"
     >
       <MessageCircle className="w-5 h-5" />
+      {showNotification && (
+        <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+      )}
+    </button>
+  );
+}
+
+function MailNotificationButton() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const { unreadCount } = useMail();
+  const [mounted, setMounted] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+    setUserRole(getUserRole());
+  }, []);
+
+  // Only show for Super Admin and Admin, but wait for mount to prevent hydration error
+  if (!mounted || !['SUPER_ADMIN', 'ADMIN'].includes(userRole || '')) {
+    return null;
+  }
+  
+  // Only show notification when NOT on mail page and there are unread messages
+  const isOnMailPage = pathname === '/dashboard/mail';
+  const showNotification = !isOnMailPage && unreadCount > 0;
+
+  const handleClick = () => {
+    router.push('/dashboard/mail');
+  };
+
+  return (
+    <button
+      onClick={handleClick}
+      className="relative p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+      title="Mail"
+    >
+      <Mail className="w-5 h-5" />
       {showNotification && (
         <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
       )}
@@ -130,6 +170,9 @@ export default function Header({ onMenuClick }: HeaderProps) {
 
         {/* Chat Notifications */}
         <ChatNotificationButton />
+
+        {/* Mail Notifications */}
+        <MailNotificationButton />
 
         {/* Notifications */}
         <NotificationDropdown />

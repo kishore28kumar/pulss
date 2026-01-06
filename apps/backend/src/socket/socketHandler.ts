@@ -99,6 +99,12 @@ export const initializeSocketIO = (httpServer: HTTPServer) => {
   io.on('connection', (socket: AuthenticatedSocket) => {
     console.log(`✅ User connected: ${socket.userId} (${socket.userRole})`);
 
+    // Join user-specific room for mail notifications (Super Admin and Admin only)
+    if (socket.userRole === 'SUPER_ADMIN' || socket.userRole === 'ADMIN') {
+      socket.join(`user:${socket.userId}`);
+      console.log(`📧 User ${socket.userId} joined mail room: user:${socket.userId}`);
+    }
+
     // Join tenant room
     socket.on('join-tenant', async (tenantSlug: string) => {
       try {

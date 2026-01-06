@@ -421,6 +421,8 @@ model users {
   sentMessages        messages[]       @relation("MessageSender")
   sentBroadcasts      broadcasts[]     @relation("BroadcastSender")
   broadcastReads      broadcast_reads[] @relation("BroadcastReader")
+  sentInternalMessages internal_messages[] @relation("InternalMessageSender")
+  receivedInternalMessages internal_messages[] @relation("InternalMessageRecipient")
 
   @@index([email])
   @@index([role])
@@ -469,6 +471,23 @@ model broadcast_reads {
   @@unique([broadcastId, userId])
   @@index([userId])
   @@index([broadcastId])
+}
+
+model internal_messages {
+  id          String   @id @default(cuid())
+  subject     String
+  body        String
+  senderId    String   // Super Admin or Admin
+  recipientId String   // Super Admin or Admin
+  isRead      Boolean  @default(false)
+  readAt      DateTime?
+  createdAt   DateTime @default(now())
+  sender      users    @relation("InternalMessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  recipient   users    @relation("InternalMessageRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@index([senderId, createdAt])
+  @@index([recipientId, createdAt])
+  @@index([recipientId, isRead])
 }
 
 enum TenantStatus {

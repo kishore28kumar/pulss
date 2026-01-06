@@ -16,6 +16,7 @@ import {
   X,
   MessageCircle,
   Megaphone,
+  Mail,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import PermissionGuard from '@/components/permissions/PermissionGuard';
@@ -67,6 +68,15 @@ const navigation = [
     icon: Megaphone,
     requireAdminOrStaff: true, // ADMIN, STAFF, and SUPER_ADMIN can see Broadcasts
     allowSuperAdmin: true, // Explicitly allow SUPER_ADMIN
+  },
+  { 
+    name: 'Mail', 
+    href: '/dashboard/mail', 
+    icon: Mail,
+    requireAdminOrStaff: true, // Only SUPER_ADMIN and ADMIN can see Mail
+    allowSuperAdmin: true,
+    // Only show for SUPER_ADMIN and ADMIN (not STAFF)
+    requireSuperAdminOrAdmin: true,
   },
   { name: 'Settings', href: '/dashboard/settings', icon: Settings },
 ];
@@ -122,6 +132,11 @@ export default function Sidebar({ onClose }: SidebarProps) {
       {/* Navigation */}
       <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
         {navigation.map((item) => {
+          // For items that require Super Admin or Admin only (like Mail)
+          if ((item as any).requireSuperAdminOrAdmin && (!mounted || !['SUPER_ADMIN', 'ADMIN'].includes(userRole || ''))) {
+            return null;
+          }
+          
           // Skip items that require Admin or Staff if user is not ADMIN or STAFF
           // Exception: if allowSuperAdmin is true, also allow SUPER_ADMIN
           if (item.requireAdminOrStaff) {

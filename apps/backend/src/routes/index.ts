@@ -13,6 +13,7 @@ import reportRoutes from './reportRoutes';
 import uploadRoutes from './uploadRoutes';
 import chatRoutes from './chatRoutes';
 import broadcastRoutes from './broadcastRoutes';
+import mailRoutes from './mailRoutes';
 
 const router = Router();
 
@@ -31,5 +32,6 @@ router.use('/reports', reportRoutes);
 router.use('/upload', uploadRoutes);
 router.use('/chat', chatRoutes);
 router.use('/broadcasts', broadcastRoutes);
+router.use('/mail', mailRoutes);
 
 export default router;
