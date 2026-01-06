@@ -39,39 +39,58 @@ app.use(
 // Cache allowed origins to avoid recalculating on every request
 const allowedCorsOrigins = getCorsOrigins();
 
+// Hardcoded fallback origins for development environment (as safety net)
+const FALLBACK_ORIGINS = [
+  'https://pulss-admin-dev.onrender.com',
+  'https://pulss-store-dev.onrender.com',
+  'https://pulss-admin.onrender.com',
+  'https://pulss-storefront.onrender.com',
+];
+
+// Combine allowed origins with fallbacks
+const allAllowedOrigins = [...new Set([...allowedCorsOrigins, ...FALLBACK_ORIGINS])];
+
+console.log('[CORS] Final allowed origins (including fallbacks):', allAllowedOrigins);
+
 // CORS configuration
 const corsOptions = {
   origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) {
-      return callback(null, true);
-    }
-    
-    // Normalize origin (remove trailing slash if present)
-    const normalizedOrigin = origin.replace(/\/$/, '');
-    
-    // Check if origin is in allowed list (also check normalized versions)
-    const isAllowed = allowedCorsOrigins.some(allowed => {
-      const normalizedAllowed = allowed.replace(/\/$/, '');
-      return normalizedAllowed === normalizedOrigin || allowed === origin;
-    });
-    
-    if (isAllowed) {
-      callback(null, true);
-    } else {
-      // In development, allow localhost with any port
-      if (process.env.NODE_ENV !== 'production' && origin?.includes('localhost')) {
+    try {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) {
+        return callback(null, true);
+      }
+      
+      // Normalize origin (remove trailing slash if present)
+      const normalizedOrigin = origin.replace(/\/$/, '');
+      
+      // Check if origin is in allowed list (also check normalized versions)
+      const isAllowed = allAllowedOrigins.some(allowed => {
+        const normalizedAllowed = allowed.replace(/\/$/, '');
+        return normalizedAllowed === normalizedOrigin || allowed === origin;
+      });
+      
+      if (isAllowed) {
         callback(null, true);
       } else {
-        // Log rejected origin for debugging (only first few times to avoid log spam)
-        const rejectCount = (global as any).corsRejectCount || 0;
-        if (rejectCount < 10) {
-          console.warn(`[CORS] Rejected origin: ${origin}`);
-          console.log(`[CORS] Allowed origins:`, allowedCorsOrigins);
-          (global as any).corsRejectCount = rejectCount + 1;
+        // In development, allow localhost with any port
+        if (process.env.NODE_ENV !== 'production' && origin?.includes('localhost')) {
+          callback(null, true);
+        } else {
+          // Log rejected origin for debugging (only first few times to avoid log spam)
+          const rejectCount = (global as any).corsRejectCount || 0;
+          if (rejectCount < 10) {
+            console.warn(`[CORS] Rejected origin: ${origin}`);
+            console.log(`[CORS] Allowed origins:`, allAllowedOrigins);
+            (global as any).corsRejectCount = rejectCount + 1;
+          }
+          callback(new Error(`Not allowed by CORS. Origin: ${origin}`));
         }
-        callback(new Error(`Not allowed by CORS. Origin: ${origin}`));
       }
+    } catch (error) {
+      // If there's an error in the callback, log it but allow the request to prevent breaking CORS entirely
+      console.error('[CORS] Error in origin callback:', error);
+      callback(null, true); // Fallback to allowing the request
     }
   },
   credentials: true,
