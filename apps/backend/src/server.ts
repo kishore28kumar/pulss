@@ -19,6 +19,10 @@ const app = express();
 const httpServer = createServer(app);
 const PORT = process.env.BACKEND_PORT || 5000;
 
+// Log CORS configuration at startup
+const corsOrigins = getCorsOrigins();
+console.log('[Server] CORS origins configured:', corsOrigins);
+
 // ============================================
 // MIDDLEWARE
 // ============================================
@@ -32,21 +36,39 @@ app.use(
 );
 
 // CORS - Uses environment-based URL configuration
+// Cache allowed origins to avoid recalculating on every request
+const allowedCorsOrigins = getCorsOrigins();
+
 app.use(
   cors({
     origin: (origin, callback) => {
-      const allowedOrigins = getCorsOrigins();
       // Allow requests with no origin (like mobile apps or curl requests)
       if (!origin) return callback(null, true);
       
-      if (allowedOrigins.includes(origin)) {
+      // Normalize origin (remove trailing slash if present)
+      const normalizedOrigin = origin.replace(/\/$/, '');
+      
+      // Check if origin is in allowed list (also check normalized versions)
+      const isAllowed = allowedCorsOrigins.some(allowed => {
+        const normalizedAllowed = allowed.replace(/\/$/, '');
+        return normalizedAllowed === normalizedOrigin || allowed === origin;
+      });
+      
+      if (isAllowed) {
         callback(null, true);
       } else {
         // In development, allow localhost with any port
         if (process.env.NODE_ENV !== 'production' && origin?.includes('localhost')) {
           callback(null, true);
         } else {
-          callback(new Error('Not allowed by CORS'));
+          // Log rejected origin for debugging (only first few times to avoid log spam)
+          const rejectCount = (global as any).corsRejectCount || 0;
+          if (rejectCount < 5) {
+            console.warn(`[CORS] Rejected origin: ${origin}`);
+            console.log(`[CORS] Allowed origins:`, allowedCorsOrigins);
+            (global as any).corsRejectCount = rejectCount + 1;
+          }
+          callback(new Error(`Not allowed by CORS. Origin: ${origin}`));
         }
       }
     },

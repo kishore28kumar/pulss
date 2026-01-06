@@ -9,7 +9,23 @@
 
 type DeployEnvironment = 'development' | 'production' | 'dev' | 'prod';
 
-const DEPLOY_ENV = (process.env.DEPLOY_ENV || process.env.NODE_ENV || 'development').toLowerCase() as DeployEnvironment;
+// Determine deploy environment - prioritize DEPLOY_ENV, then check if URL contains 'dev' or 'prod'
+const getDeployEnvFromUrl = (): string | null => {
+  const apiUrl = process.env.API_URL || '';
+  if (apiUrl.includes('-dev.') || apiUrl.includes('.dev')) {
+    return 'development';
+  }
+  if (apiUrl.includes('-prod.') || apiUrl.includes('.prod') || (!apiUrl.includes('-dev.') && apiUrl.includes('onrender.com'))) {
+    return 'production';
+  }
+  return null;
+};
+
+const DEPLOY_ENV = (
+  process.env.DEPLOY_ENV || 
+  getDeployEnvFromUrl() ||
+  (process.env.NODE_ENV === 'production' ? 'production' : 'development')
+).toLowerCase() as DeployEnvironment;
 
 // URL Configuration Map
 const URL_CONFIG = {
@@ -58,23 +74,16 @@ const LOCAL_URLS = {
 export const getCorsOrigins = (): string[] => {
   const origins: string[] = [];
   
-  // Add admin URL
-  if (process.env.ADMIN_URL) {
-    origins.push(process.env.ADMIN_URL);
-  } else if (env === 'development') {
-    origins.push(config.ADMIN_URL);
-  } else {
-    origins.push(config.ADMIN_URL);
+  // Add admin URL - prioritize environment variable, then config
+  const adminUrl = process.env.ADMIN_URL || config.ADMIN_URL;
+  if (adminUrl) {
+    origins.push(adminUrl);
   }
   
-  // Add frontend/storefront URL
-  if (process.env.FRONTEND_URL || process.env.STOREFRONT_URL) {
-    const frontendUrl = process.env.FRONTEND_URL || process.env.STOREFRONT_URL || '';
-    if (frontendUrl) origins.push(frontendUrl);
-  } else if (env === 'development') {
-    origins.push(config.FRONTEND_URL);
-  } else {
-    origins.push(config.FRONTEND_URL);
+  // Add frontend/storefront URL - prioritize environment variable, then config
+  const frontendUrl = process.env.FRONTEND_URL || process.env.STOREFRONT_URL || config.FRONTEND_URL;
+  if (frontendUrl) {
+    origins.push(frontendUrl);
   }
   
   // Always include localhost for local development
@@ -85,7 +94,21 @@ export const getCorsOrigins = (): string[] => {
   }
   
   // Remove duplicates and filter out empty strings
-  return [...new Set(origins.filter(Boolean))];
+  const uniqueOrigins = [...new Set(origins.filter(Boolean))];
+  
+  // Always log allowed origins at startup for debugging
+  console.log('[CORS] Allowed origins:', uniqueOrigins);
+  console.log('[CORS] Environment configuration:', {
+    DEPLOY_ENV: process.env.DEPLOY_ENV,
+    NODE_ENV: process.env.NODE_ENV,
+    ADMIN_URL_ENV: process.env.ADMIN_URL,
+    ADMIN_URL_CONFIG: config.ADMIN_URL,
+    FRONTEND_URL_ENV: process.env.FRONTEND_URL,
+    FRONTEND_URL_CONFIG: config.FRONTEND_URL,
+    STOREFRONT_URL_ENV: process.env.STOREFRONT_URL,
+  });
+  
+  return uniqueOrigins;
 };
 
 export default config;
