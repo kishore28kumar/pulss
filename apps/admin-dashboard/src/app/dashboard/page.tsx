@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Package, ShoppingCart, Users, IndianRupee, TrendingUp, TrendingDown, Building2, Store, X, ArrowRight, Calendar, AlertCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
