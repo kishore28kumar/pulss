@@ -144,7 +144,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       // For Super Admin, join all tenant rooms to receive real-time messages
       if (user?.role === 'SUPER_ADMIN') {
         const uniqueTenantSlugs = [...new Set(conversationsData
-          .map((c) => c.tenantSlug)
+          .map((c: Conversation) => c.tenantSlug)
           .filter((slug): slug is string => !!slug)
         )];
         
@@ -363,7 +363,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         const currentConversations = conversationsRef.current;
         if (currentConversations.length > 0) {
           const uniqueTenantSlugs = [...new Set(currentConversations
-            .map((c) => c.tenantSlug)
+            .map((c: Conversation) => c.tenantSlug)
             .filter((slug): slug is string => !!slug)
           )];
           

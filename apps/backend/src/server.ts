@@ -80,12 +80,31 @@ app.use(tenantMiddleware);
 // ROUTES
 // ============================================
 
+// Health check endpoint (must be before error handler)
 app.get('/health', async (_req, res) => {
-  const dbConnected = await checkConnection();
-  res.json({ 
-    status: 'ok', 
-    message: 'Pulss API is running',
-    database: dbConnected ? 'connected' : 'disconnected'
+  try {
+    const dbConnected = await checkConnection();
+    res.status(200).json({ 
+      status: 'ok', 
+      message: 'Pulss API is running',
+      database: dbConnected ? 'connected' : 'disconnected',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(503).json({
+      status: 'error',
+      message: 'Health check failed',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// Root endpoint for Render health checks
+app.get('/', (_req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    message: 'Pulss API',
+    version: '1.0.0'
   });
 });
 
@@ -109,8 +128,14 @@ if (process.env.DATABASE_URL) {
   });
 }
 
-// Initialize Socket.io
-initializeSocketIO(httpServer);
+// Initialize Socket.io with error handling
+try {
+  initializeSocketIO(httpServer);
+  console.log('✅ Socket.io initialized successfully');
+} catch (error) {
+  console.error('❌ Failed to initialize Socket.io:', error);
+  // Don't crash - continue without Socket.io if initialization fails
+}
 
 httpServer.listen(PORT, () => {
   console.log(`🚀 Pulss Backend API running on port ${PORT}`);
@@ -118,15 +143,78 @@ httpServer.listen(PORT, () => {
   console.log(`🔌 Socket.io server initialized`);
 });
 
+// Keep the process alive
+httpServer.on('error', (error: NodeJS.ErrnoException) => {
+  if (error.syscall !== 'listen') {
+    throw error;
+  }
+
+  const bind = typeof PORT === 'string' ? 'Pipe ' + PORT : 'Port ' + PORT;
+
+  switch (error.code) {
+    case 'EACCES':
+      console.error(`${bind} requires elevated privileges`);
+      process.exit(1);
+      break;
+    case 'EADDRINUSE':
+      console.error(`${bind} is already in use`);
+      process.exit(1);
+      break;
+    default:
+      throw error;
+  }
+});
+
 // Handle uncaught exceptions and unhandled rejections
 process.on('uncaughtException', (error) => {
   console.error('❌ Uncaught Exception:', error);
-  process.exit(1);
+  console.error('Stack:', error.stack);
+  // In production, log but don't exit immediately to allow graceful shutdown
+  if (process.env.NODE_ENV === 'production') {
+    // Give time for logs to be written
+    setTimeout(() => process.exit(1), 1000);
+  } else {
+    process.exit(1);
+  }
 });
 
 process.on('unhandledRejection', (reason, promise) => {
   console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
-  process.exit(1);
+  // In production, log but don't exit immediately
+  if (process.env.NODE_ENV === 'production') {
+    setTimeout(() => process.exit(1), 1000);
+  } else {
+    process.exit(1);
+  }
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('⚠️  SIGTERM received, shutting down gracefully...');
+  httpServer.close(() => {
+    console.log('✅ HTTP server closed');
+    process.exit(0);
+  });
+  
+  // Force close after 10 seconds
+  setTimeout(() => {
+    console.error('⚠️  Forcing shutdown after timeout');
+    process.exit(1);
+  }, 10000);
+});
+
+process.on('SIGINT', () => {
+  console.log('⚠️  SIGINT received, shutting down gracefully...');
+  httpServer.close(() => {
+    console.log('✅ HTTP server closed');
+    process.exit(0);
+  });
+  
+  // Force close after 10 seconds
+  setTimeout(() => {
+    console.error('⚠️  Forcing shutdown after timeout');
+    process.exit(1);
+  }, 10000);
 });
 
 export default app;
