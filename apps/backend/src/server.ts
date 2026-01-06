@@ -104,7 +104,7 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // Request logging middleware for CORS debugging (only log first few requests)
-app.use((req, res, next) => {
+app.use((req, _res, next) => {
   if ((global as any).requestLogCount === undefined) (global as any).requestLogCount = 0;
   const logCount = (global as any).requestLogCount;
   if (logCount < 10 && req.method === 'OPTIONS') {
