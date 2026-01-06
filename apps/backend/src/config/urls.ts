@@ -96,7 +96,14 @@ export const getCorsOrigins = (): string[] => {
   // Remove duplicates and filter out empty strings
   const uniqueOrigins = [...new Set(origins.filter(Boolean))];
   
+  // Validate that we have at least one origin
+  if (uniqueOrigins.length === 0) {
+    console.error('[CORS] WARNING: No CORS origins configured! This will block all cross-origin requests.');
+    console.error('[CORS] Please set ADMIN_URL and/or FRONTEND_URL environment variables.');
+  }
+  
   // Always log allowed origins at startup for debugging
+  console.log('[CORS] ==========================================');
   console.log('[CORS] Allowed origins:', uniqueOrigins);
   console.log('[CORS] Environment configuration:', {
     DEPLOY_ENV: process.env.DEPLOY_ENV,
@@ -107,6 +114,7 @@ export const getCorsOrigins = (): string[] => {
     FRONTEND_URL_CONFIG: config.FRONTEND_URL,
     STOREFRONT_URL_ENV: process.env.STOREFRONT_URL,
   });
+  console.log('[CORS] ==========================================');
   
   return uniqueOrigins;
 };

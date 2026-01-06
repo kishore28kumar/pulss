@@ -39,46 +39,54 @@ app.use(
 // Cache allowed origins to avoid recalculating on every request
 const allowedCorsOrigins = getCorsOrigins();
 
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      // Allow requests with no origin (like mobile apps or curl requests)
-      if (!origin) return callback(null, true);
-      
-      // Normalize origin (remove trailing slash if present)
-      const normalizedOrigin = origin.replace(/\/$/, '');
-      
-      // Check if origin is in allowed list (also check normalized versions)
-      const isAllowed = allowedCorsOrigins.some(allowed => {
-        const normalizedAllowed = allowed.replace(/\/$/, '');
-        return normalizedAllowed === normalizedOrigin || allowed === origin;
-      });
-      
-      if (isAllowed) {
+// CORS configuration
+const corsOptions = {
+  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) {
+      return callback(null, true);
+    }
+    
+    // Normalize origin (remove trailing slash if present)
+    const normalizedOrigin = origin.replace(/\/$/, '');
+    
+    // Check if origin is in allowed list (also check normalized versions)
+    const isAllowed = allowedCorsOrigins.some(allowed => {
+      const normalizedAllowed = allowed.replace(/\/$/, '');
+      return normalizedAllowed === normalizedOrigin || allowed === origin;
+    });
+    
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      // In development, allow localhost with any port
+      if (process.env.NODE_ENV !== 'production' && origin?.includes('localhost')) {
         callback(null, true);
       } else {
-        // In development, allow localhost with any port
-        if (process.env.NODE_ENV !== 'production' && origin?.includes('localhost')) {
-          callback(null, true);
-        } else {
-          // Log rejected origin for debugging (only first few times to avoid log spam)
-          const rejectCount = (global as any).corsRejectCount || 0;
-          if (rejectCount < 5) {
-            console.warn(`[CORS] Rejected origin: ${origin}`);
-            console.log(`[CORS] Allowed origins:`, allowedCorsOrigins);
-            (global as any).corsRejectCount = rejectCount + 1;
-          }
-          callback(new Error(`Not allowed by CORS. Origin: ${origin}`));
+        // Log rejected origin for debugging (only first few times to avoid log spam)
+        const rejectCount = (global as any).corsRejectCount || 0;
+        if (rejectCount < 10) {
+          console.warn(`[CORS] Rejected origin: ${origin}`);
+          console.log(`[CORS] Allowed origins:`, allowedCorsOrigins);
+          (global as any).corsRejectCount = rejectCount + 1;
         }
+        callback(new Error(`Not allowed by CORS. Origin: ${origin}`));
       }
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Tenant-Slug', 'X-Requested-With'],
-    exposedHeaders: ['Content-Type', 'Authorization'],
-    maxAge: 86400, // 24 hours
-  })
-);
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Tenant-Slug', 'X-Requested-With'],
+  exposedHeaders: ['Content-Type', 'Authorization'],
+  maxAge: 86400, // 24 hours
+  preflightContinue: false,
+  optionsSuccessStatus: 204,
+};
+
+app.use(cors(corsOptions));
+
+// Explicit OPTIONS handler as fallback (though cors middleware should handle it)
+app.options('*', cors(corsOptions));
 
 // Body parsing
 app.use(express.json({ limit: '10mb' }));
@@ -94,6 +102,21 @@ if (process.env.NODE_ENV === 'development') {
 } else {
   app.use(morgan('combined'));
 }
+
+// Request logging middleware for CORS debugging (only log first few requests)
+app.use((req, res, next) => {
+  if ((global as any).requestLogCount === undefined) (global as any).requestLogCount = 0;
+  const logCount = (global as any).requestLogCount;
+  if (logCount < 10 && req.method === 'OPTIONS') {
+    console.log(`[CORS Preflight] ${req.method} ${req.path}`, {
+      origin: req.headers.origin,
+      'access-control-request-method': req.headers['access-control-request-method'],
+      'access-control-request-headers': req.headers['access-control-request-headers'],
+    });
+    (global as any).requestLogCount = logCount + 1;
+  }
+  next();
+});
 
 // Tenant resolution (extract tenant from subdomain or header)
 app.use(tenantMiddleware);
@@ -119,6 +142,16 @@ app.get('/health', async (_req, res) => {
       error: error instanceof Error ? error.message : 'Unknown error'
     });
   }
+});
+
+// CORS test endpoint
+app.get('/api/cors-test', (_req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    message: 'CORS is working correctly',
+    origin: _req.headers.origin,
+    allowedOrigins: allowedCorsOrigins,
+  });
 });
 
 // Root endpoint for Render health checks
