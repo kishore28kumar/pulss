@@ -1,13 +1,13 @@
 import { Request, Response } from 'express';
 import { prisma } from '@pulss/database';
-import { AppError } from '../middleware/errorHandler';
+import { AppError, asyncHandler } from '../middleware/errorHandler';
 import { getIO } from '../socket/socketHandler';
 
 /**
  * Create a new broadcast (Super Admin only)
  * POST /api/broadcasts
  */
-export const createBroadcast = async (req: Request, res: Response) => {
+export const createBroadcast = asyncHandler(async (req: Request, res: Response) => {
   try {
     const { title, message } = req.body;
     const senderId = req.user?.userId;
@@ -67,13 +67,13 @@ export const createBroadcast = async (req: Request, res: Response) => {
   } catch (error: any) {
     throw new AppError(error.message || 'Failed to create broadcast', 500);
   }
-};
+});
 
 /**
  * Get all broadcasts for current user (Admin/Staff)
  * GET /api/broadcasts
  */
-export const getBroadcasts = async (req: Request, res: Response) => {
+export const getBroadcasts = asyncHandler(async (req: Request, res: Response) => {
   try {
     const userId = req.user?.userId;
     const userRole = req.user?.role;
@@ -135,13 +135,13 @@ export const getBroadcasts = async (req: Request, res: Response) => {
   } catch (error: any) {
     throw new AppError(error.message || 'Failed to fetch broadcasts', 500);
   }
-};
+});
 
 /**
  * Get unread broadcasts count
  * GET /api/broadcasts/unread-count
  */
-export const getUnreadCount = async (req: Request, res: Response) => {
+export const getUnreadCount = asyncHandler(async (req: Request, res: Response) => {
   try {
     const userId = req.user?.userId;
     const userRole = req.user?.role;
@@ -192,13 +192,13 @@ export const getUnreadCount = async (req: Request, res: Response) => {
   } catch (error: any) {
     throw new AppError(error.message || 'Failed to fetch unread count', 500);
   }
-};
+});
 
 /**
  * Mark broadcast as read
  * POST /api/broadcasts/:id/read
  */
-export const markBroadcastAsRead = async (req: Request, res: Response) => {
+export const markBroadcastAsRead = asyncHandler(async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const userId = req.user?.userId;
@@ -245,13 +245,13 @@ export const markBroadcastAsRead = async (req: Request, res: Response) => {
   } catch (error: any) {
     throw new AppError(error.message || 'Failed to mark broadcast as read', 500);
   }
-};
+});
 
 /**
  * Mark all broadcasts as read
  * POST /api/broadcasts/mark-all-read
  */
-export const markAllBroadcastsAsRead = async (req: Request, res: Response) => {
+export const markAllBroadcastsAsRead = asyncHandler(async (req: Request, res: Response) => {
   try {
     const userId = req.user?.userId;
     const userRole = req.user?.role;
@@ -294,13 +294,13 @@ export const markAllBroadcastsAsRead = async (req: Request, res: Response) => {
   } catch (error: any) {
     throw new AppError(error.message || 'Failed to mark all broadcasts as read', 500);
   }
-};
+});
 
 /**
  * Delete broadcast (Super Admin only)
  * DELETE /api/broadcasts/:id
  */
-export const deleteBroadcast = async (req: Request, res: Response) => {
+export const deleteBroadcast = asyncHandler(async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const senderId = req.user?.userId;
@@ -325,5 +325,5 @@ export const deleteBroadcast = async (req: Request, res: Response) => {
   } catch (error: any) {
     throw new AppError(error.message || 'Failed to delete broadcast', 500);
   }
-};
+});
 

@@ -1,13 +1,13 @@
 import { Request, Response } from 'express';
 import { prisma } from '@pulss/database';
-import { AppError } from '../middleware/errorHandler';
+import { AppError, asyncHandler } from '../middleware/errorHandler';
 import { getIO } from '../socket/socketHandler';
 
 /**
  * Send internal message
  * POST /api/mail/send
  */
-export const sendMessage = async (req: Request, res: Response) => {
+export const sendMessage = asyncHandler(async (req: Request, res: Response) => {
   try {
     const { recipientId, subject, body } = req.body;
     const senderId = req.user?.userId;
@@ -99,13 +99,13 @@ export const sendMessage = async (req: Request, res: Response) => {
   } catch (error: any) {
     throw new AppError(error.message || 'Failed to send message', 500);
   }
-};
+});
 
 /**
  * Get conversations (list of users you've messaged or received messages from)
  * GET /api/mail/conversations
  */
-export const getConversations = async (req: Request, res: Response) => {
+export const getConversations = asyncHandler(async (req: Request, res: Response) => {
   try {
     const userId = req.user?.userId;
     const userRole = req.user?.role;
@@ -188,13 +188,13 @@ export const getConversations = async (req: Request, res: Response) => {
   } catch (error: any) {
     throw new AppError(error.message || 'Failed to fetch conversations', 500);
   }
-};
+});
 
 /**
  * Get messages for a conversation
  * GET /api/mail/messages/:partnerId
  */
-export const getMessages = async (req: Request, res: Response) => {
+export const getMessages = asyncHandler(async (req: Request, res: Response) => {
   try {
     const { partnerId } = req.params;
     const userId = req.user?.userId;
@@ -247,13 +247,13 @@ export const getMessages = async (req: Request, res: Response) => {
   } catch (error: any) {
     throw new AppError(error.message || 'Failed to fetch messages', 500);
   }
-};
+});
 
 /**
  * Get unread count
  * GET /api/mail/unread-count
  */
-export const getUnreadCount = async (req: Request, res: Response) => {
+export const getUnreadCount = asyncHandler(async (req: Request, res: Response) => {
   try {
     const userId = req.user?.userId;
     const userRole = req.user?.role;
@@ -276,13 +276,13 @@ export const getUnreadCount = async (req: Request, res: Response) => {
   } catch (error: any) {
     throw new AppError(error.message || 'Failed to fetch unread count', 500);
   }
-};
+});
 
 /**
  * Mark messages as read
  * POST /api/mail/mark-read/:partnerId
  */
-export const markAsRead = async (req: Request, res: Response) => {
+export const markAsRead = asyncHandler(async (req: Request, res: Response) => {
   try {
     const { partnerId } = req.params;
     const userId = req.user?.userId;
@@ -311,13 +311,13 @@ export const markAsRead = async (req: Request, res: Response) => {
   } catch (error: any) {
     throw new AppError(error.message || 'Failed to mark messages as read', 500);
   }
-};
+});
 
 /**
  * Get available recipients for mail
  * GET /api/mail/recipients
  */
-export const getRecipients = async (req: Request, res: Response) => {
+export const getRecipients = asyncHandler(async (req: Request, res: Response) => {
   try {
     const userId = req.user?.userId;
     const userRole = req.user?.role;
@@ -373,5 +373,5 @@ export const getRecipients = async (req: Request, res: Response) => {
   } catch (error: any) {
     throw new AppError(error.message || 'Failed to fetch recipients', 500);
   }
-};
+});
 
