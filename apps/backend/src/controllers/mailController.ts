@@ -125,7 +125,32 @@ export const getConversations = asyncHandler(async (req: Request, res: Response)
     }
 
     // Get all messages where user is sender or recipient
-    let messages;
+    type InternalMessageWithRelations = {
+      id: string;
+      subject: string;
+      body: string;
+      senderId: string;
+      recipientId: string;
+      isRead: boolean;
+      readAt: Date | null;
+      createdAt: Date;
+      sender: {
+        id: string;
+        firstName: string | null;
+        lastName: string | null;
+        email: string;
+        role: string;
+      };
+      recipient: {
+        id: string;
+        firstName: string | null;
+        lastName: string | null;
+        email: string;
+        role: string;
+      };
+    };
+    
+    let messages: InternalMessageWithRelations[] = [];
     try {
       messages = await prisma.internal_messages.findMany({
         where: {
@@ -225,7 +250,7 @@ export const getMessages = asyncHandler(async (req: Request, res: Response) => {
       throw new AppError('Unauthorized', 403);
     }
 
-    let messages;
+    let messages: InternalMessageWithRelations[] = [];
     try {
       messages = await prisma.internal_messages.findMany({
         where: {

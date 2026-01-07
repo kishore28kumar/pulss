@@ -93,7 +93,25 @@ export const getBroadcasts = asyncHandler(async (req: Request, res: Response) =>
     }
 
     // Get all non-deleted broadcasts
-    let broadcasts;
+    type BroadcastWithRelations = {
+      id: string;
+      title: string;
+      message: string;
+      senderId: string;
+      createdAt: Date;
+      deletedAt: Date | null;
+      sender: {
+        id: string;
+        firstName: string | null;
+        lastName: string | null;
+        email: string;
+      };
+      readBy: Array<{
+        readAt: Date;
+      }>;
+    };
+    
+    let broadcasts: BroadcastWithRelations[] = [];
     try {
       broadcasts = await prisma.broadcasts.findMany({
         where: {
