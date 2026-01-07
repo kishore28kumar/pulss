@@ -54,7 +54,11 @@ const FALLBACK_ORIGINS = [
 // Combine allowed origins with fallbacks
 const allAllowedOrigins = [...new Set([...allowedCorsOrigins, ...FALLBACK_ORIGINS])];
 
+// Normalize all origins (remove trailing slashes) for consistent matching
+const normalizedAllowedOrigins = allAllowedOrigins.map(origin => origin.replace(/\/$/, ''));
+
 console.log('[CORS] Final allowed origins (including fallbacks):', allAllowedOrigins);
+console.log('[CORS] Normalized allowed origins:', normalizedAllowedOrigins);
 
 // CORS configuration
 const corsOptions = {
@@ -68,11 +72,13 @@ const corsOptions = {
       // Normalize origin (remove trailing slash if present)
       const normalizedOrigin = origin.replace(/\/$/, '');
       
-      // Check if origin is in allowed list (also check normalized versions)
-      const isAllowed = allAllowedOrigins.some(allowed => {
-        const normalizedAllowed = allowed.replace(/\/$/, '');
-        return normalizedAllowed === normalizedOrigin || allowed === origin;
-      });
+      // Check if origin is in allowed list (check both original and normalized versions)
+      const isAllowed = normalizedAllowedOrigins.includes(normalizedOrigin) || 
+                       allAllowedOrigins.includes(origin) ||
+                       allAllowedOrigins.some(allowed => {
+                         const normalizedAllowed = allowed.replace(/\/$/, '');
+                         return normalizedAllowed === normalizedOrigin;
+                       });
       
       if (isAllowed) {
         return callback(null, true);
@@ -87,6 +93,7 @@ const corsOptions = {
       const rejectCount = (global as any).corsRejectCount || 0;
       if (rejectCount < 10) {
         console.warn(`[CORS] Rejected origin: ${origin}`);
+        console.log(`[CORS] Normalized origin: ${normalizedOrigin}`);
         console.log(`[CORS] Allowed origins:`, allAllowedOrigins);
         (global as any).corsRejectCount = rejectCount + 1;
       }
@@ -104,16 +111,26 @@ const corsOptions = {
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Tenant-Slug', 'X-Requested-With'],
   exposedHeaders: ['Content-Type', 'Authorization'],
   maxAge: 86400, // 24 hours
-  preflightContinue: false,
+  preflightContinue: false, // CORS middleware handles preflight and doesn't pass to next
   optionsSuccessStatus: 204,
 };
 
-// Handle OPTIONS requests FIRST (before CORS middleware) to ensure preflight works
-// This must be before the CORS middleware to catch preflight requests
+// Apply CORS middleware FIRST - it handles OPTIONS automatically
+app.use(cors(corsOptions));
+
+// Handle OPTIONS requests explicitly as a fallback (in case CORS middleware doesn't catch it)
+// This runs AFTER CORS middleware to ensure we catch any OPTIONS requests that weren't handled
 app.options('*', (req: express.Request, res: express.Response) => {
   const origin = req.headers.origin;
   
-  // Always set CORS headers for OPTIONS requests if origin is present
+  // Log OPTIONS request for debugging (only first few)
+  const optionsLogCount = (global as any).optionsLogCount || 0;
+  if (optionsLogCount < 5) {
+    console.log(`[CORS Preflight] OPTIONS ${req.path}`, { origin, headers: req.headers });
+    (global as any).optionsLogCount = optionsLogCount + 1;
+  }
+  
+  // Always set CORS headers for OPTIONS requests if origin is present and allowed
   if (origin) {
     const normalizedOrigin = origin.replace(/\/$/, '');
     const isAllowed = allAllowedOrigins.some(allowed => {
@@ -122,21 +139,36 @@ app.options('*', (req: express.Request, res: express.Response) => {
     }) || (process.env.NODE_ENV !== 'production' && origin.includes('localhost'));
     
     if (isAllowed) {
-      res.setHeader('Access-Control-Allow-Origin', origin);
-      res.setHeader('Access-Control-Allow-Credentials', 'true');
-      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Tenant-Slug, X-Requested-With');
-      res.setHeader('Access-Control-Max-Age', '86400');
+      // Set headers if not already set by CORS middleware
+      if (!res.getHeader('Access-Control-Allow-Origin')) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+      }
+      if (!res.getHeader('Access-Control-Allow-Credentials')) {
+        res.setHeader('Access-Control-Allow-Credentials', 'true');
+      }
+      if (!res.getHeader('Access-Control-Allow-Methods')) {
+        res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+      }
+      if (!res.getHeader('Access-Control-Allow-Headers')) {
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Tenant-Slug, X-Requested-With');
+      }
+      if (!res.getHeader('Access-Control-Max-Age')) {
+        res.setHeader('Access-Control-Max-Age', '86400');
+      }
       return res.status(204).end();
+    } else {
+      // Origin not allowed - log for debugging
+      if (optionsLogCount < 5) {
+        console.warn(`[CORS Preflight] Origin not allowed: ${origin}`);
+        console.log(`[CORS Preflight] Allowed origins:`, allAllowedOrigins);
+      }
     }
   }
   
-  // If no origin or not allowed, still respond (browser will handle rejection)
+  // If no origin or not allowed, respond with 204 but without CORS headers
+  // Browser will reject this, which is correct behavior
   res.status(204).end();
 });
-
-// Apply CORS middleware
-app.use(cors(corsOptions));
 
 // Ensure CORS headers are always set (even if CORS middleware fails)
 // This runs AFTER CORS middleware as a backup
