@@ -3,6 +3,32 @@ import { prisma } from '@pulss/database';
 import { AppError, asyncHandler } from '../middleware/errorHandler';
 import { getIO } from '../socket/socketHandler';
 
+// Type definitions for internal messages
+type InternalMessageWithRelations = {
+  id: string;
+  subject: string;
+  body: string;
+  senderId: string;
+  recipientId: string;
+  isRead: boolean;
+  readAt: Date | null;
+  createdAt: Date;
+  sender: {
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+    email: string;
+    role: string;
+  };
+  recipient: {
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+    email: string;
+    role: string;
+  };
+};
+
 /**
  * Send internal message
  * POST /api/mail/send
@@ -125,31 +151,6 @@ export const getConversations = asyncHandler(async (req: Request, res: Response)
     }
 
     // Get all messages where user is sender or recipient
-    type InternalMessageWithRelations = {
-      id: string;
-      subject: string;
-      body: string;
-      senderId: string;
-      recipientId: string;
-      isRead: boolean;
-      readAt: Date | null;
-      createdAt: Date;
-      sender: {
-        id: string;
-        firstName: string | null;
-        lastName: string | null;
-        email: string;
-        role: string;
-      };
-      recipient: {
-        id: string;
-        firstName: string | null;
-        lastName: string | null;
-        email: string;
-        role: string;
-      };
-    };
-    
     let messages: InternalMessageWithRelations[] = [];
     try {
       messages = await prisma.internal_messages.findMany({
