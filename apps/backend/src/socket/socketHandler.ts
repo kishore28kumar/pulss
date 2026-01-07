@@ -268,9 +268,27 @@ export const initializeSocketIO = (httpServer: HTTPServer) => {
           ? socket.customerId 
           : (messageCustomerId || null);
         
-        let message;
+        // Define message type
+        type MessageWithSender = {
+          id: string;
+          text: string;
+          senderId: string;
+          senderType: string;
+          customerId: string | null;
+          createdAt: Date;
+          readAt: Date | null;
+          sender: {
+            id: string;
+            firstName: string | null;
+            lastName: string | null;
+            email: string;
+            avatar: string | null;
+          };
+        };
+        
+        let message: MessageWithSender;
         try {
-          message = await prisma.messages.create({
+          const dbMessage = await prisma.messages.create({
             data: {
               text: text.trim(),
               senderId, // This is now the user ID (resolved from customer ID if needed)
@@ -290,6 +308,16 @@ export const initializeSocketIO = (httpServer: HTTPServer) => {
               },
             },
           });
+          message = {
+            id: dbMessage.id,
+            text: dbMessage.text,
+            senderId: dbMessage.senderId,
+            senderType: dbMessage.senderType,
+            customerId: dbMessage.customerId,
+            createdAt: dbMessage.createdAt,
+            readAt: dbMessage.readAt,
+            sender: dbMessage.sender,
+          };
         } catch (dbError: any) {
           // If table doesn't exist, create a temporary message object for broadcasting
           // but don't save to database
@@ -336,8 +364,8 @@ export const initializeSocketIO = (httpServer: HTTPServer) => {
           senderId: message.senderId,
           senderType: message.senderType as any,
           customerId: message.customerId,
-          createdAt: message.createdAt instanceof Date ? message.createdAt.toISOString() : message.createdAt.toISOString(),
-          readAt: message.readAt instanceof Date ? message.readAt.toISOString() : (message.readAt?.toISOString() || null),
+          createdAt: message.createdAt.toISOString(),
+          readAt: message.readAt ? message.readAt.toISOString() : null,
           sender: message.sender,
         };
 

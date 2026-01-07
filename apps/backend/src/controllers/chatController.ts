@@ -54,7 +54,24 @@ export const getChatHistory = asyncHandler(async (req: Request, res: Response) =
     }
 
     // Fetch messages - handle case where table doesn't exist yet
-    let messages;
+    type MessageWithSender = {
+      id: string;
+      text: string;
+      senderId: string;
+      senderType: string;
+      customerId: string | null;
+      createdAt: Date;
+      readAt: Date | null;
+      sender: {
+        id: string;
+        firstName: string | null;
+        lastName: string | null;
+        email: string;
+        avatar: string | null;
+      };
+    };
+    
+    let messages: MessageWithSender[] = [];
     try {
       messages = await prisma.messages.findMany({
         where,
@@ -133,7 +150,28 @@ export const getConversations = asyncHandler(async (req: Request, res: Response)
 
     // Get all messages with customerId, ordered by createdAt desc
     // Then group by customerId (and tenantId for Super Admin) to get latest
-    let allMessages;
+    type ConversationMessage = {
+      id: string;
+      text: string;
+      senderId: string;
+      senderType: string;
+      customerId: string | null;
+      tenantId: string;
+      createdAt: Date;
+      readAt: Date | null;
+      tenants: {
+        slug: string;
+      } | null;
+      sender: {
+        id: string;
+        firstName: string | null;
+        lastName: string | null;
+        email: string;
+        avatar: string | null;
+      };
+    };
+    
+    let allMessages: ConversationMessage[] = [];
     try {
       allMessages = await prisma.messages.findMany({
         where: conversationsWhere,
@@ -160,10 +198,11 @@ export const getConversations = asyncHandler(async (req: Request, res: Response)
       // If table doesn't exist, return empty array instead of crashing
       if (dbError.message?.includes('does not exist') || dbError.code === 'P2021') {
         console.warn('[Chat] Messages table does not exist yet. Please run migrations.');
-        return res.json({
+        res.json({
           success: true,
           data: [],
         });
+        return;
       } else {
         throw dbError;
       }
