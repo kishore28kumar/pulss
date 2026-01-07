@@ -21,23 +21,33 @@ export const createBroadcast = asyncHandler(async (req: Request, res: Response) 
       throw new AppError('Title and message are required', 400);
     }
 
-    const broadcast = await prisma.broadcasts.create({
-      data: {
-        title: title.trim(),
-        message: message.trim(),
-        senderId,
-      },
-      include: {
-        sender: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
+    let broadcast;
+    try {
+      broadcast = await prisma.broadcasts.create({
+        data: {
+          title: title.trim(),
+          message: message.trim(),
+          senderId,
+        },
+        include: {
+          sender: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+            },
           },
         },
-      },
-    });
+      });
+    } catch (dbError: any) {
+      // If table doesn't exist, return error
+      if (dbError.message?.includes('does not exist') || dbError.code === 'P2021') {
+        throw new AppError('Broadcasts feature is not available. Please run database migrations.', 503);
+      } else {
+        throw dbError;
+      }
+    }
 
     // Emit broadcast event to all Admin/Staff users via WebSocket
     try {
@@ -83,32 +93,43 @@ export const getBroadcasts = asyncHandler(async (req: Request, res: Response) =>
     }
 
     // Get all non-deleted broadcasts
-    const broadcasts = await prisma.broadcasts.findMany({
-      where: {
-        deletedAt: null,
-      },
-      include: {
-        sender: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
+    let broadcasts;
+    try {
+      broadcasts = await prisma.broadcasts.findMany({
+        where: {
+          deletedAt: null,
+        },
+        include: {
+          sender: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+            },
+          },
+          readBy: {
+            where: {
+              userId,
+            },
+            select: {
+              readAt: true,
+            },
           },
         },
-        readBy: {
-          where: {
-            userId,
-          },
-          select: {
-            readAt: true,
-          },
+        orderBy: {
+          createdAt: 'desc',
         },
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
+      });
+    } catch (dbError: any) {
+      // If table doesn't exist, return empty array instead of crashing
+      if (dbError.message?.includes('does not exist') || dbError.code === 'P2021') {
+        console.warn('[Broadcasts] Broadcasts table does not exist yet. Please run migrations.');
+        broadcasts = [];
+      } else {
+        throw dbError;
+      }
+    }
 
     // Format response with read status
     // For Super Admin, mark their own broadcasts as read automatically
@@ -160,28 +181,42 @@ export const getUnreadCount = asyncHandler(async (req: Request, res: Response) =
       whereClause.senderId = { not: userId };
     }
 
-    const totalBroadcasts = await prisma.broadcasts.count({
-      where: whereClause,
-    });
+    let totalBroadcasts = 0;
+    let readCount = 0;
+    
+    try {
+      totalBroadcasts = await prisma.broadcasts.count({
+        where: whereClause,
+      });
 
-    // Get read broadcasts count for this user (excluding own broadcasts for Super Admin)
-    const readWhereClause: any = {
-      userId,
-      broadcast: {
-        deletedAt: null,
-      },
-    };
-
-    if (userRole === 'SUPER_ADMIN') {
-      readWhereClause.broadcast = {
-        ...readWhereClause.broadcast,
-        senderId: { not: userId },
+      // Get read broadcasts count for this user (excluding own broadcasts for Super Admin)
+      const readWhereClause: any = {
+        userId,
+        broadcast: {
+          deletedAt: null,
+        },
       };
-    }
 
-    const readCount = await prisma.broadcast_reads.count({
-      where: readWhereClause,
-    });
+      if (userRole === 'SUPER_ADMIN') {
+        readWhereClause.broadcast = {
+          ...readWhereClause.broadcast,
+          senderId: { not: userId },
+        };
+      }
+
+      readCount = await prisma.broadcast_reads.count({
+        where: readWhereClause,
+      });
+    } catch (dbError: any) {
+      // If table doesn't exist, return 0 count instead of crashing
+      if (dbError.message?.includes('does not exist') || dbError.code === 'P2021') {
+        console.warn('[Broadcasts] Broadcasts table does not exist yet. Returning 0 unread count.');
+        totalBroadcasts = 0;
+        readCount = 0;
+      } else {
+        throw dbError;
+      }
+    }
 
     const unreadCount = totalBroadcasts - readCount;
 
@@ -209,34 +244,53 @@ export const markBroadcastAsRead = asyncHandler(async (req: Request, res: Respon
     }
 
     // Check if broadcast exists and is not deleted
-    const broadcast = await prisma.broadcasts.findFirst({
-      where: {
-        id,
-        deletedAt: null,
-      },
-    });
+    let broadcast;
+    try {
+      broadcast = await prisma.broadcasts.findFirst({
+        where: {
+          id,
+          deletedAt: null,
+        },
+      });
+    } catch (dbError: any) {
+      // If table doesn't exist, return 404
+      if (dbError.message?.includes('does not exist') || dbError.code === 'P2021') {
+        throw new AppError('Broadcast not found', 404);
+      } else {
+        throw dbError;
+      }
+    }
 
     if (!broadcast) {
       throw new AppError('Broadcast not found', 404);
     }
 
     // Create or update read record
-    await prisma.broadcast_reads.upsert({
-      where: {
-        broadcastId_userId: {
+    try {
+      await prisma.broadcast_reads.upsert({
+        where: {
+          broadcastId_userId: {
+            broadcastId: id,
+            userId,
+          },
+        },
+        create: {
           broadcastId: id,
           userId,
+          readAt: new Date(),
         },
-      },
-      create: {
-        broadcastId: id,
-        userId,
-        readAt: new Date(),
-      },
-      update: {
-        readAt: new Date(),
-      },
-    });
+        update: {
+          readAt: new Date(),
+        },
+      });
+    } catch (dbError: any) {
+      // If table doesn't exist, just return success (no reads to update)
+      if (dbError.message?.includes('does not exist') || dbError.code === 'P2021') {
+        console.warn('[Broadcasts] Broadcast reads table does not exist yet. Skipping mark as read.');
+      } else {
+        throw dbError;
+      }
+    }
 
     res.json({
       success: true,
@@ -261,30 +315,49 @@ export const markAllBroadcastsAsRead = asyncHandler(async (req: Request, res: Re
     }
 
     // Get all unread broadcasts
-    const unreadBroadcasts = await prisma.broadcasts.findMany({
-      where: {
-        deletedAt: null,
-        readBy: {
-          none: {
-            userId,
+    let unreadBroadcasts = [];
+    try {
+      unreadBroadcasts = await prisma.broadcasts.findMany({
+        where: {
+          deletedAt: null,
+          readBy: {
+            none: {
+              userId,
+            },
           },
         },
-      },
-      select: {
-        id: true,
-      },
-    });
-
-    // Mark all as read
-    if (unreadBroadcasts.length > 0) {
-      await prisma.broadcast_reads.createMany({
-        data: unreadBroadcasts.map((broadcast) => ({
-          broadcastId: broadcast.id,
-          userId,
-          readAt: new Date(),
-        })),
-        skipDuplicates: true,
+        select: {
+          id: true,
+        },
       });
+
+      // Mark all as read
+      if (unreadBroadcasts.length > 0) {
+        try {
+          await prisma.broadcast_reads.createMany({
+            data: unreadBroadcasts.map((broadcast) => ({
+              broadcastId: broadcast.id,
+              userId,
+              readAt: new Date(),
+            })),
+            skipDuplicates: true,
+          });
+        } catch (dbError: any) {
+          // If table doesn't exist, just skip (no reads to create)
+          if (dbError.message?.includes('does not exist') || dbError.code === 'P2021') {
+            console.warn('[Broadcasts] Broadcast reads table does not exist yet. Skipping mark all as read.');
+          } else {
+            throw dbError;
+          }
+        }
+      }
+    } catch (dbError: any) {
+      // If table doesn't exist, just return success (no broadcasts to mark)
+      if (dbError.message?.includes('does not exist') || dbError.code === 'P2021') {
+        console.warn('[Broadcasts] Broadcasts table does not exist yet. Skipping mark all as read.');
+      } else {
+        throw dbError;
+      }
     }
 
     res.json({
@@ -311,12 +384,21 @@ export const deleteBroadcast = asyncHandler(async (req: Request, res: Response) 
     }
 
     // Soft delete
-    await prisma.broadcasts.update({
-      where: { id },
-      data: {
-        deletedAt: new Date(),
-      },
-    });
+    try {
+      await prisma.broadcasts.update({
+        where: { id },
+        data: {
+          deletedAt: new Date(),
+        },
+      });
+    } catch (dbError: any) {
+      // If table doesn't exist, return 404
+      if (dbError.message?.includes('does not exist') || dbError.code === 'P2021') {
+        throw new AppError('Broadcast not found', 404);
+      } else {
+        throw dbError;
+      }
+    }
 
     res.json({
       success: true,

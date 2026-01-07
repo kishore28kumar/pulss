@@ -42,34 +42,44 @@ export const sendMessage = asyncHandler(async (req: Request, res: Response) => {
       throw new AppError('Admin can only send messages to Super Admin', 403);
     }
 
-    const message = await prisma.internal_messages.create({
-      data: {
-        subject: subject.trim(),
-        body: body.trim(),
-        senderId,
-        recipientId,
-      },
-      include: {
-        sender: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-            role: true,
+    let message;
+    try {
+      message = await prisma.internal_messages.create({
+        data: {
+          subject: subject.trim(),
+          body: body.trim(),
+          senderId,
+          recipientId,
+        },
+        include: {
+          sender: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+              role: true,
+            },
+          },
+          recipient: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+              role: true,
+            },
           },
         },
-        recipient: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-            role: true,
-          },
-        },
-      },
-    });
+      });
+    } catch (dbError: any) {
+      // If table doesn't exist, return error
+      if (dbError.message?.includes('does not exist') || dbError.code === 'P2021') {
+        throw new AppError('Mail feature is not available. Please run database migrations.', 503);
+      } else {
+        throw dbError;
+      }
+    }
 
     // Emit WebSocket event to recipient
     try {
@@ -115,38 +125,49 @@ export const getConversations = asyncHandler(async (req: Request, res: Response)
     }
 
     // Get all messages where user is sender or recipient
-    const messages = await prisma.internal_messages.findMany({
-      where: {
-        OR: [
-          { senderId: userId },
-          { recipientId: userId },
-        ],
-      },
-      include: {
-        sender: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-            role: true,
+    let messages;
+    try {
+      messages = await prisma.internal_messages.findMany({
+        where: {
+          OR: [
+            { senderId: userId },
+            { recipientId: userId },
+          ],
+        },
+        include: {
+          sender: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+              role: true,
+            },
+          },
+          recipient: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+              role: true,
+            },
           },
         },
-        recipient: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-            role: true,
-          },
+        orderBy: {
+          createdAt: 'desc',
         },
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-      take: 1000, // Limit to prevent excessive memory usage
-    });
+        take: 1000, // Limit to prevent excessive memory usage
+      });
+    } catch (dbError: any) {
+      // If table doesn't exist, return empty array instead of crashing
+      if (dbError.message?.includes('does not exist') || dbError.code === 'P2021') {
+        console.warn('[Mail] Internal messages table does not exist yet. Please run migrations.');
+        messages = [];
+      } else {
+        throw dbError;
+      }
+    }
 
     // Group by conversation partner
     const conversationMap = new Map<string, any>();
@@ -204,37 +225,48 @@ export const getMessages = asyncHandler(async (req: Request, res: Response) => {
       throw new AppError('Unauthorized', 403);
     }
 
-    const messages = await prisma.internal_messages.findMany({
-      where: {
-        OR: [
-          { senderId: userId, recipientId: partnerId },
-          { senderId: partnerId, recipientId: userId },
-        ],
-      },
-      include: {
-        sender: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-            role: true,
+    let messages;
+    try {
+      messages = await prisma.internal_messages.findMany({
+        where: {
+          OR: [
+            { senderId: userId, recipientId: partnerId },
+            { senderId: partnerId, recipientId: userId },
+          ],
+        },
+        include: {
+          sender: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+              role: true,
+            },
+          },
+          recipient: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+              role: true,
+            },
           },
         },
-        recipient: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-            role: true,
-          },
+        orderBy: {
+          createdAt: 'asc', // Oldest first
         },
-      },
-      orderBy: {
-        createdAt: 'asc', // Oldest first
-      },
-    });
+      });
+    } catch (dbError: any) {
+      // If table doesn't exist, return empty array instead of crashing
+      if (dbError.message?.includes('does not exist') || dbError.code === 'P2021') {
+        console.warn('[Mail] Internal messages table does not exist yet. Returning empty messages.');
+        messages = [];
+      } else {
+        throw dbError;
+      }
+    }
 
     res.json({
       success: true,
@@ -262,12 +294,23 @@ export const getUnreadCount = asyncHandler(async (req: Request, res: Response) =
       throw new AppError('Unauthorized', 403);
     }
 
-    const unreadCount = await prisma.internal_messages.count({
-      where: {
-        recipientId: userId,
-        isRead: false,
-      },
-    });
+    let unreadCount = 0;
+    try {
+      unreadCount = await prisma.internal_messages.count({
+        where: {
+          recipientId: userId,
+          isRead: false,
+        },
+      });
+    } catch (dbError: any) {
+      // If table doesn't exist, return 0 count instead of crashing
+      if (dbError.message?.includes('does not exist') || dbError.code === 'P2021') {
+        console.warn('[Mail] Internal messages table does not exist yet. Returning 0 unread count.');
+        unreadCount = 0;
+      } else {
+        throw dbError;
+      }
+    }
 
     res.json({
       success: true,
@@ -292,17 +335,26 @@ export const markAsRead = asyncHandler(async (req: Request, res: Response) => {
       throw new AppError('Unauthorized', 403);
     }
 
-    await prisma.internal_messages.updateMany({
-      where: {
-        senderId: partnerId,
-        recipientId: userId,
-        isRead: false,
-      },
-      data: {
-        isRead: true,
-        readAt: new Date(),
-      },
-    });
+    try {
+      await prisma.internal_messages.updateMany({
+        where: {
+          senderId: partnerId,
+          recipientId: userId,
+          isRead: false,
+        },
+        data: {
+          isRead: true,
+          readAt: new Date(),
+        },
+      });
+    } catch (dbError: any) {
+      // If table doesn't exist, just return success (no messages to update)
+      if (dbError.message?.includes('does not exist') || dbError.code === 'P2021') {
+        console.warn('[Mail] Internal messages table does not exist yet. Skipping mark as read.');
+      } else {
+        throw dbError;
+      }
+    }
 
     res.json({
       success: true,
