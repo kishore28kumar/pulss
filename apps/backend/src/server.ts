@@ -107,6 +107,29 @@ app.use(cors(corsOptions));
 // Explicit OPTIONS handler as fallback (though cors middleware should handle it)
 app.options('*', cors(corsOptions));
 
+// Ensure CORS headers are always set (even if CORS middleware fails)
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin) {
+    const normalizedOrigin = origin.replace(/\/$/, '');
+    const isAllowed = allAllowedOrigins.some(allowed => {
+      const normalizedAllowed = allowed.replace(/\/$/, '');
+      return normalizedAllowed === normalizedOrigin || allowed === origin;
+    }) || (process.env.NODE_ENV !== 'production' && origin.includes('localhost'));
+    
+    if (isAllowed) {
+      // Set CORS headers explicitly as backup
+      if (!res.getHeader('Access-Control-Allow-Origin')) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+      }
+      if (!res.getHeader('Access-Control-Allow-Credentials')) {
+        res.setHeader('Access-Control-Allow-Credentials', 'true');
+      }
+    }
+  }
+  next();
+});
+
 // Body parsing
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));

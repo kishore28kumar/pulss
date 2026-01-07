@@ -76,21 +76,59 @@ export const getIO = () => {
 };
 
 export const initializeSocketIO = (httpServer: HTTPServer) => {
+  // Import getCorsOrigins to match Express CORS configuration
+  const { getCorsOrigins } = require('../config/urls');
+  const allowedOrigins = getCorsOrigins();
+  const FALLBACK_ORIGINS = [
+    'https://pulss-admin-dev.onrender.com',
+    'https://pulss-store-dev.onrender.com',
+    'https://pulss-admin.onrender.com',
+    'https://pulss-storefront.onrender.com',
+  ];
+  const allAllowedOrigins = [...new Set([...allowedOrigins, ...FALLBACK_ORIGINS])];
+  
+  console.log('[Socket.io] Allowed origins:', allAllowedOrigins);
+
   const io = new SocketIOServer(httpServer, {
     cors: {
       origin: (origin, callback) => {
-        // Allow all origins in development, restrict in production
-        if (process.env.NODE_ENV === 'development' || !origin) {
-          callback(null, true);
-        } else {
-          // In production, validate against allowed origins
-          callback(null, true); // For now, allow all - adjust based on your CORS config
+        try {
+          // Allow requests with no origin (like mobile apps)
+          if (!origin) {
+            return callback(null, true);
+          }
+          
+          // Normalize origin (remove trailing slash)
+          const normalizedOrigin = origin.replace(/\/$/, '');
+          
+          // Check if origin is in allowed list
+          const isAllowed = allAllowedOrigins.some(allowed => {
+            const normalizedAllowed = allowed.replace(/\/$/, '');
+            return normalizedAllowed === normalizedOrigin || allowed === origin;
+          }) || (process.env.NODE_ENV !== 'production' && origin.includes('localhost'));
+          
+          if (isAllowed) {
+            callback(null, true);
+          } else {
+            console.warn(`[Socket.io] Rejected origin: ${origin}`);
+            callback(new Error(`Not allowed by CORS. Origin: ${origin}`));
+          }
+        } catch (error) {
+          console.error('[Socket.io] Error in origin callback:', error);
+          // In development, allow on error; in production, reject
+          if (process.env.NODE_ENV === 'development') {
+            callback(null, true);
+          } else {
+            callback(new Error('CORS validation failed'));
+          }
         }
       },
       credentials: true,
       methods: ['GET', 'POST'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-Tenant-Slug'],
     },
     transports: ['websocket', 'polling'],
+    allowEIO3: true, // Allow Engine.IO v3 clients
   });
 
   // Authentication middleware

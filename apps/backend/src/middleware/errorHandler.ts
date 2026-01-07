@@ -43,6 +43,34 @@ export const errorHandler = (
     return;
   }
 
+  // Ensure CORS headers are set even on errors
+  const origin = req.headers.origin;
+  if (origin) {
+    // Import getCorsOrigins dynamically to avoid circular dependency
+    const { getCorsOrigins } = require('../config/urls');
+    const allowedOrigins = getCorsOrigins();
+    const FALLBACK_ORIGINS = [
+      'https://pulss-admin-dev.onrender.com',
+      'https://pulss-store-dev.onrender.com',
+      'https://pulss-admin.onrender.com',
+      'https://pulss-storefront.onrender.com',
+    ];
+    const allAllowedOrigins = [...new Set([...allowedOrigins, ...FALLBACK_ORIGINS])];
+    
+    const normalizedOrigin = origin.replace(/\/$/, '');
+    const isAllowed = allAllowedOrigins.some(allowed => {
+      const normalizedAllowed = allowed.replace(/\/$/, '');
+      return normalizedAllowed === normalizedOrigin || allowed === origin;
+    }) || (process.env.NODE_ENV !== 'production' && origin.includes('localhost'));
+    
+    if (isAllowed) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Tenant-Slug, X-Requested-With');
+    }
+  }
+
   const response: ApiResponse = {
     success: false,
     error: message,
