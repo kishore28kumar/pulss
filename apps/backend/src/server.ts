@@ -17,7 +17,8 @@ dotenv.config();
 
 const app = express();
 const httpServer = createServer(app);
-const PORT = process.env.BACKEND_PORT || 5000;
+// Render.com sets PORT automatically, fallback to BACKEND_PORT or 5000
+const PORT = process.env.PORT || process.env.BACKEND_PORT || 5000;
 
 // Log CORS configuration at startup
 const corsOrigins = getCorsOrigins();
@@ -317,10 +318,14 @@ try {
   // Don't crash - continue without Socket.io if initialization fails
 }
 
-httpServer.listen(PORT, () => {
+httpServer.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Pulss Backend API running on port ${PORT}`);
   console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🔌 Socket.io server initialized`);
+  console.log(`🌐 Server listening on 0.0.0.0:${PORT}`);
+  
+  // Log health check endpoint
+  console.log(`💚 Health check: http://localhost:${PORT}/`);
 });
 
 // Keep the process alive
