@@ -10,7 +10,7 @@ import { errorHandler } from './middleware/errorHandler';
 import { tenantMiddleware } from './middleware/tenantMiddleware';
 import routes from './routes';
 import { getCorsOrigins } from './config/urls';
-import { connectWithRetry, checkConnection } from '@pulss/database';
+import { connectWithRetry, checkConnection, prisma } from '@pulss/database';
 import { initializeSocketIO } from './socket/socketHandler';
 
 dotenv.config();
@@ -288,6 +288,56 @@ app.get('/', (_req, res) => {
     message: 'Pulss API',
     version: '1.0.0'
   });
+});
+
+// Health check endpoint with database table verification
+app.get('/health', async (_req, res) => {
+  try {
+    const health: any = {
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      database: 'connected',
+      tables: {},
+    };
+
+    // Check if critical tables exist
+    const tablesToCheck = ['messages', 'broadcasts', 'internal_messages'];
+    for (const tableName of tablesToCheck) {
+      try {
+        // Try a simple query to check if table exists
+        if (tableName === 'messages') {
+          await prisma.$queryRaw`SELECT 1 FROM messages LIMIT 1`;
+        } else if (tableName === 'broadcasts') {
+          await prisma.$queryRaw`SELECT 1 FROM broadcasts LIMIT 1`;
+        } else if (tableName === 'internal_messages') {
+          await prisma.$queryRaw`SELECT 1 FROM internal_messages LIMIT 1`;
+        }
+        health.tables[tableName] = 'exists';
+      } catch (error: any) {
+        if (error.message?.includes('does not exist') || error.code === 'P2021') {
+          health.tables[tableName] = 'missing';
+        } else {
+          health.tables[tableName] = 'error';
+        }
+      }
+    }
+
+    const missingTables = Object.entries(health.tables)
+      .filter(([_, status]) => status === 'missing')
+      .map(([table]) => table);
+
+    if (missingTables.length > 0) {
+      health.status = 'degraded';
+      health.warning = `Missing tables: ${missingTables.join(', ')}. Please run migrations.`;
+    }
+
+    res.status(missingTables.length > 0 ? 200 : 200).json(health);
+  } catch (error: any) {
+    res.status(500).json({
+      status: 'error',
+      message: error.message,
+    });
+  }
 });
 
 app.use('/api', routes);

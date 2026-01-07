@@ -145,6 +145,13 @@ export const getConversations = asyncHandler(async (req: Request, res: Response)
     // Super Admins can see all conversations (no tenant filter)
     // Admins/Staff can only see their tenant's conversations
     if (userRole !== 'SUPER_ADMIN') {
+      if (!tenantId) {
+        console.warn('[Chat] No tenantId found for non-Super Admin user');
+        return res.json({
+          success: true,
+          data: [],
+        });
+      }
       conversationsWhere.tenantId = tenantId;
     }
 
@@ -205,13 +212,37 @@ export const getConversations = asyncHandler(async (req: Request, res: Response)
       console.log('[Chat] Found messages:', {
         count: allMessages.length,
         messagesWithCustomerId: allMessages.filter(m => m.customerId).length,
+        messagesWithoutCustomerId: allMessages.filter(m => !m.customerId).length,
         sampleMessage: allMessages[0] ? {
           id: allMessages[0].id,
           customerId: allMessages[0].customerId,
           tenantId: allMessages[0].tenantId,
           senderType: allMessages[0].senderType,
+          createdAt: allMessages[0].createdAt,
         } : null,
+        // Log first few messages for debugging
+        firstFewMessages: allMessages.slice(0, 3).map(m => ({
+          id: m.id,
+          customerId: m.customerId,
+          tenantId: m.tenantId,
+          senderType: m.senderType,
+        })),
       });
+      
+      // Also check total messages in table (for debugging)
+      try {
+        const totalCount = await prisma.messages.count({});
+        const withCustomerIdCount = await prisma.messages.count({
+          where: { customerId: { not: null } },
+        });
+        console.log('[Chat] Total messages in database:', {
+          total: totalCount,
+          withCustomerId: withCustomerIdCount,
+          withoutCustomerId: totalCount - withCustomerIdCount,
+        });
+      } catch (countError) {
+        console.warn('[Chat] Could not count messages:', countError);
+      }
     } catch (dbError: any) {
       // If table doesn't exist, return empty array instead of crashing
       if (dbError.message?.includes('does not exist') || dbError.code === 'P2021') {

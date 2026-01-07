@@ -391,6 +391,10 @@ export const markAsRead = asyncHandler(async (req: Request, res: Response) => {
   }
 });
 
+// Cache for recipients (5 minute TTL)
+const recipientsCache = new Map<string, { data: any[]; expires: number }>();
+const RECIPIENTS_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
 /**
  * Get available recipients for mail
  * GET /api/mail/recipients
@@ -402,6 +406,17 @@ export const getRecipients = asyncHandler(async (req: Request, res: Response) =>
 
     if (!userId || !['SUPER_ADMIN', 'ADMIN'].includes(userRole || '')) {
       throw new AppError('Unauthorized', 403);
+    }
+
+    // Check cache first
+    const cacheKey = `${userRole}:${userId}`;
+    const cached = recipientsCache.get(cacheKey);
+    if (cached && cached.expires > Date.now()) {
+      console.log('[Mail] Returning cached recipients');
+      return res.json({
+        success: true,
+        data: cached.data,
+      });
     }
 
     let recipients: any[];
@@ -443,6 +458,12 @@ export const getRecipients = asyncHandler(async (req: Request, res: Response) =>
         },
       });
     }
+
+    // Cache the results
+    recipientsCache.set(cacheKey, {
+      data: recipients,
+      expires: Date.now() + RECIPIENTS_CACHE_TTL,
+    });
 
     res.json({
       success: true,
