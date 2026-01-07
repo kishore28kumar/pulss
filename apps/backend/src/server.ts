@@ -18,7 +18,8 @@ dotenv.config();
 const app = express();
 const httpServer = createServer(app);
 // Render.com sets PORT automatically, fallback to BACKEND_PORT or 5000
-const PORT = process.env.PORT || process.env.BACKEND_PORT || 5000;
+// Convert to number since environment variables are strings
+const PORT = Number(process.env.PORT || process.env.BACKEND_PORT || 5000);
 
 // Log CORS configuration at startup
 const corsOrigins = getCorsOrigins();
