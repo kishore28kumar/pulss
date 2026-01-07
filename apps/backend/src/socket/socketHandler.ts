@@ -264,8 +264,8 @@ export const initializeSocketIO = (httpServer: HTTPServer) => {
         // Save message to database
         // For customers, customerId is their own customer ID
         // For admins/staff/super_admin, customerId is the customer they're replying to (from data)
-        const dbCustomerId = senderRole === 'CUSTOMER' 
-          ? socket.customerId 
+        const dbCustomerId: string | null = senderRole === 'CUSTOMER' 
+          ? (socket.customerId || null)
           : (messageCustomerId || null);
         
         // Define message type
