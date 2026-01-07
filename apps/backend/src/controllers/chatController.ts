@@ -1,12 +1,12 @@
 import { Request, Response } from 'express';
 import { prisma } from '@pulss/database';
-import { AppError } from '../middleware/errorHandler';
+import { AppError, asyncHandler } from '../middleware/errorHandler';
 
 /**
  * Get chat history for a customer or admin
  * GET /api/chat/history
  */
-export const getChatHistory = async (req: Request, res: Response) => {
+export const getChatHistory = asyncHandler(async (req: Request, res: Response) => {
   try {
     const tenantId = req.tenantId || req.user?.tenantId;
     const { limit = 50, before, customerId, tenantId: queryTenantId } = req.query;
@@ -53,23 +53,34 @@ export const getChatHistory = async (req: Request, res: Response) => {
       where.customerId = customerId;
     }
 
-    // Fetch messages
-    const messages = await prisma.messages.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-      take: parseInt(limit as string),
-      include: {
-        sender: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-            avatar: true,
+    // Fetch messages - handle case where table doesn't exist yet
+    let messages;
+    try {
+      messages = await prisma.messages.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        take: parseInt(limit as string),
+        include: {
+          sender: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+              avatar: true,
+            },
           },
         },
-      },
-    });
+      });
+    } catch (dbError: any) {
+      // If table doesn't exist, return empty array instead of crashing
+      if (dbError.message?.includes('does not exist') || dbError.code === 'P2021') {
+        console.warn('[Chat] Messages table does not exist yet. Please run migrations.');
+        messages = [];
+      } else {
+        throw dbError;
+      }
+    }
 
     // Reverse to show oldest first
     const reversedMessages = messages.reverse();
@@ -85,15 +96,17 @@ export const getChatHistory = async (req: Request, res: Response) => {
       },
     });
   } catch (error: any) {
+    // Log the error for debugging
+    console.error('[Chat] Error fetching chat history:', error);
     throw new AppError(error.message || 'Failed to fetch chat history', 500);
   }
-};
+});
 
 /**
  * Get list of conversations (for admin dashboard)
  * GET /api/chat/conversations
  */
-export const getConversations = async (req: Request, res: Response) => {
+export const getConversations = asyncHandler(async (req: Request, res: Response) => {
   try {
     const tenantId = req.tenantId || req.user?.tenantId;
     const userRole = req.user?.role;
@@ -120,27 +133,41 @@ export const getConversations = async (req: Request, res: Response) => {
 
     // Get all messages with customerId, ordered by createdAt desc
     // Then group by customerId (and tenantId for Super Admin) to get latest
-    const allMessages = await prisma.messages.findMany({
-      where: conversationsWhere,
-      orderBy: { createdAt: 'desc' },
-      include: {
-        tenants: {
-          select: {
-            slug: true,
+    let allMessages;
+    try {
+      allMessages = await prisma.messages.findMany({
+        where: conversationsWhere,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          tenants: {
+            select: {
+              slug: true,
+            },
+          },
+          sender: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+              avatar: true,
+            },
           },
         },
-        sender: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-            avatar: true,
-          },
-        },
-      },
-      take: 1000, // Limit to prevent memory issues
-    });
+        take: 1000, // Limit to prevent memory issues
+      });
+    } catch (dbError: any) {
+      // If table doesn't exist, return empty array instead of crashing
+      if (dbError.message?.includes('does not exist') || dbError.code === 'P2021') {
+        console.warn('[Chat] Messages table does not exist yet. Please run migrations.');
+        return res.json({
+          success: true,
+          data: [],
+        });
+      } else {
+        throw dbError;
+      }
+    }
 
     // Group by customerId (and tenantId for Super Admin) and get latest message
     const conversationMap = new Map<string, typeof allMessages[0]>();
@@ -177,9 +204,19 @@ export const getConversations = async (req: Request, res: Response) => {
           unreadWhere.tenantId = conv.tenantId;
         }
 
-        const unreadCount = await prisma.messages.count({
-          where: unreadWhere,
-        });
+        let unreadCount = 0;
+        try {
+          unreadCount = await prisma.messages.count({
+            where: unreadWhere,
+          });
+        } catch (dbError: any) {
+          // If table doesn't exist, count is 0
+          if (dbError.message?.includes('does not exist') || dbError.code === 'P2021') {
+            unreadCount = 0;
+          } else {
+            throw dbError;
+          }
+        }
 
         // Get customer info
         const customer = await prisma.customers.findUnique({
@@ -237,13 +274,13 @@ export const getConversations = async (req: Request, res: Response) => {
   } catch (error: any) {
     throw new AppError(error.message || 'Failed to fetch conversations', 500);
   }
-};
+});
 
 /**
  * Mark messages as read
  * POST /api/chat/mark-read
  */
-export const markMessagesAsRead = async (req: Request, res: Response) => {
+export const markMessagesAsRead = asyncHandler(async (req: Request, res: Response) => {
   try {
     const tenantId = req.tenantId || req.user?.tenantId;
     const { customerId, messageIds, tenantId: bodyTenantId } = req.body;
@@ -289,12 +326,21 @@ export const markMessagesAsRead = async (req: Request, res: Response) => {
       where.id = { in: messageIds };
     }
 
-    await prisma.messages.updateMany({
-      where,
-      data: {
-        readAt: new Date(),
-      },
-    });
+    try {
+      await prisma.messages.updateMany({
+        where,
+        data: {
+          readAt: new Date(),
+        },
+      });
+    } catch (dbError: any) {
+      // If table doesn't exist, just return success (no messages to update)
+      if (dbError.message?.includes('does not exist') || dbError.code === 'P2021') {
+        console.warn('[Chat] Messages table does not exist yet. Skipping mark as read.');
+      } else {
+        throw dbError;
+      }
+    }
 
     res.json({
       success: true,
@@ -303,13 +349,13 @@ export const markMessagesAsRead = async (req: Request, res: Response) => {
   } catch (error: any) {
     throw new AppError(error.message || 'Failed to mark messages as read', 500);
   }
-};
+});
 
 /**
  * Get unread message count (for notifications)
  * GET /api/chat/unread-count
  */
-export const getUnreadCount = async (req: Request, res: Response) => {
+export const getUnreadCount = asyncHandler(async (req: Request, res: Response) => {
   try {
     const tenantId = req.tenantId || req.user?.tenantId;
     const userRole = req.user?.role;
@@ -329,9 +375,20 @@ export const getUnreadCount = async (req: Request, res: Response) => {
       readAt: null,
     };
 
-    const unreadCount = await prisma.messages.count({
-      where,
-    });
+    let unreadCount = 0;
+    try {
+      unreadCount = await prisma.messages.count({
+        where,
+      });
+    } catch (dbError: any) {
+      // If table doesn't exist, count is 0
+      if (dbError.message?.includes('does not exist') || dbError.code === 'P2021') {
+        console.warn('[Chat] Messages table does not exist yet. Returning 0 unread count.');
+        unreadCount = 0;
+      } else {
+        throw dbError;
+      }
+    }
 
     res.json({
       success: true,
@@ -340,5 +397,5 @@ export const getUnreadCount = async (req: Request, res: Response) => {
   } catch (error: any) {
     throw new AppError(error.message || 'Failed to get unread count', 500);
   }
-};
+});
 

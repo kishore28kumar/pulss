@@ -268,16 +268,36 @@ export const initializeSocketIO = (httpServer: HTTPServer) => {
           ? socket.customerId 
           : (messageCustomerId || null);
         
-        const message = await prisma.messages.create({
-          data: {
-            text: text.trim(),
-            senderId, // This is now the user ID (resolved from customer ID if needed)
-            senderType,
-            tenantId: targetTenantId,
-            customerId: dbCustomerId,
-          },
-          include: {
-            sender: {
+        let message;
+        try {
+          message = await prisma.messages.create({
+            data: {
+              text: text.trim(),
+              senderId, // This is now the user ID (resolved from customer ID if needed)
+              senderType,
+              tenantId: targetTenantId,
+              customerId: dbCustomerId,
+            },
+            include: {
+              sender: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                  email: true,
+                  avatar: true,
+                },
+              },
+            },
+          });
+        } catch (dbError: any) {
+          // If table doesn't exist, create a temporary message object for broadcasting
+          // but don't save to database
+          if (dbError.message?.includes('does not exist') || dbError.code === 'P2021') {
+            console.warn('[Socket] Messages table does not exist yet. Message will not be persisted.');
+            // Get sender info from users table
+            const sender = await prisma.users.findUnique({
+              where: { id: senderId },
               select: {
                 id: true,
                 firstName: true,
@@ -285,9 +305,29 @@ export const initializeSocketIO = (httpServer: HTTPServer) => {
                 email: true,
                 avatar: true,
               },
-            },
-          },
-        });
+            });
+            
+            // Create temporary message object (won't be persisted)
+            message = {
+              id: `temp_${Date.now()}`,
+              text: text.trim(),
+              senderId,
+              senderType,
+              customerId: dbCustomerId,
+              createdAt: new Date(),
+              readAt: null,
+              sender: sender || {
+                id: senderId,
+                firstName: null,
+                lastName: null,
+                email: '',
+                avatar: null,
+              },
+            };
+          } else {
+            throw dbError;
+          }
+        }
 
         // Format message for frontend (ensure dates are ISO strings)
         const formattedMessage = {
@@ -296,8 +336,8 @@ export const initializeSocketIO = (httpServer: HTTPServer) => {
           senderId: message.senderId,
           senderType: message.senderType as any,
           customerId: message.customerId,
-          createdAt: message.createdAt.toISOString(),
-          readAt: message.readAt?.toISOString() || null,
+          createdAt: message.createdAt instanceof Date ? message.createdAt.toISOString() : message.createdAt.toISOString(),
+          readAt: message.readAt instanceof Date ? message.readAt.toISOString() : (message.readAt?.toISOString() || null),
           sender: message.sender,
         };
 

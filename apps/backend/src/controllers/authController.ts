@@ -558,7 +558,7 @@ export const generateLoginToken = asyncHandler(
     );
 
     // Generate the login URL
-    const adminDashboardUrl = process.env.ADMIN_DASHBOARD_URL || 'http://localhost:3001';
+    const adminDashboardUrl = process.env.ADMIN_URL || 'http://localhost:3001';
     const loginUrl = `${adminDashboardUrl}/login?token=${loginToken}`;
 
     const response: ApiResponse = {
