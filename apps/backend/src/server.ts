@@ -120,7 +120,7 @@ app.use(cors(corsOptions));
 
 // Handle OPTIONS requests explicitly as a fallback (in case CORS middleware doesn't catch it)
 // This runs AFTER CORS middleware to ensure we catch any OPTIONS requests that weren't handled
-app.options('*', (req: express.Request, res: express.Response) => {
+app.options('*', (req: express.Request, res: express.Response): void => {
   const origin = req.headers.origin;
   
   // Log OPTIONS request for debugging (only first few)
@@ -155,7 +155,8 @@ app.options('*', (req: express.Request, res: express.Response) => {
       if (!res.getHeader('Access-Control-Max-Age')) {
         res.setHeader('Access-Control-Max-Age', '86400');
       }
-      return res.status(204).end();
+      res.status(204).end();
+      return;
     } else {
       // Origin not allowed - log for debugging
       if (optionsLogCount < 5) {
