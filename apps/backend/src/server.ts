@@ -40,11 +40,15 @@ app.use(
 const allowedCorsOrigins = getCorsOrigins();
 
 // Hardcoded fallback origins for development environment (as safety net)
+// These are always allowed regardless of environment variables
 const FALLBACK_ORIGINS = [
   'https://pulss-admin-dev.onrender.com',
   'https://pulss-store-dev.onrender.com',
   'https://pulss-admin.onrender.com',
   'https://pulss-storefront.onrender.com',
+  // Also include variations that might be used
+  'https://pulss-store-dev.onrender.com/',
+  'https://pulss-admin-dev.onrender.com/',
 ];
 
 // Combine allowed origins with fallbacks
@@ -71,22 +75,24 @@ const corsOptions = {
       });
       
       if (isAllowed) {
-        callback(null, true);
-      } else {
-        // In development, allow localhost with any port
-        if (process.env.NODE_ENV !== 'production' && origin?.includes('localhost')) {
-          callback(null, true);
-        } else {
-          // Log rejected origin for debugging (only first few times to avoid log spam)
-          const rejectCount = (global as any).corsRejectCount || 0;
-          if (rejectCount < 10) {
-            console.warn(`[CORS] Rejected origin: ${origin}`);
-            console.log(`[CORS] Allowed origins:`, allAllowedOrigins);
-            (global as any).corsRejectCount = rejectCount + 1;
-          }
-          callback(new Error(`Not allowed by CORS. Origin: ${origin}`));
-        }
+        return callback(null, true);
       }
+      
+      // In development, allow localhost with any port
+      if (process.env.NODE_ENV !== 'production' && origin.includes('localhost')) {
+        return callback(null, true);
+      }
+      
+      // Log rejected origin for debugging (only first few times to avoid log spam)
+      const rejectCount = (global as any).corsRejectCount || 0;
+      if (rejectCount < 10) {
+        console.warn(`[CORS] Rejected origin: ${origin}`);
+        console.log(`[CORS] Allowed origins:`, allAllowedOrigins);
+        (global as any).corsRejectCount = rejectCount + 1;
+      }
+      
+      // For production, reject unknown origins
+      callback(new Error(`Not allowed by CORS. Origin: ${origin}`));
     } catch (error) {
       // If there's an error in the callback, log it but allow the request to prevent breaking CORS entirely
       console.error('[CORS] Error in origin callback:', error);
@@ -102,14 +108,12 @@ const corsOptions = {
   optionsSuccessStatus: 204,
 };
 
-app.use(cors(corsOptions));
-
-// Explicit OPTIONS handler as fallback (though cors middleware should handle it)
-app.options('*', cors(corsOptions));
-
-// Ensure CORS headers are always set (even if CORS middleware fails)
-app.use((req, res, next) => {
+// Handle OPTIONS requests FIRST (before CORS middleware) to ensure preflight works
+// This must be before the CORS middleware to catch preflight requests
+app.options('*', (req: express.Request, res: express.Response) => {
   const origin = req.headers.origin;
+  
+  // Always set CORS headers for OPTIONS requests if origin is present
   if (origin) {
     const normalizedOrigin = origin.replace(/\/$/, '');
     const isAllowed = allAllowedOrigins.some(allowed => {
@@ -118,13 +122,59 @@ app.use((req, res, next) => {
     }) || (process.env.NODE_ENV !== 'production' && origin.includes('localhost'));
     
     if (isAllowed) {
-      // Set CORS headers explicitly as backup
-      if (!res.getHeader('Access-Control-Allow-Origin')) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Tenant-Slug, X-Requested-With');
+      res.setHeader('Access-Control-Max-Age', '86400');
+      return res.status(204).end();
+    }
+  }
+  
+  // If no origin or not allowed, still respond (browser will handle rejection)
+  res.status(204).end();
+});
+
+// Apply CORS middleware
+app.use(cors(corsOptions));
+
+// Ensure CORS headers are always set (even if CORS middleware fails)
+// This runs AFTER CORS middleware as a backup
+app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
+  // For OPTIONS requests, ensure headers are set (backup in case CORS middleware failed)
+  if (req.method === 'OPTIONS') {
+    const origin = req.headers.origin;
+    if (origin && !res.getHeader('Access-Control-Allow-Origin')) {
+      const normalizedOrigin = origin.replace(/\/$/, '');
+      const isAllowed = allAllowedOrigins.some(allowed => {
+        const normalizedAllowed = allowed.replace(/\/$/, '');
+        return normalizedAllowed === normalizedOrigin || allowed === origin;
+      }) || (process.env.NODE_ENV !== 'production' && origin.includes('localhost'));
+      
+      if (isAllowed) {
         res.setHeader('Access-Control-Allow-Origin', origin);
-      }
-      if (!res.getHeader('Access-Control-Allow-Credentials')) {
         res.setHeader('Access-Control-Allow-Credentials', 'true');
+        res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Tenant-Slug, X-Requested-With');
+        res.setHeader('Access-Control-Max-Age', '86400');
       }
+    }
+    // Don't call next() for OPTIONS - let it end here
+    return;
+  }
+  
+  // For non-OPTIONS requests, set CORS headers as backup
+  const origin = req.headers.origin;
+  if (origin && !res.getHeader('Access-Control-Allow-Origin')) {
+    const normalizedOrigin = origin.replace(/\/$/, '');
+    const isAllowed = allAllowedOrigins.some(allowed => {
+      const normalizedAllowed = allowed.replace(/\/$/, '');
+      return normalizedAllowed === normalizedOrigin || allowed === origin;
+    }) || (process.env.NODE_ENV !== 'production' && origin.includes('localhost'));
+    
+    if (isAllowed) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
     }
   }
   next();
