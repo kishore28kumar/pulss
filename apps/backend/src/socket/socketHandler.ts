@@ -264,9 +264,53 @@ export const initializeSocketIO = (httpServer: HTTPServer) => {
         // Save message to database
         // For customers, customerId is their own customer ID
         // For admins/staff/super_admin, customerId is the customer they're replying to (from data)
-        const dbCustomerId: string | null = senderRole === 'CUSTOMER' 
+        let dbCustomerId: string | null = senderRole === 'CUSTOMER' 
           ? (socket.customerId || null)
           : (messageCustomerId || null);
+        
+        // Log customer ID resolution for debugging
+        if (senderRole === 'CUSTOMER') {
+          console.log('[Socket] Customer message:', {
+            socketCustomerId: socket.customerId,
+            resolvedCustomerId: dbCustomerId,
+            senderId,
+            tenantId: targetTenantId,
+          });
+          
+          // If customerId is not set, try to get it from the customer record
+          if (!dbCustomerId && socket.userId) {
+            try {
+              const customer = await prisma.customers.findFirst({
+                where: { userId: socket.userId },
+                select: { id: true },
+              });
+              if (customer) {
+                console.log('[Socket] Resolved customerId from database:', customer.id);
+                // Update socket for future messages
+                socket.customerId = customer.id;
+                // Use the resolved customer ID for this message
+                dbCustomerId = customer.id;
+              } else {
+                console.warn('[Socket] Customer record not found for userId:', socket.userId);
+              }
+            } catch (err) {
+              console.error('[Socket] Error resolving customerId:', err);
+            }
+          }
+          
+          // Final check: if still no customerId, log warning and don't save message
+          if (!dbCustomerId) {
+            console.error('[Socket] ERROR: customerId is null for customer message! Cannot save message.', {
+              senderId,
+              senderRole,
+              socketCustomerId: socket.customerId,
+            });
+            socket.emit('error', { 
+              message: 'Unable to save message: Customer ID not found. Please refresh and try again.' 
+            });
+            return;
+          }
+        }
         
         // Define message type
         type MessageWithSender = {
@@ -288,6 +332,16 @@ export const initializeSocketIO = (httpServer: HTTPServer) => {
         
         let message: MessageWithSender;
         try {
+          // Log message details for debugging
+          console.log('[Socket] Saving message:', {
+            senderId,
+            senderRole,
+            senderType,
+            customerId: dbCustomerId,
+            tenantId: targetTenantId,
+            textLength: text.trim().length,
+          });
+          
           const dbMessage = await prisma.messages.create({
             data: {
               text: text.trim(),
@@ -308,6 +362,13 @@ export const initializeSocketIO = (httpServer: HTTPServer) => {
               },
             },
           });
+          
+          console.log('[Socket] Message saved successfully:', {
+            id: dbMessage.id,
+            customerId: dbMessage.customerId,
+            tenantId: dbMessage.tenantId,
+          });
+          
           message = {
             id: dbMessage.id,
             text: dbMessage.text,
@@ -323,6 +384,7 @@ export const initializeSocketIO = (httpServer: HTTPServer) => {
           // but don't save to database
           if (dbError.message?.includes('does not exist') || dbError.code === 'P2021') {
             console.warn('[Socket] Messages table does not exist yet. Message will not be persisted.');
+            console.warn('[Socket] Error details:', dbError.message);
             // Get sender info from users table
             const sender = await prisma.users.findUnique({
               where: { id: senderId },
@@ -353,6 +415,7 @@ export const initializeSocketIO = (httpServer: HTTPServer) => {
               },
             };
           } else {
+            console.error('[Socket] Database error saving message:', dbError);
             throw dbError;
           }
         }

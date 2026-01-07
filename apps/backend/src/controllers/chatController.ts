@@ -173,6 +173,13 @@ export const getConversations = asyncHandler(async (req: Request, res: Response)
     
     let allMessages: ConversationMessage[] = [];
     try {
+      // Log query details for debugging
+      console.log('[Chat] Fetching conversations:', {
+        userRole,
+        tenantId,
+        conversationsWhere,
+      });
+      
       allMessages = await prisma.messages.findMany({
         where: conversationsWhere,
         orderBy: { createdAt: 'desc' },
@@ -194,16 +201,29 @@ export const getConversations = asyncHandler(async (req: Request, res: Response)
         },
         take: 1000, // Limit to prevent memory issues
       });
+      
+      console.log('[Chat] Found messages:', {
+        count: allMessages.length,
+        messagesWithCustomerId: allMessages.filter(m => m.customerId).length,
+        sampleMessage: allMessages[0] ? {
+          id: allMessages[0].id,
+          customerId: allMessages[0].customerId,
+          tenantId: allMessages[0].tenantId,
+          senderType: allMessages[0].senderType,
+        } : null,
+      });
     } catch (dbError: any) {
       // If table doesn't exist, return empty array instead of crashing
       if (dbError.message?.includes('does not exist') || dbError.code === 'P2021') {
         console.warn('[Chat] Messages table does not exist yet. Please run migrations.');
+        console.warn('[Chat] Error details:', dbError.message);
         res.json({
           success: true,
           data: [],
         });
         return;
       } else {
+        console.error('[Chat] Database error fetching conversations:', dbError);
         throw dbError;
       }
     }
