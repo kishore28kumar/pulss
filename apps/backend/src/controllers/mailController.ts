@@ -465,7 +465,7 @@ export const getRecipients = asyncHandler(async (req: Request, res: Response) =>
       expires: Date.now() + RECIPIENTS_CACHE_TTL,
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: recipients,
     });

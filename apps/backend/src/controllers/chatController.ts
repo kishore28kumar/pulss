@@ -357,7 +357,7 @@ export const getConversations = asyncHandler(async (req: Request, res: Response)
       return dateB - dateA;
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: sortedConversations,
     });
