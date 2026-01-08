@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useMail } from '@/contexts/MailContext';
 import { formatDistanceToNow, format } from 'date-fns';
 import { Plus, Send, ArrowLeft, User, Mail } from 'lucide-react';
@@ -24,16 +24,21 @@ export default function MailPage() {
   const [isSending, setIsSending] = useState(false);
   const [composeData, setComposeData] = useState({ recipientId: '', subject: '', body: '' });
   const [availableRecipients, setAvailableRecipients] = useState<any[]>([]);
-  const user = authService.getStoredUser();
+  const user = useMemo(() => authService.getStoredUser(), []);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const replyFormRef = useRef<HTMLFormElement>(null);
+  const recipientsLoadedRef = useRef(false);
 
-  // Load available recipients (Super Admin or Admin users)
+  // Load available recipients (Super Admin or Admin users) - only once
   useEffect(() => {
+    if (recipientsLoadedRef.current) return;
+    
     const loadRecipients = async () => {
       try {
         const response = await api.get('/mail/recipients');
         const recipients = response.data.data || [];
         setAvailableRecipients(recipients);
+        recipientsLoadedRef.current = true;
       } catch (error) {
         console.error('Failed to load recipients:', error);
       }
@@ -42,7 +47,7 @@ export default function MailPage() {
     if (user && ['SUPER_ADMIN', 'ADMIN'].includes(user.role || '')) {
       loadRecipients();
     }
-  }, [user]);
+  }, [user?.id, user?.role]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -300,9 +305,13 @@ export default function MailPage() {
               {/* Reply Form */}
               <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
                 <form
+                  ref={replyFormRef}
                   onSubmit={async (e) => {
                     e.preventDefault();
-                    const formData = new FormData(e.currentTarget);
+                    const form = e.currentTarget || replyFormRef.current;
+                    if (!form) return;
+                    
+                    const formData = new FormData(form);
                     const subject = formData.get('subject') as string;
                     const body = formData.get('body') as string;
                     
@@ -314,7 +323,9 @@ export default function MailPage() {
                     setIsSending(true);
                     try {
                       await sendMailMessage(currentPartner.id, subject, body);
-                      e.currentTarget.reset();
+                      if (form) {
+                        form.reset();
+                      }
                       toast.success('Message sent');
                     } catch (error: any) {
                       toast.error(error.message || 'Failed to send message');
