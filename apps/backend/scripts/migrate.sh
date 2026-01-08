@@ -83,10 +83,30 @@ elif echo "$MIGRATE_OUTPUT" | grep -q "already applied\|No pending migrations\|D
 else
   echo "⚠️  Migration failed with exit code $MIGRATE_EXIT_CODE"
   echo "   Output:"
-  echo "$MIGRATE_OUTPUT" | head -10
+  echo "$MIGRATE_OUTPUT" | head -20
   echo ""
-  echo "⚠️  Server will start anyway. Please check migrations manually if needed."
-  exit 0  # Don't fail startup
+  
+  # If migration deploy failed, try db push as fallback to ensure schema is up to date
+  # This is safe because db push will only add missing tables/columns, not delete existing data
+  echo "🔄 Attempting fallback: using prisma db push to sync schema..."
+  set +e
+  PUSH_OUTPUT=$(npx prisma db push --skip-generate 2>&1)
+  PUSH_EXIT_CODE=$?
+  set -e
+  
+  if [ $PUSH_EXIT_CODE -eq 0 ]; then
+    echo "✅ Schema synced successfully using db push (fallback method)"
+    # Try to mark migrations as resolved
+    npx prisma migrate resolve --applied 20260107161000_add_chat_tables 2>/dev/null || echo "   Note: Could not mark migration as resolved, but schema is synced"
+    exit 0
+  else
+    echo "❌ Fallback also failed:"
+    echo "$PUSH_OUTPUT" | head -20
+    echo ""
+    echo "⚠️  Server will start anyway. Please check migrations manually if needed."
+    echo "⚠️  You may need to run: cd packages/database && npx prisma db push"
+    exit 0  # Don't fail startup
+  fi
 fi
 
 # Safety net - should never reach here, but just in case

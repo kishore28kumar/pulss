@@ -24,22 +24,22 @@ export const createBroadcast = asyncHandler(async (req: Request, res: Response) 
     let broadcast;
     try {
       broadcast = await prisma.broadcasts.create({
-        data: {
-          title: title.trim(),
-          message: message.trim(),
-          senderId,
-        },
-        include: {
-          sender: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              email: true,
-            },
+      data: {
+        title: title.trim(),
+        message: message.trim(),
+        senderId,
+      },
+      include: {
+        sender: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
           },
         },
-      });
+      },
+    });
     } catch (dbError: any) {
       // If table doesn't exist, return error
       if (dbError.message?.includes('does not exist') || dbError.code === 'P2021') {
@@ -114,31 +114,31 @@ export const getBroadcasts = asyncHandler(async (req: Request, res: Response) =>
     let broadcasts: BroadcastWithRelations[] = [];
     try {
       broadcasts = await prisma.broadcasts.findMany({
-        where: {
-          deletedAt: null,
-        },
-        include: {
-          sender: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              email: true,
-            },
-          },
-          readBy: {
-            where: {
-              userId,
-            },
-            select: {
-              readAt: true,
-            },
+      where: {
+        deletedAt: null,
+      },
+      include: {
+        sender: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
           },
         },
-        orderBy: {
-          createdAt: 'desc',
+        readBy: {
+          where: {
+            userId,
+          },
+          select: {
+            readAt: true,
+          },
         },
-      });
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
     } catch (dbError: any) {
       // If table doesn't exist, return empty array instead of crashing
       if (dbError.message?.includes('does not exist') || dbError.code === 'P2021') {
@@ -204,27 +204,27 @@ export const getUnreadCount = asyncHandler(async (req: Request, res: Response) =
     
     try {
       totalBroadcasts = await prisma.broadcasts.count({
-        where: whereClause,
-      });
+      where: whereClause,
+    });
 
-      // Get read broadcasts count for this user (excluding own broadcasts for Super Admin)
-      const readWhereClause: any = {
-        userId,
-        broadcast: {
-          deletedAt: null,
-        },
+    // Get read broadcasts count for this user (excluding own broadcasts for Super Admin)
+    const readWhereClause: any = {
+      userId,
+      broadcast: {
+        deletedAt: null,
+      },
+    };
+
+    if (userRole === 'SUPER_ADMIN') {
+      readWhereClause.broadcast = {
+        ...readWhereClause.broadcast,
+        senderId: { not: userId },
       };
-
-      if (userRole === 'SUPER_ADMIN') {
-        readWhereClause.broadcast = {
-          ...readWhereClause.broadcast,
-          senderId: { not: userId },
-        };
-      }
+    }
 
       readCount = await prisma.broadcast_reads.count({
-        where: readWhereClause,
-      });
+      where: readWhereClause,
+    });
     } catch (dbError: any) {
       // If table doesn't exist, return 0 count instead of crashing
       if (dbError.message?.includes('does not exist') || dbError.code === 'P2021') {
@@ -265,11 +265,11 @@ export const markBroadcastAsRead = asyncHandler(async (req: Request, res: Respon
     let broadcast;
     try {
       broadcast = await prisma.broadcasts.findFirst({
-        where: {
-          id,
-          deletedAt: null,
-        },
-      });
+      where: {
+        id,
+        deletedAt: null,
+      },
+    });
     } catch (dbError: any) {
       // If table doesn't exist, return 404
       if (dbError.message?.includes('does not exist') || dbError.code === 'P2021') {
@@ -285,22 +285,22 @@ export const markBroadcastAsRead = asyncHandler(async (req: Request, res: Respon
 
     // Create or update read record
     try {
-      await prisma.broadcast_reads.upsert({
-        where: {
-          broadcastId_userId: {
-            broadcastId: id,
-            userId,
-          },
-        },
-        create: {
+    await prisma.broadcast_reads.upsert({
+      where: {
+        broadcastId_userId: {
           broadcastId: id,
           userId,
-          readAt: new Date(),
         },
-        update: {
-          readAt: new Date(),
-        },
-      });
+      },
+      create: {
+        broadcastId: id,
+        userId,
+        readAt: new Date(),
+      },
+      update: {
+        readAt: new Date(),
+      },
+    });
     } catch (dbError: any) {
       // If table doesn't exist, just return success (no reads to update)
       if (dbError.message?.includes('does not exist') || dbError.code === 'P2021') {
@@ -336,30 +336,30 @@ export const markAllBroadcastsAsRead = asyncHandler(async (req: Request, res: Re
     let unreadBroadcasts = [];
     try {
       unreadBroadcasts = await prisma.broadcasts.findMany({
-        where: {
-          deletedAt: null,
-          readBy: {
-            none: {
-              userId,
-            },
+      where: {
+        deletedAt: null,
+        readBy: {
+          none: {
+            userId,
           },
         },
-        select: {
-          id: true,
-        },
-      });
+      },
+      select: {
+        id: true,
+      },
+    });
 
-      // Mark all as read
-      if (unreadBroadcasts.length > 0) {
+    // Mark all as read
+    if (unreadBroadcasts.length > 0) {
         try {
-          await prisma.broadcast_reads.createMany({
-            data: unreadBroadcasts.map((broadcast) => ({
-              broadcastId: broadcast.id,
-              userId,
-              readAt: new Date(),
-            })),
-            skipDuplicates: true,
-          });
+      await prisma.broadcast_reads.createMany({
+        data: unreadBroadcasts.map((broadcast) => ({
+          broadcastId: broadcast.id,
+          userId,
+          readAt: new Date(),
+        })),
+        skipDuplicates: true,
+      });
         } catch (dbError: any) {
           // If table doesn't exist, just skip (no reads to create)
           if (dbError.message?.includes('does not exist') || dbError.code === 'P2021') {
@@ -403,12 +403,12 @@ export const deleteBroadcast = asyncHandler(async (req: Request, res: Response) 
 
     // Soft delete
     try {
-      await prisma.broadcasts.update({
-        where: { id },
-        data: {
-          deletedAt: new Date(),
-        },
-      });
+    await prisma.broadcasts.update({
+      where: { id },
+      data: {
+        deletedAt: new Date(),
+      },
+    });
     } catch (dbError: any) {
       // If table doesn't exist, return 404
       if (dbError.message?.includes('does not exist') || dbError.code === 'P2021') {

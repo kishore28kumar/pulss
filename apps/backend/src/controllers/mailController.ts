@@ -71,33 +71,33 @@ export const sendMessage = asyncHandler(async (req: Request, res: Response) => {
     let message;
     try {
       message = await prisma.internal_messages.create({
-        data: {
-          subject: subject.trim(),
-          body: body.trim(),
-          senderId,
-          recipientId,
-        },
-        include: {
-          sender: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              email: true,
-              role: true,
-            },
-          },
-          recipient: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              email: true,
-              role: true,
-            },
+      data: {
+        subject: subject.trim(),
+        body: body.trim(),
+        senderId,
+        recipientId,
+      },
+      include: {
+        sender: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            role: true,
           },
         },
-      });
+        recipient: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            role: true,
+          },
+        },
+      },
+    });
     } catch (dbError: any) {
       // If table doesn't exist, return error
       if (dbError.message?.includes('does not exist') || dbError.code === 'P2021') {
@@ -154,37 +154,37 @@ export const getConversations = asyncHandler(async (req: Request, res: Response)
     let messages: InternalMessageWithRelations[] = [];
     try {
       messages = await prisma.internal_messages.findMany({
-        where: {
-          OR: [
-            { senderId: userId },
-            { recipientId: userId },
-          ],
-        },
-        include: {
-          sender: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              email: true,
-              role: true,
-            },
-          },
-          recipient: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              email: true,
-              role: true,
-            },
+      where: {
+        OR: [
+          { senderId: userId },
+          { recipientId: userId },
+        ],
+      },
+      include: {
+        sender: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            role: true,
           },
         },
-        orderBy: {
-          createdAt: 'desc',
+        recipient: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            role: true,
+          },
         },
-        take: 1000, // Limit to prevent excessive memory usage
-      });
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      take: 1000, // Limit to prevent excessive memory usage
+    });
     } catch (dbError: any) {
       // If table doesn't exist, return empty array instead of crashing
       if (dbError.message?.includes('does not exist') || dbError.code === 'P2021') {
@@ -254,36 +254,36 @@ export const getMessages = asyncHandler(async (req: Request, res: Response) => {
     let messages: InternalMessageWithRelations[] = [];
     try {
       messages = await prisma.internal_messages.findMany({
-        where: {
-          OR: [
-            { senderId: userId, recipientId: partnerId },
-            { senderId: partnerId, recipientId: userId },
-          ],
-        },
-        include: {
-          sender: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              email: true,
-              role: true,
-            },
-          },
-          recipient: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              email: true,
-              role: true,
-            },
+      where: {
+        OR: [
+          { senderId: userId, recipientId: partnerId },
+          { senderId: partnerId, recipientId: userId },
+        ],
+      },
+      include: {
+        sender: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            role: true,
           },
         },
-        orderBy: {
-          createdAt: 'asc', // Oldest first
+        recipient: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            role: true,
+          },
         },
-      });
+      },
+      orderBy: {
+        createdAt: 'asc', // Oldest first
+      },
+    });
     } catch (dbError: any) {
       // If table doesn't exist, return empty array instead of crashing
       if (dbError.message?.includes('does not exist') || dbError.code === 'P2021') {
@@ -323,11 +323,11 @@ export const getUnreadCount = asyncHandler(async (req: Request, res: Response) =
     let unreadCount = 0;
     try {
       unreadCount = await prisma.internal_messages.count({
-        where: {
-          recipientId: userId,
-          isRead: false,
-        },
-      });
+      where: {
+        recipientId: userId,
+        isRead: false,
+      },
+    });
     } catch (dbError: any) {
       // If table doesn't exist, return 0 count instead of crashing
       if (dbError.message?.includes('does not exist') || dbError.code === 'P2021') {
@@ -362,17 +362,17 @@ export const markAsRead = asyncHandler(async (req: Request, res: Response) => {
     }
 
     try {
-      await prisma.internal_messages.updateMany({
-        where: {
-          senderId: partnerId,
-          recipientId: userId,
-          isRead: false,
-        },
-        data: {
-          isRead: true,
-          readAt: new Date(),
-        },
-      });
+    await prisma.internal_messages.updateMany({
+      where: {
+        senderId: partnerId,
+        recipientId: userId,
+        isRead: false,
+      },
+      data: {
+        isRead: true,
+        readAt: new Date(),
+      },
+    });
     } catch (dbError: any) {
       // If table doesn't exist, just return success (no messages to update)
       if (dbError.message?.includes('does not exist') || dbError.code === 'P2021') {

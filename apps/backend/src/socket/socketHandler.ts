@@ -117,8 +117,8 @@ export const initializeSocketIO = (httpServer: HTTPServer) => {
           console.error('[Socket.io] Error in origin callback:', error);
           // In development, allow on error; in production, reject
           if (process.env.NODE_ENV === 'development') {
-            callback(null, true);
-          } else {
+          callback(null, true);
+        } else {
             callback(new Error('CORS validation failed'));
           }
         }
@@ -343,25 +343,25 @@ export const initializeSocketIO = (httpServer: HTTPServer) => {
           });
           
           const dbMessage = await prisma.messages.create({
-            data: {
-              text: text.trim(),
-              senderId, // This is now the user ID (resolved from customer ID if needed)
-              senderType,
-              tenantId: targetTenantId,
-              customerId: dbCustomerId,
-            },
-            include: {
-              sender: {
-                select: {
-                  id: true,
-                  firstName: true,
-                  lastName: true,
-                  email: true,
-                  avatar: true,
-                },
+          data: {
+            text: text.trim(),
+            senderId, // This is now the user ID (resolved from customer ID if needed)
+            senderType,
+            tenantId: targetTenantId,
+            customerId: dbCustomerId,
+          },
+          include: {
+            sender: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+                avatar: true,
               },
             },
-          });
+          },
+        });
           
           console.log('[Socket] Message saved successfully:', {
             id: dbMessage.id,

@@ -86,7 +86,7 @@ const corsOptions = {
         return callback(null, true);
       }
       
-      // In development, allow localhost with any port
+        // In development, allow localhost with any port
       if (process.env.NODE_ENV !== 'production' && origin.includes('localhost')) {
         return callback(null, true);
       }
@@ -106,13 +106,13 @@ const corsOptions = {
       // If there's an error in the callback, log it but allow the request to prevent breaking CORS entirely
       console.error('[CORS] Error in origin callback:', error);
       callback(null, true); // Fallback to allowing the request
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Tenant-Slug', 'X-Requested-With'],
-  exposedHeaders: ['Content-Type', 'Authorization'],
-  maxAge: 86400, // 24 hours
+      }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Tenant-Slug', 'X-Requested-With'],
+    exposedHeaders: ['Content-Type', 'Authorization'],
+    maxAge: 86400, // 24 hours
   preflightContinue: false, // CORS middleware handles preflight and doesn't pass to next
   optionsSuccessStatus: 204,
 };
@@ -255,10 +255,10 @@ app.use(tenantMiddleware);
 // Health check endpoint (must be before error handler)
 app.get('/health', async (_req, res) => {
   try {
-    const dbConnected = await checkConnection();
+  const dbConnected = await checkConnection();
     res.status(200).json({ 
-      status: 'ok', 
-      message: 'Pulss API is running',
+    status: 'ok', 
+    message: 'Pulss API is running',
       database: dbConnected ? 'connected' : 'disconnected',
       timestamp: new Date().toISOString()
     });
@@ -410,7 +410,7 @@ process.on('uncaughtException', (error) => {
     // Give time for logs to be written
     setTimeout(() => process.exit(1), 1000);
   } else {
-    process.exit(1);
+  process.exit(1);
   }
 });
 
@@ -449,7 +449,7 @@ process.on('SIGINT', () => {
   // Force close after 10 seconds
   setTimeout(() => {
     console.error('⚠️  Forcing shutdown after timeout');
-    process.exit(1);
+  process.exit(1);
   }, 10000);
 });
 

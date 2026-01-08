@@ -74,21 +74,21 @@ export const getChatHistory = asyncHandler(async (req: Request, res: Response) =
     let messages: MessageWithSender[] = [];
     try {
       messages = await prisma.messages.findMany({
-        where,
-        orderBy: { createdAt: 'desc' },
-        take: parseInt(limit as string),
-        include: {
-          sender: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              email: true,
-              avatar: true,
-            },
+      where,
+      orderBy: { createdAt: 'desc' },
+      take: parseInt(limit as string),
+      include: {
+        sender: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            avatar: true,
           },
         },
-      });
+      },
+    });
     } catch (dbError: any) {
       // If table doesn't exist, return empty array instead of crashing
       if (dbError.message?.includes('does not exist') || dbError.code === 'P2021') {
@@ -188,26 +188,26 @@ export const getConversations = asyncHandler(async (req: Request, res: Response)
       });
       
       allMessages = await prisma.messages.findMany({
-        where: conversationsWhere,
-        orderBy: { createdAt: 'desc' },
-        include: {
-          tenants: {
-            select: {
-              slug: true,
-            },
-          },
-          sender: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              email: true,
-              avatar: true,
-            },
+      where: conversationsWhere,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        tenants: {
+          select: {
+            slug: true,
           },
         },
-        take: 1000, // Limit to prevent memory issues
-      });
+        sender: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            avatar: true,
+          },
+        },
+      },
+      take: 1000, // Limit to prevent memory issues
+    });
       
       console.log('[Chat] Found messages:', {
         count: allMessages.length,
@@ -297,8 +297,8 @@ export const getConversations = asyncHandler(async (req: Request, res: Response)
         let unreadCount = 0;
         try {
           unreadCount = await prisma.messages.count({
-            where: unreadWhere,
-          });
+          where: unreadWhere,
+        });
         } catch (dbError: any) {
           // If table doesn't exist, count is 0
           if (dbError.message?.includes('does not exist') || dbError.code === 'P2021') {
@@ -417,12 +417,12 @@ export const markMessagesAsRead = asyncHandler(async (req: Request, res: Respons
     }
 
     try {
-      await prisma.messages.updateMany({
-        where,
-        data: {
-          readAt: new Date(),
-        },
-      });
+    await prisma.messages.updateMany({
+      where,
+      data: {
+        readAt: new Date(),
+      },
+    });
     } catch (dbError: any) {
       // If table doesn't exist, just return success (no messages to update)
       if (dbError.message?.includes('does not exist') || dbError.code === 'P2021') {
@@ -468,8 +468,8 @@ export const getUnreadCount = asyncHandler(async (req: Request, res: Response) =
     let unreadCount = 0;
     try {
       unreadCount = await prisma.messages.count({
-        where,
-      });
+      where,
+    });
     } catch (dbError: any) {
       // If table doesn't exist, count is 0
       if (dbError.message?.includes('does not exist') || dbError.code === 'P2021') {
