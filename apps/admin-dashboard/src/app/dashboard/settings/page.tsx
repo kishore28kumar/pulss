@@ -8,7 +8,8 @@ import {
   Bell, 
   Shield, 
   Info,
-  Building2
+  Building2,
+  User
 } from 'lucide-react';
 import api from '@/lib/api';
 import { toast } from 'sonner';
@@ -16,13 +17,15 @@ import StoreInfoTab from './StoreInfoTab';
 import AppearanceTab from './AppearanceTab';
 import NotificationsTab from './NotificationsTab';
 import TenantInfoTab from './TenantInfoTab';
+import ProfileTab from './ProfileTab';
 import PermissionGuard from '@/components/permissions/PermissionGuard';
 import { Permission, getUserRole } from '@/lib/permissions';
 import { authService } from '@/lib/auth';
 
-type TabType = 'store' | 'appearance' | 'notifications' | 'security' | 'tenant';
+type TabType = 'profile' | 'store' | 'appearance' | 'notifications' | 'security' | 'tenant';
 
 const tabs = [
+  { id: 'profile' as TabType, name: 'Profile', icon: User },
   { id: 'tenant' as TabType, name: 'Tenant Information', icon: Building2 },
   { id: 'store' as TabType, name: 'Store Information', icon: Store },
   { id: 'appearance' as TabType, name: 'Appearance', icon: Palette },
@@ -48,13 +51,8 @@ export default function SettingsPage() {
       setTenantId(user.tenantId);
     }
 
-    // Set default tab based on role
-    // Admin and Staff see Tenant Information first, Super Admin sees Store Information
-    if (role === 'ADMIN' || role === 'STAFF') {
-      setActiveTab('tenant');
-    } else {
-      setActiveTab('store');
-    }
+    // Set default tab - Profile first for all users
+    setActiveTab('profile');
   }, []);
 
   // Fetch current tenant settings (for store info, appearance, notifications)
@@ -188,6 +186,12 @@ export default function SettingsPage() {
 
         {/* Tab Content */}
         <div className="p-4 sm:p-6">
+          {activeTab === 'profile' && (
+            <ProfileTab
+              isSaving={false}
+              readOnly={false}
+            />
+          )}
           {activeTab === 'tenant' && mounted && (userRole === 'ADMIN' || userRole === 'STAFF') && (
             <>
               {tenantDetailsLoading ? (

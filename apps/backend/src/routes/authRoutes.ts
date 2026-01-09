@@ -4,6 +4,7 @@ import {
   loginCustomer,
   registerCustomer,
   getCurrentUser,
+  updateUserProfile,
   getCurrentCustomer,
   updateCustomerProfile,
   refreshToken,
@@ -17,6 +18,7 @@ const router = Router();
 // Admin/Staff Authentication
 router.post('/login', loginUser);
 router.get('/me', authenticateUser, getCurrentUser);
+router.put('/profile', authenticateUser, updateUserProfile);
 
 // Customer Authentication
 router.post('/customer/login', loginCustomer);

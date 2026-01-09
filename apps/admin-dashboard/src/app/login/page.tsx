@@ -56,6 +56,12 @@ function LoginPageContent() {
       localStorage.setItem('accessToken', tokens.accessToken);
       localStorage.setItem('refreshToken', tokens.refreshToken);
       localStorage.setItem('user', JSON.stringify(user));
+      
+      // Dispatch storage event for UserContext
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'user',
+        newValue: JSON.stringify(user),
+      }));
 
       toast.success('Login successful!', { duration: 3000 });
       

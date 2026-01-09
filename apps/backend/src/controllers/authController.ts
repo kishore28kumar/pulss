@@ -321,6 +321,60 @@ export const getCurrentUser = asyncHandler(
   }
 );
 
+// ============================================
+// UPDATE USER PROFILE (Admin/Staff)
+// ============================================
+
+export const updateUserProfile = asyncHandler(
+  async (req: Request, res: Response) => {
+    if (!req.user) {
+      throw new AppError('Not authenticated', 401);
+    }
+
+    const { firstName, lastName, phone } = req.body;
+
+    // Update user profile
+    const updatedUser = await prisma.users.update({
+      where: { id: req.user.userId },
+      data: {
+        ...(firstName !== undefined && { firstName }),
+        ...(lastName !== undefined && { lastName }),
+        ...(phone !== undefined && { phone }),
+        updatedAt: new Date(),
+      },
+      include: {
+        tenants: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            logoUrl: true,
+            primaryColor: true,
+            secondaryColor: true,
+          },
+        },
+      },
+    });
+
+    const response: ApiResponse = {
+      success: true,
+      data: {
+        id: updatedUser.id,
+        email: updatedUser.email,
+        firstName: updatedUser.firstName || '',
+        lastName: updatedUser.lastName || '',
+        phone: updatedUser.phone || '',
+        avatar: updatedUser.avatar || '',
+        role: updatedUser.role,
+        tenant: updatedUser.tenants || undefined,
+      },
+      message: 'Profile updated successfully',
+    };
+
+    res.json(response);
+  }
+);
+
 export const getCurrentCustomer = asyncHandler(
   async (req: Request, res: Response) => {
     if (!req.customerId) {
