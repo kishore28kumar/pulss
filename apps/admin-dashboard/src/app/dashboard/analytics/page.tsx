@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { IndianRupee, ShoppingBag, Users, Package, TrendingUp, TrendingDown, Search, MapPin, Building2, X, Calendar } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { IndianRupee, ShoppingBag, Users, Package, TrendingUp, TrendingDown, Search, MapPin, Building2, X, Calendar, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import api from '@/lib/api';
 import { formatCurrency } from '@/lib/utils';
@@ -11,6 +12,7 @@ import { Permission } from '@/lib/permissions';
 import { getUserRole } from '@/lib/permissions';
 
 export default function AnalyticsPage() {
+  const router = useRouter();
   const [period, setPeriod] = useState('today');
   const [mounted, setMounted] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
@@ -150,6 +152,24 @@ export default function AnalyticsPage() {
           <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-1">Track your store performance</p>
         </div>
         <div className="flex items-center space-x-3">
+          {/* Export Button - Super Admin Only */}
+          {mounted && userRole === 'SUPER_ADMIN' && (
+            <button
+              onClick={() => {
+                const params = new URLSearchParams();
+                if (period === 'custom' && customStartDate && customEndDate) {
+                  params.set('startDate', customStartDate);
+                  params.set('endDate', customEndDate);
+                }
+                router.push(`/dashboard/analytics/export${params.toString() ? `?${params.toString()}` : ''}`);
+              }}
+              className="inline-flex items-center space-x-2 px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition"
+            >
+              <Download className="w-4 h-4" />
+              <span className="hidden sm:inline">Export Analytics</span>
+              <span className="sm:hidden">Export</span>
+            </button>
+          )}
           <div className="flex items-center space-x-2">
             <Calendar className="w-4 h-4 text-gray-500 dark:text-gray-400" />
             <label htmlFor="period-filter" className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
