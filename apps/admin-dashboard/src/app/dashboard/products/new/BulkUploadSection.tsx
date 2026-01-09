@@ -205,10 +205,34 @@ export default function BulkUploadSection({
         if (category) {
           product.categoryId = category.id;
         } else {
-          errors.push(`Category "${product.categorySlug}" not found`);
+          // Category not found - try to assign "Other" category
+          const otherCategory = categories.find(cat => cat.slug.toLowerCase() === 'other');
+          if (otherCategory) {
+            product.categorySlug = 'other';
+            product.categoryId = otherCategory.id;
+          } else if (categories.length > 0) {
+            // If "Other" doesn't exist, use the first category as fallback
+            product.categorySlug = categories[0].slug;
+            product.categoryId = categories[0].id;
+          } else {
+            // No categories available at all
+            errors.push('No categories available');
+          }
         }
       } else {
-        errors.push('Category is required');
+        // No category slug provided - try to assign "Other" or first category
+        if (categories.length > 0) {
+          const otherCategory = categories.find(cat => cat.slug.toLowerCase() === 'other');
+          if (otherCategory) {
+            product.categorySlug = 'other';
+            product.categoryId = otherCategory.id;
+          } else {
+            product.categorySlug = categories[0].slug;
+            product.categoryId = categories[0].id;
+          }
+        } else {
+          errors.push('Category is required');
+        }
       }
       
       if (product.images && product.images.length > 0) {
@@ -310,11 +334,17 @@ export default function BulkUploadSection({
   // Bulk upload mutation
   const bulkUploadMutation = useMutation({
     mutationFn: async (productsToUpload: BulkProduct[]) => {
+      if (!selectedTenantId) {
+        throw new Error('Tenant ID is required. Please select a tenant.');
+      }
+
       const config: any = {};
       if (isSuperAdminUser) {
         const selectedAdmin = adminsData?.find(admin => admin.tenants?.id === selectedTenantId);
         if (selectedAdmin?.tenants?.slug) {
           config.headers = { 'X-Tenant-Slug': selectedAdmin.tenants.slug };
+        } else {
+          console.warn('Super Admin: Could not find tenant slug for selected tenant');
         }
       }
 
@@ -343,6 +373,12 @@ export default function BulkUploadSection({
         })),
       };
 
+      console.log('Bulk upload payload:', { 
+        tenantId: payload.tenantId, 
+        productCount: payload.products.length,
+        config 
+      });
+
       return await api.post('/products/bulk', payload, config);
     },
     onSuccess: (response) => {
@@ -352,7 +388,10 @@ export default function BulkUploadSection({
       onSuccess(result);
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.error || 'Failed to upload products');
+      console.error('Bulk upload error:', error);
+      const errorMessage = error.response?.data?.error || error.response?.data?.message || error.message || 'Failed to upload products';
+      const errorDetails = error.response?.data?.details ? ` Details: ${JSON.stringify(error.response.data.details)}` : '';
+      toast.error(`${errorMessage}${errorDetails}`, { duration: 5000 });
     },
   });
 
@@ -591,9 +630,25 @@ export default function BulkUploadSection({
                         <select
                           value={editValue}
                           onChange={(e) => {
-                            const category = categories.find(c => c.slug === e.target.value);
-                            handleCellEdit(index, 'categorySlug', e.target.value);
-                            if (category) handleCellEdit(index, 'categoryId', category.id);
+                            const selectedSlug = e.target.value || undefined;
+                            const category = categories.find(c => c.slug === selectedSlug);
+                            
+                            // Update both categorySlug and categoryId in a single state update
+                            const updated = [...products];
+                            updated[index] = {
+                              ...updated[index],
+                              categorySlug: selectedSlug,
+                              categoryId: category?.id || undefined,
+                            };
+                            
+                            // Re-validate the product
+                            const validated = validateProducts([updated[index]]);
+                            updated[index] = validated[0];
+                            
+                            setProducts(updated);
+                            // Update sessionStorage
+                            sessionStorage.setItem('bulkUploadProducts', JSON.stringify(updated));
+                            setEditingCell(null);
                           }}
                           onBlur={() => setEditingCell(null)}
                           className="w-full px-2 py-1 border border-blue-500 dark:border-blue-400 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
