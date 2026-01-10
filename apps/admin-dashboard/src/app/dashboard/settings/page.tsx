@@ -188,7 +188,6 @@ export default function SettingsPage() {
         <div className="p-4 sm:p-6">
           {activeTab === 'profile' && (
             <ProfileTab
-              isSaving={false}
               readOnly={false}
             />
           )}

@@ -20,11 +20,10 @@ const profileSchema = z.object({
 type ProfileForm = z.infer<typeof profileSchema>;
 
 interface ProfileTabProps {
-  isSaving: boolean;
   readOnly?: boolean;
 }
 
-export default function ProfileTab({ isSaving, readOnly = false }: ProfileTabProps) {
+export default function ProfileTab({ readOnly = false }: ProfileTabProps) {
   const { user, updateUser } = useUser();
   const [mounted, setMounted] = useState(false);
 
