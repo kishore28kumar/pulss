@@ -9,7 +9,8 @@ import {
   ShoppingBag, 
   IndianRupee, 
   Package, 
-  Download
+  Download,
+  Loader2
 } from 'lucide-react';
 import api from '@/lib/api';
 import { formatCurrency, formatDateTime } from '@/lib/utils';
@@ -17,6 +18,7 @@ import OrderDetailsModal from './OrderDetailsModal';
 import OrderFilters from './OrderFilters';
 import PermissionGuard from '@/components/permissions/PermissionGuard';
 import { Permission } from '@/lib/permissions';
+import { toast } from 'sonner';
 
 interface Order {
   id: string;
@@ -126,6 +128,50 @@ export default function OrdersPage() {
     setPage(1);
   };
 
+  const handleExportOrders = async () => {
+    const toastId = toast.loading('Preparing orders export...');
+    
+    try {
+      const params = new URLSearchParams();
+      if (filters.status) params.set('status', filters.status);
+      if (filters.paymentStatus) params.set('paymentStatus', filters.paymentStatus);
+      if (filters.startDate) params.set('startDate', filters.startDate);
+      if (filters.endDate) params.set('endDate', filters.endDate);
+      if (search) params.set('search', search);
+
+      const response = await api.get(`/orders/export?${params.toString()}`, {
+        responseType: 'blob',
+      });
+
+      // Create blob and download
+      const blob = new Blob([response.data], { type: 'text/csv;charset=utf-8;' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // Extract filename from Content-Disposition header or use default
+      const contentDisposition = response.headers['content-disposition'];
+      let filename = `orders_${new Date().toISOString().split('T')[0]}.csv`;
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        if (filenameMatch && filenameMatch[1]) {
+          filename = filenameMatch[1].replace(/['"]/g, '');
+        }
+      }
+      
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success('Orders exported successfully', { id: toastId });
+    } catch (error: any) {
+      console.error('Export error:', error);
+      toast.error(error.response?.data?.error || 'Failed to export orders', { id: toastId });
+    }
+  };
+
   const orders = data?.data || [];
   const meta = data?.meta;
 
@@ -138,7 +184,10 @@ export default function OrdersPage() {
           <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-1">Manage and track customer orders</p>
         </div>
         <PermissionGuard permission={Permission.ORDERS_EXPORT}>
-          <button className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm sm:text-base">
+          <button 
+            onClick={handleExportOrders}
+            className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
+          >
             <Download className="w-5 h-5 mr-2" />
             Export Orders
           </button>

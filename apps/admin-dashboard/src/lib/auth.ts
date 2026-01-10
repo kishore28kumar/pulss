@@ -10,18 +10,39 @@ export const authService = {
     localStorage.setItem('refreshToken', tokens.refreshToken);
     localStorage.setItem('user', JSON.stringify(user));
 
+    // Dispatch custom event for same-tab updates (not StorageEvent which is for cross-tab)
+    window.dispatchEvent(new CustomEvent('userUpdated', {
+      detail: { user },
+    }));
+
     return { user, tokens };
   },
 
   async getCurrentUser(): Promise<AuthUser> {
     const response = await api.get('/auth/me');
-    return response.data.data;
+    const userData = response.data.data;
+    // Transform to AuthUser format
+    return {
+      id: userData.id,
+      email: userData.email,
+      firstName: userData.firstName || '',
+      lastName: userData.lastName || '',
+      role: userData.role,
+      tenantId: userData.tenant?.id || '',
+      tenant: userData.tenant || { id: '', name: '', slug: '' },
+    };
   },
 
   logout() {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
+    
+    // Dispatch custom event for same-tab updates (not StorageEvent which is for cross-tab)
+    window.dispatchEvent(new CustomEvent('userUpdated', {
+      detail: { user: null },
+    }));
+    
     window.location.href = '/login';
   },
 
@@ -29,6 +50,15 @@ export const authService = {
     if (typeof window === 'undefined') return null;
     const userStr = localStorage.getItem('user');
     return userStr ? JSON.parse(userStr) : null;
+  },
+
+  updateStoredUser(updatedUser: AuthUser) {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+    // Dispatch custom event for same-tab updates (not StorageEvent which is for cross-tab)
+    window.dispatchEvent(new CustomEvent('userUpdated', {
+      detail: { user: updatedUser },
+    }));
   },
 
   isAuthenticated(): boolean {

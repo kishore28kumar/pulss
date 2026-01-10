@@ -25,7 +25,7 @@ import { Permission, getUserRole } from '@/lib/permissions';
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { 
-    name: 'Tenants', // Will be renamed to 'Staff' for Admin users
+    name: 'Tenants', // Shows as 'Tenants' for SUPER_ADMIN, 'Staff' for ADMIN/STAFF
     href: '/dashboard/staff', 
     icon: UserCog,
     permission: Permission.STAFF_VIEW,

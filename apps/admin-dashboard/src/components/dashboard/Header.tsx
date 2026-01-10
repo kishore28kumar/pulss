@@ -10,6 +10,7 @@ import ThemeToggle from '@/components/theme/ThemeToggle';
 import { getUserRole } from '@/lib/permissions';
 import { useChat } from '@/contexts/ChatContext';
 import { useMail } from '@/contexts/MailContext';
+import { useUser } from '@/contexts/UserContext';
 
 interface HeaderProps {
   onMenuClick?: () => void;
@@ -84,17 +85,16 @@ function MailNotificationButton() {
 export default function Header({ onMenuClick }: HeaderProps) {
   const router = useRouter();
   const [showMenu, setShowMenu] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  const { user } = useUser();
   const [isLoaded, setIsLoaded] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Only access localStorage on the client side
-    setUser(authService.getStoredUser());
+    // Get user role from stored user
     setUserRole(getUserRole());
     setIsLoaded(true);
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     // Close menu when clicking outside

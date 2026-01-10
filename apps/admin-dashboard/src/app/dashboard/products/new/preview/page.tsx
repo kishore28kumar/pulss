@@ -110,10 +110,34 @@ function BulkUploadPreviewPageContent() {
       if (category) {
         productToValidate.categoryId = category.id;
       } else {
-        errors.push(`Category "${productToValidate.categorySlug}" not found`);
+        // Category not found - try to assign "Other" category
+        const otherCategory = categories?.find(cat => cat.slug.toLowerCase() === 'other');
+        if (otherCategory) {
+          productToValidate.categorySlug = 'other';
+          productToValidate.categoryId = otherCategory.id;
+        } else if (categories && categories.length > 0) {
+          // If "Other" doesn't exist, use the first category as fallback
+          productToValidate.categorySlug = categories[0].slug;
+          productToValidate.categoryId = categories[0].id;
+        } else {
+          // No categories available at all
+          errors.push('No categories available');
+        }
       }
     } else {
-      errors.push('Category is required');
+      // No category slug provided - try to assign "Other" or first category
+      if (categories && categories.length > 0) {
+        const otherCategory = categories.find(cat => cat.slug.toLowerCase() === 'other');
+        if (otherCategory) {
+          productToValidate.categorySlug = 'other';
+          productToValidate.categoryId = otherCategory.id;
+        } else {
+          productToValidate.categorySlug = categories[0].slug;
+          productToValidate.categoryId = categories[0].id;
+        }
+      } else {
+        errors.push('Category is required');
+      }
     }
     
     if (productToValidate.images && productToValidate.images.length > 0) {
@@ -175,8 +199,8 @@ function BulkUploadPreviewPageContent() {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <p className="text-gray-500 mt-4">Loading product preview...</p>
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 dark:border-blue-400"></div>
+          <p className="text-gray-500 dark:text-gray-400 mt-4">Loading product preview...</p>
         </div>
       </div>
     );
@@ -188,15 +212,15 @@ function BulkUploadPreviewPageContent() {
       <div>
         <Link
           href="/dashboard/products/new"
-          className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-2 text-sm sm:text-base"
+          className="inline-flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 mb-2 text-sm sm:text-base"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Upload
         </Link>
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Product Preview</h1>
-            <p className="text-sm sm:text-base text-gray-500 mt-1">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Product Preview</h1>
+            <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-1">
               Product {productIndex + 1} of {allProducts.length}
             </p>
           </div>
@@ -204,14 +228,14 @@ function BulkUploadPreviewPageContent() {
             <button
               onClick={handlePrevious}
               disabled={productIndex === 0}
-              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 dark:text-gray-300"
             >
               Previous
             </button>
             <button
               onClick={handleNext}
               disabled={productIndex === allProducts.length - 1}
-              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 dark:text-gray-300"
             >
               Next
             </button>
@@ -220,17 +244,17 @@ function BulkUploadPreviewPageContent() {
       </div>
 
       {/* Product Preview Content */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-6">
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 space-y-6">
         {/* Status Badge */}
         <div className="flex items-center justify-between">
           <div>
             {product.isValid ? (
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200">
                 <CheckCircle className="w-4 h-4 mr-1" />
                 Valid Product
               </span>
             ) : (
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200">
                 <AlertCircle className="w-4 h-4 mr-1" />
                 Invalid Product
               </span>
@@ -238,14 +262,14 @@ function BulkUploadPreviewPageContent() {
           </div>
           <div className="flex items-center space-x-2">
             {product.errors && product.errors.length > 0 && (
-              <div className="text-sm text-red-600">
+              <div className="text-sm text-red-600 dark:text-red-400">
                 {product.errors.length} error(s)
               </div>
             )}
             {!isEditing ? (
               <button
                 onClick={() => setIsEditing(true)}
-                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                className="inline-flex items-center px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition"
               >
                 <Edit2 className="w-4 h-4 mr-2" />
                 Edit
@@ -254,14 +278,14 @@ function BulkUploadPreviewPageContent() {
               <div className="flex items-center space-x-2">
                 <button
                   onClick={handleSave}
-                  className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+                  className="inline-flex items-center px-4 py-2 bg-green-600 dark:bg-green-500 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition"
                 >
                   <Save className="w-4 h-4 mr-2" />
                   Save
                 </button>
                 <button
                   onClick={handleCancel}
-                  className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition text-gray-700 dark:text-gray-300"
                 >
                   <X className="w-4 h-4 mr-2" />
                   Cancel
@@ -273,9 +297,9 @@ function BulkUploadPreviewPageContent() {
 
         {/* Errors */}
         {product.errors && product.errors.length > 0 && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <h4 className="font-semibold text-red-900 mb-2">Errors:</h4>
-            <ul className="list-disc list-inside space-y-1 text-sm text-red-700">
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+            <h4 className="font-semibold text-red-900 dark:text-red-200 mb-2">Errors:</h4>
+            <ul className="list-disc list-inside space-y-1 text-sm text-red-700 dark:text-red-300">
               {product.errors.map((error, idx) => (
                 <li key={idx}>{error}</li>
               ))}
@@ -286,42 +310,42 @@ function BulkUploadPreviewPageContent() {
         {/* Basic Information */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Product Name</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Product Name</label>
             {isEditing && editedProduct ? (
               <input
                 type="text"
                 value={editedProduct.name || ''}
                 onChange={(e) => handleFieldChange('name', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
               />
             ) : (
-              <div className="text-gray-900 font-semibold">{product.name || 'N/A'}</div>
+              <div className="text-gray-900 dark:text-gray-100 font-semibold">{product.name || 'N/A'}</div>
             )}
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Slug</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Slug</label>
             {isEditing && editedProduct ? (
               <input
                 type="text"
                 value={editedProduct.slug || ''}
                 onChange={(e) => handleFieldChange('slug', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
               />
             ) : (
-              <div className="text-gray-900">{product.slug || 'N/A'}</div>
+              <div className="text-gray-900 dark:text-gray-100">{product.slug || 'N/A'}</div>
             )}
           </div>
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
             {isEditing && editedProduct ? (
               <textarea
                 value={editedProduct.description || ''}
                 onChange={(e) => handleFieldChange('description', e.target.value)}
                 rows={4}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
               />
             ) : (
-              <div className="text-gray-900 whitespace-pre-wrap">
+              <div className="text-gray-900 dark:text-gray-100 whitespace-pre-wrap">
                 {product.description || 'No description provided'}
               </div>
             )}
@@ -329,159 +353,164 @@ function BulkUploadPreviewPageContent() {
         </div>
 
         {/* Pricing */}
-        <div className="border-t border-gray-200 pt-6">
-          <h4 className="text-lg font-semibold text-gray-900 mb-4">Pricing</h4>
+        <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+          <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Pricing</h4>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Price</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Price</label>
               {isEditing && editedProduct ? (
                 <input
                   type="number"
                   step="0.01"
                   value={editedProduct.price || 0}
                   onChange={(e) => handleFieldChange('price', parseFloat(e.target.value) || 0)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 />
               ) : (
-                <div className="text-lg font-bold text-gray-900">₹{product.price || '0.00'}</div>
+                <div className="text-lg font-bold text-gray-900 dark:text-gray-100">₹{product.price || '0.00'}</div>
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Compare At Price</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Compare At Price</label>
               {isEditing && editedProduct ? (
                 <input
                   type="number"
                   step="0.01"
                   value={editedProduct.compareAtPrice || ''}
                   onChange={(e) => handleFieldChange('compareAtPrice', e.target.value ? parseFloat(e.target.value) : undefined)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   placeholder="Optional"
                 />
               ) : product.compareAtPrice ? (
-                <div className="text-lg font-semibold text-gray-600 line-through">₹{product.compareAtPrice}</div>
+                <div className="text-lg font-semibold text-gray-600 dark:text-gray-400 line-through">₹{product.compareAtPrice}</div>
               ) : (
-                <div className="text-gray-400">Not set</div>
+                <div className="text-gray-400 dark:text-gray-500">Not set</div>
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Cost Price</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Cost Price</label>
               {isEditing && editedProduct ? (
                 <input
                   type="number"
                   step="0.01"
                   value={editedProduct.costPrice || ''}
                   onChange={(e) => handleFieldChange('costPrice', e.target.value ? parseFloat(e.target.value) : undefined)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   placeholder="Optional"
                 />
               ) : product.costPrice ? (
-                <div className="text-lg font-semibold text-gray-900">₹{product.costPrice}</div>
+                <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">₹{product.costPrice}</div>
               ) : (
-                <div className="text-gray-400">Not set</div>
+                <div className="text-gray-400 dark:text-gray-500">Not set</div>
               )}
             </div>
           </div>
         </div>
 
         {/* Inventory */}
-        <div className="border-t border-gray-200 pt-6">
-          <h4 className="text-lg font-semibold text-gray-900 mb-4">Inventory</h4>
+        <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+          <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Inventory</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">SKU</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">SKU</label>
               {isEditing && editedProduct ? (
                 <input
                   type="text"
                   value={editedProduct.sku || ''}
                   onChange={(e) => handleFieldChange('sku', e.target.value || undefined)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   placeholder="Optional"
                 />
               ) : (
-                <div className="text-gray-900">{product.sku || 'N/A'}</div>
+                <div className="text-gray-900 dark:text-gray-100">{product.sku || 'N/A'}</div>
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Barcode</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Barcode</label>
               {isEditing && editedProduct ? (
                 <input
                   type="text"
                   value={editedProduct.barcode || ''}
                   onChange={(e) => handleFieldChange('barcode', e.target.value || undefined)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   placeholder="Optional"
                 />
               ) : (
-                <div className="text-gray-900">{product.barcode || 'N/A'}</div>
+                <div className="text-gray-900 dark:text-gray-100">{product.barcode || 'N/A'}</div>
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Track Inventory</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Track Inventory</label>
               {isEditing && editedProduct ? (
                 <label className="flex items-center space-x-2 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={editedProduct.trackInventory}
                     onChange={(e) => handleFieldChange('trackInventory', e.target.checked)}
-                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:bg-gray-700"
                   />
-                  <span className="text-sm text-gray-700">Track inventory</span>
+                  <span className="text-sm text-gray-700 dark:text-gray-300">Track inventory</span>
                 </label>
               ) : (
-                <div className="text-gray-900">
+                <div className="text-gray-900 dark:text-gray-100">
                   {product.trackInventory ? (
-                    <span className="text-green-600">Yes</span>
+                    <span className="text-green-600 dark:text-green-400">Yes</span>
                   ) : (
-                    <span className="text-gray-500">No</span>
+                    <span className="text-gray-500 dark:text-gray-400">No</span>
                   )}
                 </div>
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Stock Quantity</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Stock Quantity</label>
               {isEditing && editedProduct ? (
                 <input
                   type="number"
                   value={editedProduct.stockQuantity || 0}
                   onChange={(e) => handleFieldChange('stockQuantity', parseInt(e.target.value) || 0)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 />
               ) : (
-                <div className="text-gray-900 font-semibold">{product.stockQuantity || 0}</div>
+                <div className="text-gray-900 dark:text-gray-100 font-semibold">{product.stockQuantity || 0}</div>
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Low Stock Threshold</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Low Stock Threshold</label>
               {isEditing && editedProduct ? (
                 <input
                   type="number"
                   value={editedProduct.lowStockThreshold || 10}
                   onChange={(e) => handleFieldChange('lowStockThreshold', parseInt(e.target.value) || 10)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 />
               ) : (
-                <div className="text-gray-900">{product.lowStockThreshold || 10}</div>
+                <div className="text-gray-900 dark:text-gray-100">{product.lowStockThreshold || 10}</div>
               )}
             </div>
           </div>
         </div>
 
         {/* Category */}
-        <div className="border-t border-gray-200 pt-6">
-          <h4 className="text-lg font-semibold text-gray-900 mb-4">Category</h4>
+        <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+          <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Category</h4>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
             {isEditing && editedProduct ? (
               <select
                 value={editedProduct.categorySlug || ''}
                 onChange={(e) => {
-                  const category = categories?.find(c => c.slug === e.target.value);
-                  handleFieldChange('categorySlug', e.target.value || undefined);
-                  if (category) {
-                    handleFieldChange('categoryId', category.id);
-                  }
+                  if (!editedProduct) return;
+                  const selectedSlug = e.target.value || undefined;
+                  const category = categories?.find(c => c.slug === selectedSlug);
+                  
+                  // Update both categorySlug and categoryId in a single state update
+                  setEditedProduct({
+                    ...editedProduct,
+                    categorySlug: selectedSlug,
+                    categoryId: category?.id || undefined,
+                  });
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
               >
                 <option value="">Select Category</option>
                 {categories?.map(cat => (
@@ -489,14 +518,14 @@ function BulkUploadPreviewPageContent() {
                 ))}
               </select>
             ) : (
-              <div className="text-gray-900">{product.categorySlug || 'N/A'}</div>
+              <div className="text-gray-900 dark:text-gray-100">{product.categorySlug || 'N/A'}</div>
             )}
           </div>
         </div>
 
         {/* Images */}
-        <div className="border-t border-gray-200 pt-6">
-          <h4 className="text-lg font-semibold text-gray-900 mb-4">
+        <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+          <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
             Images {product.images ? `(${product.images.length})` : '(0)'}
           </h4>
           {isEditing && editedProduct ? (
@@ -506,7 +535,7 @@ function BulkUploadPreviewPageContent() {
                   type="url"
                   id="newImageUrl"
                   placeholder="Enter image URL"
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
@@ -529,7 +558,7 @@ function BulkUploadPreviewPageContent() {
                       input.value = '';
                     }
                   }}
-                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
+                  className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition"
                 >
                   Add Image
                 </button>
@@ -537,7 +566,7 @@ function BulkUploadPreviewPageContent() {
               {editedProduct.images && editedProduct.images.length > 0 && (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {editedProduct.images.map((image, idx) => (
-                    <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 group">
+                    <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 group">
                       <img
                         src={image}
                         alt={`Product image ${idx + 1}`}
@@ -564,7 +593,7 @@ function BulkUploadPreviewPageContent() {
           ) : product.images && product.images.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {product.images.map((image, idx) => (
-                <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border border-gray-200">
+                <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
                   <img
                     src={image}
                     alt={`Product image ${idx + 1}`}
@@ -577,114 +606,114 @@ function BulkUploadPreviewPageContent() {
               ))}
             </div>
           ) : (
-            <div className="text-gray-400">No images</div>
+            <div className="text-gray-400 dark:text-gray-500">No images</div>
           )}
         </div>
 
         {/* Flags */}
-        <div className="border-t border-gray-200 pt-6">
-          <h4 className="text-lg font-semibold text-gray-900 mb-4">Product Flags</h4>
+        <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+          <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Product Flags</h4>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="flex items-center space-x-2">
-              <label className="text-sm font-medium text-gray-700">Active:</label>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Active:</label>
               {isEditing && editedProduct ? (
                 <input
                   type="checkbox"
                   checked={editedProduct.isActive}
                   onChange={(e) => handleFieldChange('isActive', e.target.checked)}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:bg-gray-700"
                 />
               ) : product.isActive ? (
-                <CheckCircle className="w-5 h-5 text-green-600" />
+                <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
               ) : (
-                <XCircle className="w-5 h-5 text-red-600" />
+                <XCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
               )}
             </div>
             <div className="flex items-center space-x-2">
-              <label className="text-sm font-medium text-gray-700">Featured:</label>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Featured:</label>
               {isEditing && editedProduct ? (
                 <input
                   type="checkbox"
                   checked={editedProduct.isFeatured}
                   onChange={(e) => handleFieldChange('isFeatured', e.target.checked)}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:bg-gray-700"
                 />
               ) : product.isFeatured ? (
-                <CheckCircle className="w-5 h-5 text-green-600" />
+                <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
               ) : (
-                <XCircle className="w-5 h-5 text-gray-400" />
+                <XCircle className="w-5 h-5 text-gray-400 dark:text-gray-500" />
               )}
             </div>
             <div className="flex items-center space-x-2">
-              <label className="text-sm font-medium text-gray-700">Requires Prescription:</label>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Requires Prescription:</label>
               {isEditing && editedProduct ? (
                 <input
                   type="checkbox"
                   checked={editedProduct.requiresPrescription}
                   onChange={(e) => handleFieldChange('requiresPrescription', e.target.checked)}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:bg-gray-700"
                 />
               ) : product.requiresPrescription ? (
-                <CheckCircle className="w-5 h-5 text-green-600" />
+                <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
               ) : (
-                <XCircle className="w-5 h-5 text-gray-400" />
+                <XCircle className="w-5 h-5 text-gray-400 dark:text-gray-500" />
               )}
             </div>
           </div>
         </div>
 
         {/* Manufacturer */}
-        <div className="border-t border-gray-200 pt-6">
-          <h4 className="text-lg font-semibold text-gray-900 mb-4">Manufacturer</h4>
+        <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+          <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Manufacturer</h4>
           {isEditing && editedProduct ? (
             <input
               type="text"
               value={editedProduct.manufacturer || ''}
               onChange={(e) => handleFieldChange('manufacturer', e.target.value || undefined)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
               placeholder="Optional"
             />
           ) : product.manufacturer ? (
-            <div className="text-gray-900">{product.manufacturer}</div>
+            <div className="text-gray-900 dark:text-gray-100">{product.manufacturer}</div>
           ) : (
-            <div className="text-gray-400">Not set</div>
+            <div className="text-gray-400 dark:text-gray-500">Not set</div>
           )}
         </div>
 
         {/* SEO */}
-        <div className="border-t border-gray-200 pt-6">
-          <h4 className="text-lg font-semibold text-gray-900 mb-4">SEO Information</h4>
+        <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+          <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">SEO Information</h4>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Meta Title</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Meta Title</label>
               {isEditing && editedProduct ? (
                 <input
                   type="text"
                   value={editedProduct.metaTitle || ''}
                   onChange={(e) => handleFieldChange('metaTitle', e.target.value || undefined)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   placeholder="Optional"
                 />
               ) : product.metaTitle ? (
-                <div className="text-gray-900">{product.metaTitle}</div>
+                <div className="text-gray-900 dark:text-gray-100">{product.metaTitle}</div>
               ) : (
-                <div className="text-gray-400">Not set</div>
+                <div className="text-gray-400 dark:text-gray-500">Not set</div>
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Meta Description</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Meta Description</label>
               {isEditing && editedProduct ? (
                 <textarea
                   value={editedProduct.metaDescription || ''}
                   onChange={(e) => handleFieldChange('metaDescription', e.target.value || undefined)}
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   placeholder="Optional"
                 />
               ) : product.metaDescription ? (
-                <div className="text-gray-900">{product.metaDescription}</div>
+                <div className="text-gray-900 dark:text-gray-100">{product.metaDescription}</div>
               ) : (
-                <div className="text-gray-400">Not set</div>
+                <div className="text-gray-400 dark:text-gray-500">Not set</div>
               )}
             </div>
           </div>
@@ -692,10 +721,10 @@ function BulkUploadPreviewPageContent() {
       </div>
 
       {/* Navigation Footer */}
-      <div className="bg-white rounded-xl border border-gray-200 p-4 flex items-center justify-between">
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 flex items-center justify-between">
         <Link
           href="/dashboard/products/new"
-          className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+          className="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition text-gray-700 dark:text-gray-300"
         >
           Back to Upload
         </Link>
@@ -703,14 +732,14 @@ function BulkUploadPreviewPageContent() {
           <button
             onClick={handlePrevious}
             disabled={productIndex === 0}
-            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 dark:text-gray-300"
           >
             Previous
           </button>
           <button
             onClick={handleNext}
             disabled={productIndex === allProducts.length - 1}
-            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 dark:text-gray-300"
           >
             Next
           </button>
@@ -725,8 +754,8 @@ export default function BulkUploadPreviewPage() {
     <Suspense fallback={
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <p className="text-gray-500 mt-4">Loading...</p>
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 dark:border-blue-400"></div>
+          <p className="text-gray-500 dark:text-gray-400 mt-4">Loading...</p>
         </div>
       </div>
     }>

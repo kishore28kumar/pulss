@@ -57,7 +57,15 @@ const getDateRange = (period?: string, startDate?: string, endDate?: string): { 
 
 export const getDashboardStats = asyncHandler(
   async (req: Request, res: Response) => {
-    if (!req.tenantId) {
+    // SUPER_ADMIN can see aggregated stats across all tenants
+    // Other roles require a tenantId
+    if (!req.user) {
+      throw new AppError('Authentication required', 401);
+    }
+
+    const isSuperAdmin = req.user.role === 'SUPER_ADMIN';
+    
+    if (!isSuperAdmin && !req.tenantId) {
       throw new AppError('Tenant not found', 400);
     }
 
@@ -66,12 +74,16 @@ export const getDashboardStats = asyncHandler(
 
     // Get orders for date range
     const ordersWhere: any = {
-      tenantId: req.tenantId,
       createdAt: {
         gte: start,
         lte: end,
       },
     };
+
+    // For non-SUPER_ADMIN, filter by tenantId
+    if (!isSuperAdmin && req.tenantId) {
+      ordersWhere.tenantId = req.tenantId;
+    }
 
     // Calculate stats
     const [
@@ -99,22 +111,18 @@ export const getDashboardStats = asyncHandler(
 
       // Total customers
       prisma.customers.count({
-        where: {
-          tenantId: req.tenantId,
-        },
+        where: isSuperAdmin ? {} : { tenantId: req.tenantId },
       }),
 
       // Total products
       prisma.products.count({
-        where: {
-          tenantId: req.tenantId,
-        },
+        where: isSuperAdmin ? {} : { tenantId: req.tenantId },
       }),
 
       // Orders for previous period (for comparison)
       prisma.orders.findMany({
         where: {
-          tenantId: req.tenantId,
+          ...(isSuperAdmin ? {} : { tenantId: req.tenantId }),
           createdAt: {
             gte: new Date(start.getTime() - (end.getTime() - start.getTime())),
             lt: start,

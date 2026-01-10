@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { prisma } from '@pulss/database';
 import { ApiResponse, CreateOrderDTO, UpdateOrderStatusDTO, PaginatedResponse } from '@pulss/types';
 import { AppError, asyncHandler } from '../middleware/errorHandler';
+import { format } from 'date-fns';
 
 // ============================================
 // ORDER ID AND ORDER NUMBER GENERATORS
@@ -531,6 +532,177 @@ export const getCustomerOrders = asyncHandler(
     };
 
     res.json(response);
+  }
+);
+
+// ============================================
+// EXPORT ORDERS (CSV)
+// ============================================
+
+export const exportOrders = asyncHandler(
+  async (req: Request, res: Response) => {
+    if (!req.user) {
+      throw new AppError('Authentication required', 401);
+    }
+
+    if (!req.tenantId) {
+      throw new AppError('Tenant not found', 400);
+    }
+
+    const {
+      status,
+      paymentStatus,
+      startDate,
+      endDate,
+      search,
+      limit = 10000, // Maximum orders to export
+    } = req.query as any;
+
+    // Enforce maximum limit to prevent memory exhaustion
+    const maxLimit = 10000;
+    const exportLimit = Math.min(parseInt(limit) || maxLimit, maxLimit);
+
+    const where: any = {
+      tenantId: req.tenantId,
+    };
+
+    if (status) where.status = status;
+    if (paymentStatus) where.paymentStatus = paymentStatus;
+
+    if (startDate || endDate) {
+      where.createdAt = {};
+      if (startDate) where.createdAt.gte = new Date(startDate);
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        where.createdAt.lte = end;
+      }
+    }
+
+    if (search) {
+      where.OR = [
+        { orderNumber: { contains: search, mode: 'insensitive' } },
+        { customers: { users: { email: { contains: search, mode: 'insensitive' } } } },
+      ];
+    }
+
+    // Fetch orders matching the filters with limit
+    const orders = await prisma.orders.findMany({
+      where,
+      include: {
+        customers: {
+          include: {
+            users: {
+              select: {
+                firstName: true,
+                lastName: true,
+                email: true,
+                phone: true,
+              },
+            },
+          },
+        },
+        order_items: {
+          include: {
+            products: {
+              select: {
+                name: true,
+                sku: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: exportLimit,
+    });
+
+    // CSV Headers
+    const headers = [
+      'Order Number',
+      'Order Date',
+      'Customer Name',
+      'Customer Email',
+      'Customer Phone',
+      'Status',
+      'Payment Status',
+      'Subtotal',
+      'Tax',
+      'Shipping',
+      'Discount',
+      'Total',
+      'Items Count',
+      'Product Names',
+      'SKUs',
+    ];
+
+    // Helper to escape CSV values and prevent CSV injection
+    const escapeCSV = (value: string | number | null | undefined): string => {
+      if (value === null || value === undefined) return '';
+      const str = String(value);
+      // Prevent CSV injection by prepending single quote to formula characters
+      const sanitized = /^[=+\-@]/.test(str) ? `'${str}` : str;
+      if (sanitized.includes(',') || sanitized.includes('"') || sanitized.includes('\n')) {
+        return `"${sanitized.replace(/"/g, '""')}"`;
+      }
+      return sanitized;
+    };
+
+    // Convert orders to CSV rows
+    const csvRows = orders.map((order) => {
+      const customerName = order.customers?.users
+        ? `${order.customers.users.firstName || ''} ${order.customers.users.lastName || ''}`.trim() || 'N/A'
+        : 'N/A';
+      const customerEmail = order.customers?.users?.email || 'N/A';
+      const customerPhone = order.customers?.users?.phone || order.customers?.phone || 'N/A';
+      const orderDate = order.createdAt ? format(new Date(order.createdAt), 'yyyy-MM-dd HH:mm:ss') : 'N/A';
+      const itemsCount = order.order_items.reduce((sum, item) => sum + item.quantity, 0);
+      const productNames = order.order_items.map(item => item.products?.name || item.name || 'N/A').join('; ');
+      const skus = order.order_items.map(item => item.products?.sku || 'N/A').filter(sku => sku !== 'N/A').join('; ') || 'N/A';
+
+      return [
+        escapeCSV(order.orderNumber),
+        escapeCSV(orderDate),
+        escapeCSV(customerName),
+        escapeCSV(customerEmail),
+        escapeCSV(customerPhone),
+        escapeCSV(order.status),
+        escapeCSV(order.paymentStatus),
+        escapeCSV(order.subtotal?.toFixed(2) || '0.00'),
+        escapeCSV(order.tax?.toFixed(2) || '0.00'),
+        escapeCSV(order.shipping?.toFixed(2) || '0.00'),
+        escapeCSV(order.discount?.toFixed(2) || '0.00'),
+        escapeCSV(order.total?.toFixed(2) || '0.00'),
+        escapeCSV(itemsCount),
+        escapeCSV(productNames),
+        escapeCSV(skus),
+      ].join(',');
+    });
+
+    // Combine headers and rows
+    const csvContent = [headers.join(','), ...csvRows].join('\n');
+
+    // Generate filename with date range if applicable
+    let filename = `orders_${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    if (startDate && endDate) {
+      const start = format(new Date(startDate), 'yyyy-MM-dd');
+      const end = format(new Date(endDate), 'yyyy-MM-dd');
+      filename = `orders_${start}_to_${end}.csv`;
+    } else if (startDate) {
+      const start = format(new Date(startDate), 'yyyy-MM-dd');
+      filename = `orders_from_${start}.csv`;
+    } else if (endDate) {
+      const end = format(new Date(endDate), 'yyyy-MM-dd');
+      filename = `orders_until_${end}.csv`;
+    }
+
+    // Set response headers for CSV download
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Cache-Control', 'no-cache');
+
+    // Send CSV content with BOM for Excel UTF-8 support
+    res.send('\ufeff' + csvContent);
   }
 );
 

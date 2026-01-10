@@ -8,6 +8,7 @@ import {
   getTopSearchLocations,
   getTenantPerformance,
 } from '../controllers/analyticsController';
+import { exportAnalytics } from '../controllers/analyticsExportController';
 import { authenticateUser, requireAdminOrStaff } from '../middleware/authMiddleware';
 import { requireTenant, ensureTenantAccess } from '../middleware/tenantMiddleware';
 import { requirePermission, Permission } from '../middleware/permissionMiddleware';
@@ -36,6 +37,7 @@ router.get('/customers', requirePermission(Permission.ANALYTICS_VIEW), getCustom
 router.get('/global-top-searches', getGlobalTopSearches);
 router.get('/top-search-locations', getTopSearchLocations);
 router.get('/tenant-performance', getTenantPerformance);
+router.get('/export', requirePermission(Permission.ANALYTICS_VIEW), exportAnalytics); // Export analytics (SUPER_ADMIN only)
 
 export default router;
 

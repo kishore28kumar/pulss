@@ -321,6 +321,71 @@ export const getCurrentUser = asyncHandler(
   }
 );
 
+// ============================================
+// UPDATE USER PROFILE (Admin/Staff)
+// ============================================
+
+export const updateUserProfile = asyncHandler(
+  async (req: Request, res: Response) => {
+    if (!req.user) {
+      throw new AppError('Not authenticated', 401);
+    }
+
+    const { firstName, lastName, phone } = req.body;
+
+    // Validate phone number format if provided
+    if (phone !== undefined && phone !== null && phone !== '') {
+      // Basic phone validation: allows digits, spaces, hyphens, parentheses, and + for international
+      // Minimum 10 digits, maximum 20 characters
+      const phoneRegex = /^[\+]?[(]?[0-9]{1,4}[)]?[-\s\.]?[(]?[0-9]{1,4}[)]?[-\s\.]?[0-9]{1,9}$/;
+      const digitsOnly = phone.replace(/\D/g, '');
+      if (digitsOnly.length < 10 || digitsOnly.length > 15 || !phoneRegex.test(phone)) {
+        throw new AppError('Invalid phone number format. Please provide a valid phone number (10-15 digits).', 400);
+      }
+    }
+
+    // Update user profile
+    const updatedUser = await prisma.users.update({
+      where: { id: req.user.userId },
+      data: {
+        ...(firstName !== undefined && { firstName }),
+        ...(lastName !== undefined && { lastName }),
+        ...(phone !== undefined && { phone: phone || null }),
+        updatedAt: new Date(),
+      },
+      include: {
+        tenants: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            logoUrl: true,
+            primaryColor: true,
+            secondaryColor: true,
+          },
+        },
+      },
+    });
+
+    const response: ApiResponse = {
+      success: true,
+      data: {
+        id: updatedUser.id,
+        email: updatedUser.email,
+        firstName: updatedUser.firstName || '',
+        lastName: updatedUser.lastName || '',
+        phone: updatedUser.phone || '',
+        avatar: updatedUser.avatar || '',
+        role: updatedUser.role,
+        tenant: updatedUser.tenants || undefined,
+      },
+      message: 'Profile updated successfully',
+    };
+
+    res.json(response);
+  }
+);
+
 export const getCurrentCustomer = asyncHandler(
   async (req: Request, res: Response) => {
     if (!req.customerId) {

@@ -56,6 +56,11 @@ function LoginPageContent() {
       localStorage.setItem('accessToken', tokens.accessToken);
       localStorage.setItem('refreshToken', tokens.refreshToken);
       localStorage.setItem('user', JSON.stringify(user));
+      
+      // Dispatch custom event for same-tab updates (not StorageEvent which is for cross-tab)
+      window.dispatchEvent(new CustomEvent('userUpdated', {
+        detail: { user },
+      }));
 
       toast.success('Login successful!', { duration: 3000 });
       
