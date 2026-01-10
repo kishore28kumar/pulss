@@ -48,6 +48,7 @@ export const errorHandler = (
   const origin = req.headers.origin;
   if (origin) {
     // Import getCorsOrigins dynamically to avoid circular dependency
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { getCorsOrigins } = require('../config/urls');
     const allowedOrigins = getCorsOrigins();
     const FALLBACK_ORIGINS = [
@@ -85,7 +86,7 @@ export const errorHandler = (
   res.status(statusCode).json(response);
 };
 
-export const asyncHandler = (fn: Function) => {
+export const asyncHandler = (fn: (req: Request, res: Response, next: NextFunction) => any) => {
   return (req: Request, res: Response, next: NextFunction) => {
     Promise.resolve(fn(req, res, next)).catch(next);
   };

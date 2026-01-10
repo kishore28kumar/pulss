@@ -4,6 +4,7 @@ import { JWTPayload } from '@pulss/types';
 import { AppError } from './errorHandler';
 
 // Extend Express Request to include user
+/* eslint-disable @typescript-eslint/no-namespace */
 declare global {
   namespace Express {
     interface Request {
@@ -17,6 +18,7 @@ declare global {
     }
   }
 }
+/* eslint-enable @typescript-eslint/no-namespace */
 
 /**
  * Optional authentication - sets req.user if token is present, but doesn't fail if missing
@@ -63,10 +65,10 @@ export const authenticateUser = (req: Request, _res: Response, next: NextFunctio
     // Check both lowercase and capitalized versions (Express normalizes headers)
     // Express normalizes headers to lowercase, but check both to be safe
     const authHeaderRaw = req.headers.authorization || req.headers.Authorization;
-    
+
     // Normalize to string (Express headers can be string | string[])
     const authHeader = Array.isArray(authHeaderRaw) ? authHeaderRaw[0] : authHeaderRaw;
-    
+
     // Log ALL headers for debugging (only for chat conversations endpoint)
     if (req.url?.includes('/chat/conversations')) {
       console.log('[Auth] Request received:', {
@@ -79,7 +81,7 @@ export const authenticateUser = (req: Request, _res: Response, next: NextFunctio
         AuthorizationHeader: req.headers.Authorization,
       });
     }
-    
+
     const token = authHeader && typeof authHeader === 'string' ? authHeader.replace(/^Bearer\s+/i, '') : null;
 
     if (!token) {

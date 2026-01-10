@@ -176,7 +176,7 @@ export default function AdDetailPage() {
                                             <span className="text-[11px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-500">Official Feedback</span>
                                         </div>
                                         <p className="text-sm italic text-amber-900/80 dark:text-amber-200/80 leading-relaxed font-medium">
-                                            "{data.adminNote}"
+                                            &ldquo;{data.adminNote}&rdquo;
                                         </p>
                                     </div>
                                 </div>

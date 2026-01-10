@@ -3,7 +3,7 @@ import { getApiUrl } from './config/urls';
 
 // Get API URL - this is evaluated at module load time
 // For runtime changes, you'll need to rebuild the app
-let API_URL = getApiUrl();
+const API_URL = getApiUrl();
 
 // Log the API URL being used (for debugging)
 if (typeof window !== 'undefined') {
@@ -38,16 +38,16 @@ api.interceptors.request.use(
     if (isCircuitOpen) {
       return Promise.reject(new Error('Circuit breaker open - too many authentication failures'));
     }
-    
+
     // Ensure headers object exists
     if (!config.headers) {
       config.headers = {} as any;
     }
-    
+
     // Always get token from localStorage and set Authorization header
     // This ensures we always use the freshest token, especially after refresh
     const token = localStorage.getItem('accessToken');
-    
+
     if (token) {
       // Remove any existing authorization headers first (case-insensitive)
       // Axios normalizes headers, so check all variations
@@ -59,10 +59,10 @@ api.interceptors.request.use(
           }
         });
       }
-      
+
       // Set fresh token
       config.headers.Authorization = `Bearer ${token}`;
-      
+
       console.log('[API] Setting Authorization header', {
         url: config.url,
         method: config.method,
@@ -127,9 +127,9 @@ api.interceptors.response.use(
     const originalRequest = error.config;
 
     // Skip interceptor logic for login/auth endpoints to prevent redirect loops
-    const isAuthEndpoint = originalRequest?.url?.includes('/auth/login') || 
-                          originalRequest?.url?.includes('/auth/refresh') ||
-                          originalRequest?.url?.includes('/auth/customer/login');
+    const isAuthEndpoint = originalRequest?.url?.includes('/auth/login') ||
+      originalRequest?.url?.includes('/auth/refresh') ||
+      originalRequest?.url?.includes('/auth/customer/login');
 
     if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
       // If we're already refreshing, wait for it to complete
@@ -179,10 +179,10 @@ api.interceptors.response.use(
         // IMPORTANT: Update localStorage FIRST
         // Then create retry config with Authorization header set DIRECTLY
         // This ensures the token is definitely sent, even if interceptor has issues
-        
+
         // Build clean headers object
         const retryHeaders: any = {};
-        
+
         // Copy non-authorization headers from original request
         if (originalRequest.headers) {
           Object.keys(originalRequest.headers).forEach(key => {
@@ -191,10 +191,10 @@ api.interceptors.response.use(
             }
           });
         }
-        
+
         // CRITICAL: Set Authorization header directly with fresh token
         retryHeaders.Authorization = `Bearer ${accessToken}`;
-        
+
         const retryConfig: any = {
           method: originalRequest.method,
           url: originalRequest.url,
@@ -204,7 +204,7 @@ api.interceptors.response.use(
           data: originalRequest.data,
           _retry: true, // Mark as retry to prevent infinite loops
         };
-        
+
         console.log('[API] Retrying request with refreshed token', {
           url: retryConfig.url,
           method: retryConfig.method,
@@ -212,7 +212,7 @@ api.interceptors.response.use(
           authHeaderPrefix: retryConfig.headers.Authorization?.substring(0, 30),
           tokenInStorage: !!localStorage.getItem('accessToken'),
         });
-        
+
         // Retry using the api instance - interceptor will also set it, but we have it set directly too
         return api.request(retryConfig);
       } catch (err) {
@@ -228,12 +228,12 @@ api.interceptors.response.use(
         return Promise.reject(err);
       }
     }
-    
+
     // If we already retried and still got 401, don't retry again - open circuit breaker
     if (error.response?.status === 401 && originalRequest._retry && !isAuthEndpoint) {
       authFailureCount++;
       console.error(`Token refresh succeeded but request still failed (${authFailureCount}/${MAX_AUTH_FAILURES})`);
-      
+
       if (authFailureCount >= MAX_AUTH_FAILURES) {
         console.error('Opening circuit breaker - too many authentication failures');
         isCircuitOpen = true;
@@ -246,10 +246,10 @@ api.interceptors.response.use(
           window.location.href = '/login';
         }
       }
-      
+
       return Promise.reject(new Error('Authentication failed after token refresh'));
     }
-    
+
     // Track auth failures even for first attempt (before retry)
     if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
       authFailureCount++;

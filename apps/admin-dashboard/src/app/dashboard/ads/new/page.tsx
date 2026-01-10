@@ -72,7 +72,7 @@ export default function NewAdPage() {
                 </Link>
                 <div>
                     <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Request New Ad</h1>
-                    <p className="text-sm text-gray-500 font-medium italic">Create a new advertisement campaign for your store</p>
+                    <p className="text-sm text-gray-500 font-medium">Create a new advertisement campaign for your store</p>
                 </div>
             </div>
 

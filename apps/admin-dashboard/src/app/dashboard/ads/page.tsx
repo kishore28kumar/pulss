@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Search, Check, X, AlertCircle, Eye, Trash2 } from 'lucide-react';
+import { Plus, Check, X, AlertCircle, Eye } from 'lucide-react';
 import api from '@/lib/api';
 import { toast } from 'sonner';
 import { Permission, isSuperAdmin } from '@/lib/permissions';
@@ -30,7 +30,6 @@ interface AdRequest {
 
 export default function AdsPage() {
     const queryClient = useQueryClient();
-    const [search, setSearch] = useState('');
     const [page, setPage] = useState(1);
     const [statusFilter, setStatusFilter] = useState('');
     const [mounted, setMounted] = useState(false);
@@ -49,7 +48,7 @@ export default function AdsPage() {
 
     // Fetch Ad Requests
     const { data, isLoading } = useQuery({
-        queryKey: ['ads', { search, page, status: statusFilter }],
+        queryKey: ['ads', { page, status: statusFilter }],
         queryFn: async () => {
             const params: any = { page, limit: 10 };
             if (statusFilter) params.status = statusFilter;
@@ -269,7 +268,7 @@ export default function AdsPage() {
                         <div className="p-6">
                             <div className="flex items-center gap-3 mb-4">
                                 <div className={`p-2 rounded-full ${targetStatus === 'APPROVED' ? 'bg-green-100 text-green-600' :
-                                        targetStatus === 'REJECTED' ? 'bg-red-100 text-red-600' : 'bg-orange-100 text-orange-600'
+                                    targetStatus === 'REJECTED' ? 'bg-red-100 text-red-600' : 'bg-orange-100 text-orange-600'
                                     }`}>
                                     {targetStatus === 'APPROVED' ? <Check className="w-5 h-5" /> :
                                         targetStatus === 'REJECTED' ? <X className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
@@ -309,8 +308,8 @@ export default function AdsPage() {
                                 onClick={confirmStatusUpdate}
                                 disabled={updateStatusMutation.isPending}
                                 className={`px-5 py-2 text-sm font-semibold text-white rounded-lg shadow-md transition transform active:scale-95 disabled:opacity-50 ${targetStatus === 'APPROVED' ? 'bg-green-600 hover:bg-green-700 shadow-green-500/20' :
-                                        targetStatus === 'REJECTED' ? 'bg-red-600 hover:bg-red-700 shadow-red-500/20' :
-                                            'bg-orange-600 hover:bg-orange-700 shadow-orange-500/20'
+                                    targetStatus === 'REJECTED' ? 'bg-red-600 hover:bg-red-700 shadow-red-500/20' :
+                                        'bg-orange-600 hover:bg-orange-700 shadow-orange-500/20'
                                     }`}
                             >
                                 {updateStatusMutation.isPending ? 'Updating...' : `Confirm ${targetStatus.charAt(0) + targetStatus.slice(1).toLowerCase()}`}
