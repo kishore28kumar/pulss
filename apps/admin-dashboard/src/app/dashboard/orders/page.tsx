@@ -9,8 +9,7 @@ import {
   ShoppingBag, 
   IndianRupee, 
   Package, 
-  Download,
-  Loader2
+  Download
 } from 'lucide-react';
 import api from '@/lib/api';
 import { formatCurrency, formatDateTime } from '@/lib/utils';
