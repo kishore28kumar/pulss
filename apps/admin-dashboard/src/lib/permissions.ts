@@ -5,41 +5,48 @@ export enum Permission {
   PRODUCTS_CREATE = 'products:create',
   PRODUCTS_UPDATE = 'products:update',
   PRODUCTS_DELETE = 'products:delete',
-  
+
   // Categories
   CATEGORIES_VIEW = 'categories:view',
   CATEGORIES_CREATE = 'categories:create',
   CATEGORIES_UPDATE = 'categories:update',
   CATEGORIES_DELETE = 'categories:delete',
-  
+
+  // Ad Management
+  ADS_VIEW = 'ads:view',
+  ADS_CREATE = 'ads:create',
+  ADS_UPDATE = 'ads:update',
+  ADS_DELETE = 'ads:delete',
+  ADS_APPROVE = 'ads:approve',
+
   // Orders
   ORDERS_VIEW = 'orders:view',
   ORDERS_UPDATE = 'orders:update',
   ORDERS_EXPORT = 'orders:export',
   ORDERS_CANCEL = 'orders:cancel',
   ORDERS_REFUND = 'orders:refund',
-  
+
   // Customers
   CUSTOMERS_VIEW = 'customers:view',
   CUSTOMERS_EDIT = 'customers:edit',
-  
+
   // Settings
   SETTINGS_VIEW = 'settings:view',
   SETTINGS_UPDATE = 'settings:update',
-  
+
   // Staff
   STAFF_VIEW = 'staff:view',
   STAFF_INVITE = 'staff:invite',
   STAFF_UPDATE = 'staff:update',
   STAFF_DELETE = 'staff:delete',
-  
+
   // Analytics
   ANALYTICS_VIEW = 'analytics:view',
-  
+
   // Reports
   REPORTS_VIEW = 'reports:view',
   REPORTS_EXPORT = 'reports:export',
-  
+
   // Tenant Management
   TENANTS_VIEW = 'tenants:view',
   TENANTS_CREATE = 'tenants:create',
@@ -78,6 +85,11 @@ const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     Permission.TENANTS_CREATE,
     Permission.TENANTS_UPDATE,
     Permission.TENANTS_DELETE,
+    Permission.TENANTS_UPDATE,
+    Permission.TENANTS_DELETE,
+    Permission.ADS_VIEW,
+    Permission.ADS_APPROVE,
+    Permission.ADS_DELETE,
   ],
   ADMIN: [
     Permission.PRODUCTS_VIEW,
@@ -103,6 +115,10 @@ const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     Permission.ANALYTICS_VIEW,
     Permission.REPORTS_VIEW,
     Permission.REPORTS_EXPORT,
+    Permission.ADS_VIEW,
+    Permission.ADS_CREATE,
+    Permission.ADS_UPDATE,
+    Permission.ADS_DELETE,
   ],
   STAFF: [
     Permission.PRODUCTS_VIEW,
@@ -137,7 +153,7 @@ export const getUserRole = (): string | null => {
 export const hasPermission = (permission: Permission): boolean => {
   const role = getUserRole();
   if (!role) return false;
-  
+
   const permissions = ROLE_PERMISSIONS[role] || [];
   return permissions.includes(permission);
 };

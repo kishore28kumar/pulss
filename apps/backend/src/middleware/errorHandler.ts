@@ -29,12 +29,13 @@ export const errorHandler = (
   }
 
   // Log error details
-  console.error('❌ Error:', {
-    message: err.message,
-    stack: err.stack,
+  console.error('❌ Error details:', err);
+  console.error('❌ Request context:', {
     method: req.method,
     url: req.url,
     statusCode,
+    tenantId: (req as any).tenantId,
+    body: req.body,
   });
 
   // Don't send response if headers already sent
@@ -56,13 +57,13 @@ export const errorHandler = (
       'https://pulss-storefront.onrender.com',
     ];
     const allAllowedOrigins = [...new Set([...allowedOrigins, ...FALLBACK_ORIGINS])];
-    
+
     const normalizedOrigin = origin.replace(/\/$/, '');
     const isAllowed = allAllowedOrigins.some(allowed => {
       const normalizedAllowed = allowed.replace(/\/$/, '');
       return normalizedAllowed === normalizedOrigin || allowed === origin;
     }) || (process.env.NODE_ENV !== 'production' && origin.includes('localhost'));
-    
+
     if (isAllowed) {
       res.setHeader('Access-Control-Allow-Origin', origin);
       res.setHeader('Access-Control-Allow-Credentials', 'true');

@@ -226,46 +226,46 @@ export default function DashboardPage() {
   // Format stats
   const stats = statsData
     ? [
-    {
-      name: 'Total Revenue',
-          value: formatCurrency(statsData.totalRevenue),
-          change: `${statsData.revenueChange >= 0 ? '+' : ''}${statsData.revenueChange.toFixed(1)}%`,
-          trending: statsData.revenueChange >= 0 ? 'up' : 'down',
-      icon: IndianRupee,
-      color: 'bg-green-500',
-    },
-    {
-      name: 'Total Orders',
-          value: statsData.totalOrders.toLocaleString(),
-          change: `${statsData.ordersChange >= 0 ? '+' : ''}${statsData.ordersChange.toFixed(1)}%`,
-          trending: statsData.ordersChange >= 0 ? 'up' : 'down',
-      icon: ShoppingCart,
-      color: 'bg-blue-500',
-    },
-    {
-      name: 'Products',
-          value: statsData.totalProducts.toLocaleString(),
-          change: `${statsData.productsChange >= 0 ? '+' : ''}${statsData.productsChange.toFixed(1)}%`,
-          trending: statsData.productsChange >= 0 ? 'up' : 'down',
-      icon: Package,
-      color: 'bg-purple-500',
-    },
-    {
-      name: 'Customers',
-          value: statsData.totalCustomers.toLocaleString(),
-          change: `${statsData.customersChange >= 0 ? '+' : ''}${statsData.customersChange.toFixed(1)}%`,
-          trending: statsData.customersChange >= 0 ? 'up' : 'down',
-      icon: Users,
-      color: 'bg-orange-500',
-    },
-      ]
+      {
+        name: 'Total Revenue',
+        value: formatCurrency(statsData.totalRevenue),
+        change: `${statsData.revenueChange >= 0 ? '+' : ''}${statsData.revenueChange.toFixed(1)}%`,
+        trending: statsData.revenueChange >= 0 ? 'up' : 'down',
+        icon: IndianRupee,
+        color: 'bg-green-500',
+      },
+      {
+        name: 'Total Orders',
+        value: statsData.totalOrders.toLocaleString(),
+        change: `${statsData.ordersChange >= 0 ? '+' : ''}${statsData.ordersChange.toFixed(1)}%`,
+        trending: statsData.ordersChange >= 0 ? 'up' : 'down',
+        icon: ShoppingCart,
+        color: 'bg-blue-500',
+      },
+      {
+        name: 'Products',
+        value: statsData.totalProducts.toLocaleString(),
+        change: `${statsData.productsChange >= 0 ? '+' : ''}${statsData.productsChange.toFixed(1)}%`,
+        trending: statsData.productsChange >= 0 ? 'up' : 'down',
+        icon: Package,
+        color: 'bg-purple-500',
+      },
+      {
+        name: 'Customers',
+        value: statsData.totalCustomers.toLocaleString(),
+        change: `${statsData.customersChange >= 0 ? '+' : ''}${statsData.customersChange.toFixed(1)}%`,
+        trending: statsData.customersChange >= 0 ? 'up' : 'down',
+        icon: Users,
+        color: 'bg-orange-500',
+      },
+    ]
     : [];
 
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
+        <div className="flex-1">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Dashboard</h1>
           <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-1">Overview of your store performance</p>
         </div>
@@ -316,28 +316,27 @@ export default function DashboardPage() {
           ))
         ) : (
           stats.map((stat) => (
-          <div
-            key={stat.name}
-            className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <div className={`${stat.color} w-12 h-12 rounded-lg flex items-center justify-center`}>
-                <stat.icon className="w-6 h-6 text-white" />
+            <div
+              key={stat.name}
+              className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className={`${stat.color} w-12 h-12 rounded-lg flex items-center justify-center`}>
+                  <stat.icon className="w-6 h-6 text-white" />
+                </div>
+                <div className={`flex items-center text-sm font-medium ${stat.trending === 'up' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                  }`}>
+                  {stat.trending === 'up' ? (
+                    <TrendingUp className="w-4 h-4 mr-1" />
+                  ) : (
+                    <TrendingDown className="w-4 h-4 mr-1" />
+                  )}
+                  {stat.change}
+                </div>
               </div>
-              <div className={`flex items-center text-sm font-medium ${
-                stat.trending === 'up' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
-              }`}>
-                {stat.trending === 'up' ? (
-                  <TrendingUp className="w-4 h-4 mr-1" />
-                ) : (
-                  <TrendingDown className="w-4 h-4 mr-1" />
-                )}
-                {stat.change}
-              </div>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stat.value}</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{stat.name}</p>
             </div>
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stat.value}</h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{stat.name}</p>
-          </div>
           ))
         )}
       </div>
@@ -348,61 +347,60 @@ export default function DashboardPage() {
         {mounted && userRole !== 'SUPER_ADMIN' && (
           <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Recent Orders</h2>
-          {ordersLoading ? (
-          <div className="space-y-4">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0 animate-pulse">
-                  <div className="flex-1">
-                    <div className="w-32 h-4 bg-gray-200 rounded mb-2"></div>
-                    <div className="w-24 h-3 bg-gray-200 rounded"></div>
+            {ordersLoading ? (
+              <div className="space-y-4">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0 animate-pulse">
+                    <div className="flex-1">
+                      <div className="w-32 h-4 bg-gray-200 rounded mb-2"></div>
+                      <div className="w-24 h-3 bg-gray-200 rounded"></div>
+                    </div>
+                    <div className="text-right">
+                      <div className="w-16 h-4 bg-gray-200 rounded mb-2"></div>
+                      <div className="w-20 h-6 bg-gray-200 rounded"></div>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <div className="w-16 h-4 bg-gray-200 rounded mb-2"></div>
-                    <div className="w-20 h-6 bg-gray-200 rounded"></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : ordersData?.data && ordersData.data.length > 0 ? (
-            <div className="space-y-4">
-              {ordersData.data.map((order) => {
-                const customerName = order.customers
-                  ? `${order.customers.users.firstName} ${order.customers.users.lastName}`
-                  : order.guestName || order.guestEmail || 'Guest';
-                
-                const statusColors: Record<string, string> = {
-                  COMPLETED: 'bg-green-100 text-green-800',
-                  PENDING: 'bg-yellow-100 text-yellow-800',
-                  PROCESSING: 'bg-blue-100 text-blue-800',
-                  SHIPPED: 'bg-purple-100 text-purple-800',
-                  DELIVERED: 'bg-green-100 text-green-800',
-                  CANCELLED: 'bg-red-100 text-red-800',
-                };
-
-                return (
-                  <div key={order.id} className="flex items-center justify-between py-3 border-b border-gray-100 dark:border-gray-700 last:border-0">
-                <div>
-                      <p className="font-medium text-gray-900 dark:text-gray-100">{order.orderNumber}</p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">{customerName}</p>
-                </div>
-                <div className="text-right">
-                      <p className="font-medium text-gray-900 dark:text-gray-100">{formatCurrency(order.total)}</p>
-                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                        statusColors[order.status] || 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {order.status}
-                  </span>
-                </div>
+                ))}
               </div>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-              <ShoppingCart className="w-12 h-12 mx-auto mb-2 text-gray-400 dark:text-gray-500" />
-              <p>No orders yet</p>
-          </div>
-          )}
+            ) : ordersData?.data && ordersData.data.length > 0 ? (
+              <div className="space-y-4">
+                {ordersData.data.map((order) => {
+                  const customerName = order.customers
+                    ? `${order.customers.users.firstName} ${order.customers.users.lastName}`
+                    : order.guestName || order.guestEmail || 'Guest';
+
+                  const statusColors: Record<string, string> = {
+                    COMPLETED: 'bg-green-100 text-green-800',
+                    PENDING: 'bg-yellow-100 text-yellow-800',
+                    PROCESSING: 'bg-blue-100 text-blue-800',
+                    SHIPPED: 'bg-purple-100 text-purple-800',
+                    DELIVERED: 'bg-green-100 text-green-800',
+                    CANCELLED: 'bg-red-100 text-red-800',
+                  };
+
+                  return (
+                    <div key={order.id} className="flex items-center justify-between py-3 border-b border-gray-100 dark:border-gray-700 last:border-0">
+                      <div>
+                        <p className="font-medium text-gray-900 dark:text-gray-100">{order.orderNumber}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">{customerName}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-medium text-gray-900 dark:text-gray-100">{formatCurrency(order.total)}</p>
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${statusColors[order.status] || 'bg-gray-100 text-gray-800'
+                          }`}>
+                          {order.status}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                <ShoppingCart className="w-12 h-12 mx-auto mb-2 text-gray-400 dark:text-gray-500" />
+                <p>No orders yet</p>
+              </div>
+            )}
           </div>
         )}
 
@@ -410,40 +408,40 @@ export default function DashboardPage() {
         {mounted && userRole !== 'SUPER_ADMIN' && (
           <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Low Stock Alert</h2>
-          {productsLoading ? (
-          <div className="space-y-4">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0 animate-pulse">
-                  <div className="flex-1">
-                    <div className="w-32 h-4 bg-gray-200 rounded mb-2"></div>
-                    <div className="w-24 h-3 bg-gray-200 rounded"></div>
+            {productsLoading ? (
+              <div className="space-y-4">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0 animate-pulse">
+                    <div className="flex-1">
+                      <div className="w-32 h-4 bg-gray-200 rounded mb-2"></div>
+                      <div className="w-24 h-3 bg-gray-200 rounded"></div>
+                    </div>
+                    <div className="w-16 h-6 bg-gray-200 rounded"></div>
                   </div>
-                  <div className="w-16 h-6 bg-gray-200 rounded"></div>
-                </div>
-              ))}
-            </div>
-          ) : lowStockProducts.length > 0 ? (
-            <div className="space-y-4">
-              {lowStockProducts.map((product) => (
-                <div key={product.id} className="flex items-center justify-between py-3 border-b border-gray-100 dark:border-gray-700 last:border-0">
-                <div>
-                    <p className="font-medium text-gray-900 dark:text-gray-100">{product.name}</p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">{product.sku || 'N/A'}</p>
-                </div>
-                <div className="text-right">
-                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                      {product.stock} left
-                  </span>
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
-          ) : (
-            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-              <Package className="w-12 h-12 mx-auto mb-2 text-gray-400 dark:text-gray-500" />
-              <p>All products are well stocked</p>
-            </div>
-          )}
+            ) : lowStockProducts.length > 0 ? (
+              <div className="space-y-4">
+                {lowStockProducts.map((product) => (
+                  <div key={product.id} className="flex items-center justify-between py-3 border-b border-gray-100 dark:border-gray-700 last:border-0">
+                    <div>
+                      <p className="font-medium text-gray-900 dark:text-gray-100">{product.name}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{product.sku || 'N/A'}</p>
+                    </div>
+                    <div className="text-right">
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                        {product.stock} left
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                <Package className="w-12 h-12 mx-auto mb-2 text-gray-400 dark:text-gray-500" />
+                <p>All products are well stocked</p>
+              </div>
+            )}
           </div>
         )}
 
@@ -481,7 +479,7 @@ export default function DashboardPage() {
                   const customerName = customer.users
                     ? `${customer.users.firstName || ''} ${customer.users.lastName || ''}`.trim() || customer.users.email
                     : 'Unknown';
-                  
+
                   const totalOrders = customer._count?.orders || 0;
                   const lifetimeValue = customer.lifetimeValue || 0;
 
@@ -518,8 +516,8 @@ export default function DashboardPage() {
                 <Building2 className="w-6 h-6 text-purple-600 dark:text-purple-400" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Tenants Overview</h2>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Quick summary of all tenants on the platform</p>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Store Admins Overview</h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Quick summary of all stores and their admins</p>
               </div>
             </div>
             <button
@@ -599,9 +597,8 @@ export default function DashboardPage() {
                                 </p>
                               </div>
                             </div>
-                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium flex-shrink-0 ml-2 ${
-                              statusColors[tenant.status] || 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
-                            }`}>
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium flex-shrink-0 ml-2 ${statusColors[tenant.status] || 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
+                              }`}>
                               {tenant.status}
                             </span>
                           </div>
@@ -645,9 +642,8 @@ export default function DashboardPage() {
                                 <p className="text-xs text-gray-500 dark:text-gray-400">@{tenant.slug}</p>
                               </div>
                             </div>
-                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium flex-shrink-0 ml-2 ${
-                              statusColors[tenant.status] || 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
-                            }`}>
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium flex-shrink-0 ml-2 ${statusColors[tenant.status] || 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
+                              }`}>
                               {tenant.status}
                             </span>
                           </div>

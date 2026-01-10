@@ -42,17 +42,19 @@ export const uploadFile = asyncHandler(
     // Determine tenant ID for folder structure
     // SUPER_ADMIN can upload for any tenant (from header), others use their tenant
     const tenantId = req.tenantId || 'general';
+    const subfolder = req.body.folder || 'products';
 
     // Upload to Cloudinary
     const uploadResult = await new Promise<UploadedFile>((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
-          folder: `tenants/${tenantId}/products`,
+          folder: `tenants/${tenantId}/${subfolder}`,
           resource_type: 'auto',
         },
         (error, result) => {
           if (error) {
-            reject(new AppError('Failed to upload file', 500));
+            console.error('Cloudinary Upload Error:', error);
+            reject(new AppError(`Failed to upload file: ${error.message}`, 500));
           } else if (result) {
             resolve({
               url: result.secure_url,
