@@ -107,16 +107,16 @@ export default function OrderDetailsModal({ order, onClose, onUpdate }: OrderDet
         <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" onClick={onClose} />
 
         {/* Modal */}
-        <div className="relative bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto m-0 sm:m-4">
+        <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto m-0 sm:m-4 transition-colors">
           {/* Header */}
-          <div className="sticky top-0 bg-white flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 z-10">
+          <div className="sticky top-0 bg-white dark:bg-gray-800 flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700 z-10 transition-colors">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">Order Details</h2>
-              <p className="text-sm text-gray-500 mt-1">{order.orderNumber}</p>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Order Details</h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{order.orderNumber}</p>
             </div>
             <button
               onClick={onClose}
-              className="p-2 text-gray-400 hover:text-gray-600 transition"
+              className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition"
             >
               <X className="w-5 h-5" />
             </button>
@@ -125,45 +125,45 @@ export default function OrderDetailsModal({ order, onClose, onUpdate }: OrderDet
           <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
             {/* Order Info */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              <div className="bg-gray-50 rounded-lg p-4">
-                <p className="text-sm text-gray-500 mb-1">Order Date</p>
-                <p className="font-medium text-gray-900">{formatDateTime(order.createdAt)}</p>
+              <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 transition-colors">
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Order Date</p>
+                <p className="font-medium text-gray-900 dark:text-gray-100">{formatDateTime(order.createdAt)}</p>
               </div>
               {order.shippedAt && (
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <p className="text-sm text-gray-500 mb-1">Shipped Date</p>
-                  <p className="font-medium text-gray-900">{formatDateTime(order.shippedAt)}</p>
+                <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 transition-colors">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Shipped Date</p>
+                  <p className="font-medium text-gray-900 dark:text-gray-100">{formatDateTime(order.shippedAt)}</p>
                 </div>
               )}
               {order.deliveredAt && (
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <p className="text-sm text-gray-500 mb-1">Delivered Date</p>
-                  <p className="font-medium text-gray-900">{formatDateTime(order.deliveredAt)}</p>
+                <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 transition-colors">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Delivered Date</p>
+                  <p className="font-medium text-gray-900 dark:text-gray-100">{formatDateTime(order.deliveredAt)}</p>
                 </div>
               )}
             </div>
 
             {/* Customer Info */}
-            <div className="bg-gray-50 rounded-lg p-4">
+            <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 transition-colors">
               <div className="flex items-center space-x-2 mb-3">
-                <User className="w-5 h-5 text-gray-400" />
-                <h3 className="font-semibold text-gray-900">Customer Information</h3>
+                <User className="w-5 h-5 text-gray-400 dark:text-gray-500" />
+                <h3 className="font-semibold text-gray-900 dark:text-gray-100">Customer Information</h3>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-gray-500">Name</p>
-                  <p className="font-medium text-gray-900">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Name</p>
+                  <p className="font-medium text-gray-900 dark:text-gray-100">
                     {order.customers?.users.firstName} {order.customers?.users.lastName}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Email</p>
-                  <p className="font-medium text-gray-900">{order.customers?.users.email}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Email</p>
+                  <p className="font-medium text-gray-900 dark:text-gray-100">{order.customers?.users.email}</p>
                 </div>
                 {order.customers?.users.phone && (
                   <div>
-                    <p className="text-sm text-gray-500">Phone</p>
-                    <p className="font-medium text-gray-900">{order.customers.users.phone}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Phone</p>
+                    <p className="font-medium text-gray-900 dark:text-gray-100">{order.customers.users.phone}</p>
                   </div>
                 )}
               </div>
@@ -173,12 +173,12 @@ export default function OrderDetailsModal({ order, onClose, onUpdate }: OrderDet
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Shipping Address */}
               {order.shippingAddress && (
-                <div className="bg-gray-50 rounded-lg p-4">
+                <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 transition-colors">
                   <div className="flex items-center space-x-2 mb-3">
-                    <MapPin className="w-5 h-5 text-gray-400" />
-                    <h3 className="font-semibold text-gray-900">Shipping Address</h3>
+                    <MapPin className="w-5 h-5 text-gray-400 dark:text-gray-500" />
+                    <h3 className="font-semibold text-gray-900 dark:text-gray-100">Shipping Address</h3>
                   </div>
-                  <div className="text-sm text-gray-700">
+                  <div className="text-sm text-gray-700 dark:text-gray-300">
                     {typeof order.shippingAddress === 'object' ? (
                       <>
                         <p>{order.shippingAddress.name}</p>
@@ -190,7 +190,7 @@ export default function OrderDetailsModal({ order, onClose, onUpdate }: OrderDet
                         <p>{order.shippingAddress.country}</p>
                       </>
                     ) : (
-                      <p className="text-gray-500">No address provided</p>
+                      <p className="text-gray-500 dark:text-gray-400">No address provided</p>
                     )}
                   </div>
                 </div>
@@ -198,12 +198,12 @@ export default function OrderDetailsModal({ order, onClose, onUpdate }: OrderDet
 
               {/* Billing Address */}
               {order.billingAddress && (
-                <div className="bg-gray-50 rounded-lg p-4">
+                <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 transition-colors">
                   <div className="flex items-center space-x-2 mb-3">
-                    <CreditCard className="w-5 h-5 text-gray-400" />
-                    <h3 className="font-semibold text-gray-900">Billing Address</h3>
+                    <CreditCard className="w-5 h-5 text-gray-400 dark:text-gray-500" />
+                    <h3 className="font-semibold text-gray-900 dark:text-gray-100">Billing Address</h3>
                   </div>
-                  <div className="text-sm text-gray-700">
+                  <div className="text-sm text-gray-700 dark:text-gray-300">
                     {typeof order.billingAddress === 'object' ? (
                       <>
                         <p>{order.billingAddress.name}</p>
@@ -215,7 +215,7 @@ export default function OrderDetailsModal({ order, onClose, onUpdate }: OrderDet
                         <p>{order.billingAddress.country}</p>
                       </>
                     ) : (
-                      <p className="text-gray-500">No address provided</p>
+                      <p className="text-gray-500 dark:text-gray-400">No address provided</p>
                     )}
                   </div>
                 </div>
@@ -225,21 +225,21 @@ export default function OrderDetailsModal({ order, onClose, onUpdate }: OrderDet
             {/* Order Items */}
             <div>
               <div className="flex items-center space-x-2 mb-4">
-                <Package className="w-5 h-5 text-gray-400" />
-                <h3 className="font-semibold text-gray-900">Order Items</h3>
+                <Package className="w-5 h-5 text-gray-400 dark:text-gray-500" />
+                <h3 className="font-semibold text-gray-900 dark:text-gray-100">Order Items</h3>
               </div>
-              <div className="border border-gray-200 rounded-lg overflow-hidden">
+              <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden transition-colors">
                 <table className="w-full">
-                  <thead className="bg-gray-50">
+                  <thead className="bg-gray-50 dark:bg-gray-700/50">
                     <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">SKU</th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Price</th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Quantity</th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Total</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Product</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">SKU</th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Price</th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Quantity</th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Total</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200">
+                  <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                     {order.order_items.map((item) => (
                       <tr key={item.id}>
                         <td className="px-4 py-3">
@@ -250,14 +250,14 @@ export default function OrderDetailsModal({ order, onClose, onUpdate }: OrderDet
                               className="w-10 h-10 rounded object-cover"
                             />
                             <div>
-                              <p className="text-sm font-medium text-gray-900">{item.name}</p>
+                              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{item.name}</p>
                             </div>
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-sm text-gray-500">{item.sku || '-'}</td>
-                        <td className="px-4 py-3 text-sm text-gray-900 text-right">{formatCurrency(item.price)}</td>
-                        <td className="px-4 py-3 text-sm text-gray-900 text-right">{item.quantity}</td>
-                        <td className="px-4 py-3 text-sm font-medium text-gray-900 text-right">{formatCurrency(item.total)}</td>
+                        <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{item.sku || '-'}</td>
+                        <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100 text-right">{formatCurrency(item.price)}</td>
+                        <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100 text-right">{item.quantity}</td>
+                        <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-gray-100 text-right">{formatCurrency(item.total)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -266,31 +266,31 @@ export default function OrderDetailsModal({ order, onClose, onUpdate }: OrderDet
             </div>
 
             {/* Order Summary */}
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h3 className="font-semibold text-gray-900 mb-4">Order Summary</h3>
+            <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 transition-colors">
+              <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">Order Summary</h3>
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Subtotal</span>
-                  <span className="text-gray-900">{formatCurrency(order.subtotal)}</span>
+                  <span className="text-gray-600 dark:text-gray-400">Subtotal</span>
+                  <span className="text-gray-900 dark:text-gray-100">{formatCurrency(order.subtotal)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Shipping</span>
-                  <span className="text-gray-900">{formatCurrency(order.shipping)}</span>
+                  <span className="text-gray-600 dark:text-gray-400">Shipping</span>
+                  <span className="text-gray-900 dark:text-gray-100">{formatCurrency(order.shipping)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Tax</span>
-                  <span className="text-gray-900">{formatCurrency(order.tax)}</span>
+                  <span className="text-gray-600 dark:text-gray-400">Tax</span>
+                  <span className="text-gray-900 dark:text-gray-100">{formatCurrency(order.tax)}</span>
                 </div>
                 {order.discount > 0 && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Discount</span>
-                    <span className="text-green-600">-{formatCurrency(order.discount)}</span>
+                    <span className="text-gray-600 dark:text-gray-400">Discount</span>
+                    <span className="text-green-600 dark:text-green-400">-{formatCurrency(order.discount)}</span>
                   </div>
                 )}
-                <div className="border-t border-gray-200 pt-2 mt-2">
+                <div className="border-t border-gray-200 dark:border-gray-700 pt-2 mt-2">
                   <div className="flex justify-between">
-                    <span className="font-semibold text-gray-900">Total</span>
-                    <span className="font-bold text-gray-900">{formatCurrency(order.total)}</span>
+                    <span className="font-semibold text-gray-900 dark:text-gray-100">Total</span>
+                    <span className="font-bold text-gray-900 dark:text-gray-100">{formatCurrency(order.total)}</span>
                   </div>
                 </div>
               </div>
@@ -298,27 +298,27 @@ export default function OrderDetailsModal({ order, onClose, onUpdate }: OrderDet
 
             {/* Customer Notes */}
             {order.customerNotes && (
-              <div className="bg-blue-50 rounded-lg p-4">
+              <div className="bg-blue-50 dark:bg-blue-900/10 rounded-lg p-4 transition-colors">
                 <div className="flex items-center space-x-2 mb-2">
-                  <FileText className="w-5 h-5 text-blue-600" />
-                  <h3 className="font-semibold text-gray-900">Customer Notes</h3>
+                  <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  <h3 className="font-semibold text-gray-900 dark:text-gray-100">Customer Notes</h3>
                 </div>
-                <p className="text-sm text-gray-700">{order.customerNotes}</p>
+                <p className="text-sm text-gray-700 dark:text-gray-300">{order.customerNotes}</p>
               </div>
             )}
 
             {/* Update Order Status */}
-            <div className="border-t border-gray-200 pt-4 sm:pt-6">
-              <h3 className="font-semibold text-gray-900 mb-4">Update Order Status</h3>
+            <div className="border-t border-gray-200 dark:border-gray-700 pt-4 sm:pt-6 transition-colors">
+              <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">Update Order Status</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Order Status
                   </label>
                   <select
                     value={orderStatus}
                     onChange={(e) => setOrderStatus(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100 transition-colors"
                   >
                     {ORDER_STATUSES.map((status) => (
                       <option key={status} value={status}>
@@ -329,13 +329,13 @@ export default function OrderDetailsModal({ order, onClose, onUpdate }: OrderDet
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Payment Status
                   </label>
                   <select
                     value={paymentStatus}
                     onChange={(e) => setPaymentStatus(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100 transition-colors"
                   >
                     {PAYMENT_STATUSES.map((status) => (
                       <option key={status} value={status}>
@@ -346,23 +346,23 @@ export default function OrderDetailsModal({ order, onClose, onUpdate }: OrderDet
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Tracking Number
                   </label>
                   <div className="relative">
-                    <Truck className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <Truck className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
                     <input
                       type="text"
                       value={trackingNumber}
                       onChange={(e) => setTrackingNumber(e.target.value)}
                       placeholder="Enter tracking number"
-                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full pl-10 pr-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100 transition-colors"
                     />
                   </div>
                 </div>
 
                 <div className="sm:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Internal Notes
                   </label>
                   <textarea
@@ -370,17 +370,17 @@ export default function OrderDetailsModal({ order, onClose, onUpdate }: OrderDet
                     onChange={(e) => setInternalNote(e.target.value)}
                     rows={3}
                     placeholder="Add internal notes (not visible to customer)"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100 transition-colors"
                   />
                 </div>
               </div>
             </div>
 
             {/* Actions */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 pt-4 border-t border-gray-200">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700 transition-colors">
               <button
                 onClick={onClose}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition text-sm sm:text-base"
+                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition text-sm sm:text-base"
                 disabled={updateMutation.isPending}
               >
                 Cancel
@@ -388,7 +388,7 @@ export default function OrderDetailsModal({ order, onClose, onUpdate }: OrderDet
               <button
                 onClick={handleUpdate}
                 disabled={updateMutation.isPending}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center text-sm sm:text-base"
+                className="px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center text-sm sm:text-base font-medium shadow-sm"
               >
                 {updateMutation.isPending ? (
                   <>

@@ -29,12 +29,13 @@ export const errorHandler = (
   }
 
   // Log error details
-  console.error('❌ Error:', {
-    message: err.message,
-    stack: err.stack,
+  console.error('❌ Error details:', err);
+  console.error('❌ Request context:', {
     method: req.method,
     url: req.url,
     statusCode,
+    tenantId: (req as any).tenantId,
+    body: req.body,
   });
 
   // Don't send response if headers already sent
@@ -47,6 +48,7 @@ export const errorHandler = (
   const origin = req.headers.origin;
   if (origin) {
     // Import getCorsOrigins dynamically to avoid circular dependency
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { getCorsOrigins } = require('../config/urls');
     const allowedOrigins = getCorsOrigins();
     const FALLBACK_ORIGINS = [
@@ -56,13 +58,13 @@ export const errorHandler = (
       'https://pulss-storefront.onrender.com',
     ];
     const allAllowedOrigins = [...new Set([...allowedOrigins, ...FALLBACK_ORIGINS])];
-    
+
     const normalizedOrigin = origin.replace(/\/$/, '');
     const isAllowed = allAllowedOrigins.some(allowed => {
       const normalizedAllowed = allowed.replace(/\/$/, '');
       return normalizedAllowed === normalizedOrigin || allowed === origin;
     }) || (process.env.NODE_ENV !== 'production' && origin.includes('localhost'));
-    
+
     if (isAllowed) {
       res.setHeader('Access-Control-Allow-Origin', origin);
       res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -84,7 +86,7 @@ export const errorHandler = (
   res.status(statusCode).json(response);
 };
 
-export const asyncHandler = (fn: Function) => {
+export const asyncHandler = (fn: (req: Request, res: Response, next: NextFunction) => any) => {
   return (req: Request, res: Response, next: NextFunction) => {
     Promise.resolve(fn(req, res, next)).catch(next);
   };

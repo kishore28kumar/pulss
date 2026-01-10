@@ -2,13 +2,13 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { 
-  Search, 
-  Filter, 
-  Eye, 
-  ShoppingBag, 
-  IndianRupee, 
-  Package, 
+import {
+  Search,
+  Filter,
+  Eye,
+  ShoppingBag,
+  IndianRupee,
+  Package,
   Download
 } from 'lucide-react';
 import api from '@/lib/api';
@@ -53,20 +53,20 @@ interface Order {
 }
 
 const ORDER_STATUS_COLORS: Record<string, { bg: string; text: string }> = {
-  PENDING: { bg: 'bg-yellow-100', text: 'text-yellow-800' },
-  CONFIRMED: { bg: 'bg-blue-100', text: 'text-blue-800' },
-  PROCESSING: { bg: 'bg-purple-100', text: 'text-purple-800' },
-  SHIPPED: { bg: 'bg-indigo-100', text: 'text-indigo-800' },
-  DELIVERED: { bg: 'bg-green-100', text: 'text-green-800' },
-  CANCELLED: { bg: 'bg-red-100', text: 'text-red-800' },
-  REFUNDED: { bg: 'bg-gray-100', text: 'text-gray-800' },
+  PENDING: { bg: 'bg-yellow-100 dark:bg-yellow-900/30', text: 'text-yellow-800 dark:text-yellow-400' },
+  CONFIRMED: { bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-800 dark:text-blue-400' },
+  PROCESSING: { bg: 'bg-purple-100 dark:bg-purple-900/30', text: 'text-purple-800 dark:text-purple-400' },
+  SHIPPED: { bg: 'bg-indigo-100 dark:bg-indigo-900/30', text: 'text-indigo-800 dark:text-indigo-400' },
+  DELIVERED: { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-800 dark:text-green-400' },
+  CANCELLED: { bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-800 dark:text-red-400' },
+  REFUNDED: { bg: 'bg-gray-100 dark:bg-gray-700', text: 'text-gray-800 dark:text-gray-200' },
 };
 
 const PAYMENT_STATUS_COLORS: Record<string, { bg: string; text: string }> = {
-  PENDING: { bg: 'bg-yellow-100', text: 'text-yellow-800' },
-  COMPLETED: { bg: 'bg-green-100', text: 'text-green-800' },
-  FAILED: { bg: 'bg-red-100', text: 'text-red-800' },
-  REFUNDED: { bg: 'bg-gray-100', text: 'text-gray-800' },
+  PENDING: { bg: 'bg-yellow-100 dark:bg-yellow-900/30', text: 'text-yellow-800 dark:text-yellow-400' },
+  COMPLETED: { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-800 dark:text-green-400' },
+  FAILED: { bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-800 dark:text-red-400' },
+  REFUNDED: { bg: 'bg-gray-100 dark:bg-gray-700', text: 'text-gray-800 dark:text-gray-200' },
 };
 
 export default function OrdersPage() {
@@ -86,9 +86,9 @@ export default function OrdersPage() {
     queryKey: ['orders', { search, page, ...filters }],
     queryFn: async () => {
       const response = await api.get('/orders', {
-        params: { 
-          search, 
-          page, 
+        params: {
+          search,
+          page,
           limit: 10,
           ...filters,
         },
@@ -105,7 +105,7 @@ export default function OrdersPage() {
         params: { limit: 1000 }, // Get all for stats
       });
       const orders = response.data.data.data;
-      
+
       return {
         total: orders.length,
         pending: orders.filter((o: Order) => o.status === 'PENDING').length,
@@ -129,7 +129,7 @@ export default function OrdersPage() {
 
   const handleExportOrders = async () => {
     const toastId = toast.loading('Preparing orders export...');
-    
+
     try {
       const params = new URLSearchParams();
       if (filters.status) params.set('status', filters.status);
@@ -147,7 +147,7 @@ export default function OrdersPage() {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      
+
       // Extract filename from Content-Disposition header or use default
       const contentDisposition = response.headers['content-disposition'];
       let filename = `orders_${new Date().toISOString().split('T')[0]}.csv`;
@@ -157,7 +157,7 @@ export default function OrdersPage() {
           filename = filenameMatch[1].replace(/['"]/g, '');
         }
       }
-      
+
       link.setAttribute('download', filename);
       document.body.appendChild(link);
       link.click();
@@ -183,7 +183,7 @@ export default function OrdersPage() {
           <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-1">Manage and track customer orders</p>
         </div>
         <PermissionGuard permission={Permission.ORDERS_EXPORT}>
-          <button 
+          <button
             onClick={handleExportOrders}
             className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
           >
@@ -281,11 +281,10 @@ export default function OrdersPage() {
           </div>
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className={`px-4 py-2 border rounded-lg transition inline-flex items-center justify-center whitespace-nowrap text-sm sm:text-base ${
-              showFilters 
-                ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700 text-blue-600 dark:text-blue-400' 
+            className={`px-4 py-2 border rounded-lg transition inline-flex items-center justify-center whitespace-nowrap text-sm sm:text-base ${showFilters
+                ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700 text-blue-600 dark:text-blue-400'
                 : 'border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
-            }`}
+              }`}
           >
             <Filter className="w-4 h-4 mr-2" />
             Filters
@@ -368,16 +367,14 @@ export default function OrdersPage() {
                         {formatCurrency(order.total)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          ORDER_STATUS_COLORS[order.status]?.bg || 'bg-gray-100 dark:bg-gray-700'
-                        } ${ORDER_STATUS_COLORS[order.status]?.text || 'text-gray-800 dark:text-gray-200'}`}>
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${ORDER_STATUS_COLORS[order.status]?.bg || 'bg-gray-100 dark:bg-gray-700'
+                          } ${ORDER_STATUS_COLORS[order.status]?.text || 'text-gray-800 dark:text-gray-200'}`}>
                           {order.status}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          PAYMENT_STATUS_COLORS[order.paymentStatus]?.bg || 'bg-gray-100 dark:bg-gray-700'
-                        } ${PAYMENT_STATUS_COLORS[order.paymentStatus]?.text || 'text-gray-800 dark:text-gray-200'}`}>
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${PAYMENT_STATUS_COLORS[order.paymentStatus]?.bg || 'bg-gray-100 dark:bg-gray-700'
+                          } ${PAYMENT_STATUS_COLORS[order.paymentStatus]?.text || 'text-gray-800 dark:text-gray-200'}`}>
                           {order.paymentStatus}
                         </span>
                       </td>

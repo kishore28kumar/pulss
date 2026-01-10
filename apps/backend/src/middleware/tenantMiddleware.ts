@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { prisma } from '@pulss/database';
 
 // Extend Express Request to include tenant
+/* eslint-disable @typescript-eslint/no-namespace */
 declare global {
   namespace Express {
     interface Request {
@@ -14,6 +15,7 @@ declare global {
     }
   }
 }
+/* eslint-enable @typescript-eslint/no-namespace */
 
 export const tenantMiddleware = async (
   req: Request,
@@ -55,7 +57,7 @@ export const tenantMiddleware = async (
     // Fetch tenant with retry logic for connection errors
     let tenant = null;
     let retries = 3;
-    
+
     while (retries > 0) {
       try {
         tenant = await prisma.tenants.findUnique({
@@ -70,12 +72,12 @@ export const tenantMiddleware = async (
       } catch (error: any) {
         retries--;
         const errorMessage = error?.message || String(error);
-        const isConnectionError = 
+        const isConnectionError =
           errorMessage.includes('Closed') ||
           errorMessage.includes('connection') ||
           errorMessage.includes('P1001') ||
           errorMessage.includes('ECONNREFUSED');
-        
+
         if (isConnectionError && retries > 0) {
           console.warn(`⚠️  Database connection error in tenant middleware, retrying... (${retries} attempts left)`);
           await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
@@ -96,13 +98,13 @@ export const tenantMiddleware = async (
   } catch (error: any) {
     const errorMessage = error?.message || String(error);
     console.error('Tenant middleware error:', errorMessage);
-    
+
     // If it's a connection error, log it but don't fail the request
     // The request will proceed without tenant context
     if (errorMessage.includes('Closed') || errorMessage.includes('connection')) {
       console.error('⚠️  Database connection issue - request proceeding without tenant context');
     }
-    
+
     next();
   }
 };

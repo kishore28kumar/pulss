@@ -114,12 +114,12 @@ function NewProductPageContent() {
       // For SUPER_ADMIN, we need to get the tenant slug from the selected admin
       const selectedAdmin = adminsData?.data?.find(admin => admin.tenants?.id === selectedTenantId);
       const tenantSlug = selectedAdmin?.tenants?.slug;
-      
+
       const config: any = {};
       if (isSuperAdminUser && tenantSlug) {
         config.headers = { 'X-Tenant-Slug': tenantSlug };
       }
-      
+
       const response = await api.get('/categories', config);
       return response.data.data as Category[];
     },
@@ -228,7 +228,7 @@ function NewProductPageContent() {
       if (isSuperAdminUser && selectedTenantId) {
         router.push(`/dashboard/products?tenantId=${selectedTenantId}`);
       } else {
-      router.push('/dashboard/products');
+        router.push('/dashboard/products');
       }
     },
     onError: (error: any) => {
@@ -268,7 +268,7 @@ function NewProductPageContent() {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      
+
       // Add tenant slug header if SUPER_ADMIN has selected a tenant
       const config: any = {};
       if (isSuperAdminUser && selectedTenantId) {
@@ -290,7 +290,7 @@ function NewProductPageContent() {
       const currentImages = watch('images') || [];
       setValue('images', [...currentImages, uploadedUrl]);
       toast.success('Image uploaded successfully');
-      
+
       // Reset file input
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
@@ -338,25 +338,26 @@ function NewProductPageContent() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
           <Link
-            href={isSuperAdminUser && selectedTenantId 
+            href={isSuperAdminUser && selectedTenantId
               ? `/dashboard/products?tenantId=${selectedTenantId}`
               : '/dashboard/products'}
-            className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-2 text-sm sm:text-base"
+            className="p-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl transition shadow-sm"
           >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Products
+            <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
           </Link>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">
-            {isSuperAdminUser ? 'Add Product on Behalf of Admin' : 'Create New Product'}
-          </h1>
-          <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-1">
-            {isSuperAdminUser 
-              ? 'Add a new product on behalf of the selected admin'
-              : 'Add a new product to your inventory'}
-          </p>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">
+              {isSuperAdminUser ? 'Add Product on Behalf of Admin' : 'Create New Product'}
+            </h1>
+            <p className="text-sm text-gray-500 font-medium">
+              {isSuperAdminUser
+                ? 'Add a new product on behalf of the selected admin'
+                : 'Add a new product to your inventory'}
+            </p>
+          </div>
         </div>
       </div>
 
@@ -376,13 +377,13 @@ function NewProductPageContent() {
               <span className={selectedTenantId ? 'text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400'}>
                 {selectedTenantId
                   ? (() => {
-                      const selectedAdmin = adminsData?.data?.find(
-                        (admin) => admin.tenants?.id === selectedTenantId
-                      );
-                      return selectedAdmin
-                        ? `${selectedAdmin.firstName} ${selectedAdmin.lastName} (${selectedAdmin.tenants?.name || 'No Store'})`
-                        : '-- Select an Admin/Store --';
-                    })()
+                    const selectedAdmin = adminsData?.data?.find(
+                      (admin) => admin.tenants?.id === selectedTenantId
+                    );
+                    return selectedAdmin
+                      ? `${selectedAdmin.firstName} ${selectedAdmin.lastName} (${selectedAdmin.tenants?.name || 'No Store'})`
+                      : '-- Select an Admin/Store --';
+                  })()
                   : '-- Select an Admin/Store --'}
               </span>
               {showTenantDropdown ? (
@@ -402,9 +403,8 @@ function NewProductPageContent() {
                       setShowBulkUpload(false);
                     }
                   }}
-                  className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-600 transition ${
-                    !selectedTenantId ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'
-                  }`}
+                  className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-600 transition ${!selectedTenantId ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'
+                    }`}
                 >
                   -- Select an Admin/Store --
                 </button>
@@ -419,11 +419,10 @@ function NewProductPageContent() {
                         setShowBulkUpload(false);
                       }
                     }}
-                    className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-600 transition ${
-                      selectedTenantId === admin.tenants?.id
-                        ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
-                        : 'text-gray-700 dark:text-gray-300'
-                    }`}
+                    className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-600 transition ${selectedTenantId === admin.tenants?.id
+                      ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+                      : 'text-gray-700 dark:text-gray-300'
+                      }`}
                   >
                     {admin.firstName} {admin.lastName} ({admin.tenants?.name || 'No Store'})
                   </button>
@@ -440,7 +439,7 @@ function NewProductPageContent() {
       )}
 
       {/* Divider with Toggle */}
-      {selectedTenantId && (
+      {(!isSuperAdminUser || selectedTenantId) && (
         <>
           {/* Bulk Upload Section */}
           <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
@@ -470,7 +469,7 @@ function NewProductPageContent() {
                 <ChevronDown className="w-6 h-6 text-gray-600 dark:text-gray-400 transition-transform" />
               )}
             </button>
-            
+
             {showBulkUpload && (
               <div className="border-t border-gray-200 dark:border-gray-700">
                 <BulkUploadSection
@@ -525,450 +524,450 @@ function NewProductPageContent() {
               )}
             </button>
 
-      {/* Form */}
+            {/* Form */}
             {showSingleUpload && (
               <form onSubmit={handleSubmit(onSubmit)} className="p-4 sm:p-6 space-y-4 sm:space-y-6 border-t border-gray-200 dark:border-gray-700">
-        {/* Basic Information */}
-        <div className="border-b border-gray-200 dark:border-gray-700 pb-4 sm:pb-6">
-          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Basic Information</h2>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Product Name *
-              </label>
-              <input
-                id="name"
-                type="text"
-                {...register('name')}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-                placeholder="e.g., Product Name"
-              />
-              {errors.name && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.name.message}</p>
-              )}
-            </div>
+                {/* Basic Information */}
+                <div className="border-b border-gray-200 dark:border-gray-700 pb-4 sm:pb-6">
+                  <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Basic Information</h2>
 
-            <div>
-              <label htmlFor="slug" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Slug *
-              </label>
-              <input
-                id="slug"
-                type="text"
-                {...register('slug')}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-                placeholder="e.g., product-name"
-              />
-              {errors.slug && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.slug.message}</p>
-              )}
-            </div>
-          </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Product Name *
+                      </label>
+                      <input
+                        id="name"
+                        type="text"
+                        {...register('name')}
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                        placeholder="e.g., Product Name"
+                      />
+                      {errors.name && (
+                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.name.message}</p>
+                      )}
+                    </div>
 
-          <div className="mt-4">
-            <label htmlFor="shortDescription" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Short Description
-            </label>
-            <input
-              id="shortDescription"
-              type="text"
-              {...register('shortDescription')}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-              placeholder="Brief product description"
-            />
-          </div>
+                    <div>
+                      <label htmlFor="slug" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Slug *
+                      </label>
+                      <input
+                        id="slug"
+                        type="text"
+                        {...register('slug')}
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                        placeholder="e.g., product-name"
+                      />
+                      {errors.slug && (
+                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.slug.message}</p>
+                      )}
+                    </div>
+                  </div>
 
-          <div className="mt-4">
-            <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Description
-            </label>
-            <textarea
-              id="description"
-              {...register('description')}
-              rows={4}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-              placeholder="Detailed product description"
-            />
-          </div>
-        </div>
+                  <div className="mt-4">
+                    <label htmlFor="shortDescription" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Short Description
+                    </label>
+                    <input
+                      id="shortDescription"
+                      type="text"
+                      {...register('shortDescription')}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                      placeholder="Brief product description"
+                    />
+                  </div>
 
-        {/* Pricing */}
-        <div className="border-b border-gray-200 dark:border-gray-700 pb-4 sm:pb-6">
-          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Pricing</h2>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            <div>
-              <label htmlFor="price" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Price *
-              </label>
-              <input
-                id="price"
-                type="number"
-                step="0.01"
-                {...register('price', { valueAsNumber: true })}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-                placeholder="0.00"
-                min="0"
-              />
-              {errors.price && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.price.message}</p>
-              )}
-            </div>
+                  <div className="mt-4">
+                    <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Description
+                    </label>
+                    <textarea
+                      id="description"
+                      {...register('description')}
+                      rows={4}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                      placeholder="Detailed product description"
+                    />
+                  </div>
+                </div>
 
-            <div>
-              <label htmlFor="compareAtPrice" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Compare at Price
-              </label>
-              <input
-                id="compareAtPrice"
-                type="number"
-                step="0.01"
-                {...register('compareAtPrice', { valueAsNumber: true })}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-                placeholder="0.00"
-                min="0"
-              />
-            </div>
+                {/* Pricing */}
+                <div className="border-b border-gray-200 dark:border-gray-700 pb-4 sm:pb-6">
+                  <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Pricing</h2>
 
-            <div>
-              <label htmlFor="costPrice" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Cost Price
-              </label>
-              <input
-                id="costPrice"
-                type="number"
-                step="0.01"
-                {...register('costPrice', { valueAsNumber: true })}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-                placeholder="0.00"
-                min="0"
-              />
-            </div>
-          </div>
-        </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    <div>
+                      <label htmlFor="price" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Price *
+                      </label>
+                      <input
+                        id="price"
+                        type="number"
+                        step="0.01"
+                        {...register('price', { valueAsNumber: true })}
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                        placeholder="0.00"
+                        min="0"
+                      />
+                      {errors.price && (
+                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.price.message}</p>
+                      )}
+                    </div>
 
-        {/* Inventory */}
-        <div className="border-b border-gray-200 dark:border-gray-700 pb-4 sm:pb-6">
-          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Inventory</h2>
-          
-          <div className="flex items-center mb-4">
-            <input
-              id="trackInventory"
-              type="checkbox"
-              {...register('trackInventory')}
-              className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:bg-gray-700"
-            />
-            <label htmlFor="trackInventory" className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-              Track inventory
-            </label>
-          </div>
+                    <div>
+                      <label htmlFor="compareAtPrice" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Compare at Price
+                      </label>
+                      <input
+                        id="compareAtPrice"
+                        type="number"
+                        step="0.01"
+                        {...register('compareAtPrice', { valueAsNumber: true })}
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                        placeholder="0.00"
+                        min="0"
+                      />
+                    </div>
 
-          {trackInventory && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="stockQuantity" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Stock Quantity
-                </label>
-                <input
-                  id="stockQuantity"
-                  type="number"
-                  {...register('stockQuantity', { valueAsNumber: true })}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-                  placeholder="0"
-                  min="0"
-                />
-              </div>
+                    <div>
+                      <label htmlFor="costPrice" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Cost Price
+                      </label>
+                      <input
+                        id="costPrice"
+                        type="number"
+                        step="0.01"
+                        {...register('costPrice', { valueAsNumber: true })}
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                        placeholder="0.00"
+                        min="0"
+                      />
+                    </div>
+                  </div>
+                </div>
 
-              <div>
-                <label htmlFor="lowStockThreshold" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Low Stock Threshold
-                </label>
-                <input
-                  id="lowStockThreshold"
-                  type="number"
-                  {...register('lowStockThreshold', { valueAsNumber: true })}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-                  placeholder="10"
-                  min="0"
-                />
-              </div>
-            </div>
-          )}
+                {/* Inventory */}
+                <div className="border-b border-gray-200 dark:border-gray-700 pb-4 sm:pb-6">
+                  <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Inventory</h2>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-            <div>
-              <label htmlFor="sku" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                SKU
-              </label>
-              <input
-                id="sku"
-                type="text"
-                {...register('sku')}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-                placeholder="e.g., SKU-12345"
-              />
-            </div>
+                  <div className="flex items-center mb-4">
+                    <input
+                      id="trackInventory"
+                      type="checkbox"
+                      {...register('trackInventory')}
+                      className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:bg-gray-700"
+                    />
+                    <label htmlFor="trackInventory" className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Track inventory
+                    </label>
+                  </div>
 
-            <div>
-              <label htmlFor="barcode" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Barcode
-              </label>
-              <input
-                id="barcode"
-                type="text"
-                {...register('barcode')}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-                placeholder="e.g., 1234567890123"
-              />
-            </div>
-          </div>
-        </div>
+                  {trackInventory && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label htmlFor="stockQuantity" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          Stock Quantity
+                        </label>
+                        <input
+                          id="stockQuantity"
+                          type="number"
+                          {...register('stockQuantity', { valueAsNumber: true })}
+                          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                          placeholder="0"
+                          min="0"
+                        />
+                      </div>
 
-        {/* Categories */}
-        <div className="border-b border-gray-200 dark:border-gray-700 pb-4 sm:pb-6">
-          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Categories *</h2>
-          
-          {categoriesLoading ? (
-            <div className="text-gray-500 dark:text-gray-400">Loading categories...</div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-700/50">
-              {categories?.map((category) => (
-                <label key={category.id} className="flex items-center space-x-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={selectedCategories?.includes(category.id) || false}
-                    onChange={(e) => handleCategoryChange(category.id, e.target.checked)}
-                    className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:bg-gray-700"
-                  />
-                  <span className="text-sm text-gray-700 dark:text-gray-300">{category.name}</span>
-                </label>
-              ))}
-            </div>
-          )}
-          {errors.categoryIds && (
-            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.categoryIds.message}</p>
-          )}
-        </div>
+                      <div>
+                        <label htmlFor="lowStockThreshold" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          Low Stock Threshold
+                        </label>
+                        <input
+                          id="lowStockThreshold"
+                          type="number"
+                          {...register('lowStockThreshold', { valueAsNumber: true })}
+                          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                          placeholder="10"
+                          min="0"
+                        />
+                      </div>
+                    </div>
+                  )}
 
-        {/* Images */}
-        <div className="border-b border-gray-200 dark:border-gray-700 pb-4 sm:pb-6">
-          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Product Images</h2>
-          
-          {/* File Upload Area */}
-          <div
-            onDragOver={handleDragOver}
-            onDrop={handleDrop}
-            className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 mb-4 hover:border-blue-400 dark:hover:border-blue-500 transition-colors cursor-pointer bg-gray-50 dark:bg-gray-700/50"
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleFileChange}
-              className="hidden"
-              disabled={uploading || (isSuperAdminUser && !selectedTenantId)}
-            />
-            <div className="text-center">
-              <Upload className="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-3" />
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                {uploading ? 'Uploading...' : 'Click to upload or drag and drop'}
-              </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">PNG, JPG, GIF up to 5MB</p>
-            </div>
-          </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                    <div>
+                      <label htmlFor="sku" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        SKU
+                      </label>
+                      <input
+                        id="sku"
+                        type="text"
+                        {...register('sku')}
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                        placeholder="e.g., SKU-12345"
+                      />
+                    </div>
 
-          {/* URL Input */}
-          <div className="flex flex-col sm:flex-row gap-2 mb-4">
-            <input
-              type="url"
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
-              className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-              placeholder="Or enter image URL"
-            />
-            <button
-              type="button"
-              onClick={handleAddImage}
-              disabled={!imageUrl}
-              className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Add URL
-            </button>
-          </div>
+                    <div>
+                      <label htmlFor="barcode" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Barcode
+                      </label>
+                      <input
+                        id="barcode"
+                        type="text"
+                        {...register('barcode')}
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                        placeholder="e.g., 1234567890123"
+                      />
+                    </div>
+                  </div>
+                </div>
 
-          {watch('images') && watch('images')!.length > 0 && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-              {watch('images')!.map((image, index) => (
-                <div key={index} className="relative">
-                  <img
-                    src={image}
-                    alt={`Product image ${index + 1}`}
-                    className="w-full h-32 object-cover rounded-lg"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveImage(index)}
-                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                {/* Categories */}
+                <div className="border-b border-gray-200 dark:border-gray-700 pb-4 sm:pb-6">
+                  <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Categories *</h2>
+
+                  {categoriesLoading ? (
+                    <div className="text-gray-500 dark:text-gray-400">Loading categories...</div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-700/50">
+                      {categories?.map((category) => (
+                        <label key={category.id} className="flex items-center space-x-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={selectedCategories?.includes(category.id) || false}
+                            onChange={(e) => handleCategoryChange(category.id, e.target.checked)}
+                            className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:bg-gray-700"
+                          />
+                          <span className="text-sm text-gray-700 dark:text-gray-300">{category.name}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                  {errors.categoryIds && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.categoryIds.message}</p>
+                  )}
+                </div>
+
+                {/* Images */}
+                <div className="border-b border-gray-200 dark:border-gray-700 pb-4 sm:pb-6">
+                  <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Product Images</h2>
+
+                  {/* File Upload Area */}
+                  <div
+                    onDragOver={handleDragOver}
+                    onDrop={handleDrop}
+                    className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 mb-4 hover:border-blue-400 dark:hover:border-blue-500 transition-colors cursor-pointer bg-gray-50 dark:bg-gray-700/50"
+                    onClick={() => fileInputRef.current?.click()}
                   >
-                    ×
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="hidden"
+                      disabled={uploading || (isSuperAdminUser && !selectedTenantId)}
+                    />
+                    <div className="text-center">
+                      <Upload className="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-3" />
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                        {uploading ? 'Uploading...' : 'Click to upload or drag and drop'}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">PNG, JPG, GIF up to 5MB</p>
+                    </div>
+                  </div>
+
+                  {/* URL Input */}
+                  <div className="flex flex-col sm:flex-row gap-2 mb-4">
+                    <input
+                      type="url"
+                      value={imageUrl}
+                      onChange={(e) => setImageUrl(e.target.value)}
+                      className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                      placeholder="Or enter image URL"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddImage}
+                      disabled={!imageUrl}
+                      className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Add URL
+                    </button>
+                  </div>
+
+                  {watch('images') && watch('images')!.length > 0 && (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                      {watch('images')!.map((image, index) => (
+                        <div key={index} className="relative">
+                          <img
+                            src={image}
+                            alt={`Product image ${index + 1}`}
+                            className="w-full h-32 object-cover rounded-lg"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveImage(index)}
+                            className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Additional Information */}
+                <div className="border-b border-gray-200 dark:border-gray-700 pb-4 sm:pb-6">
+                  <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Additional Information</h2>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="manufacturer" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Manufacturer
+                      </label>
+                      <input
+                        id="manufacturer"
+                        type="text"
+                        {...register('manufacturer')}
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                        placeholder="Manufacturer name"
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="weight" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Weight
+                      </label>
+                      <div className="flex space-x-2">
+                        <input
+                          id="weight"
+                          type="number"
+                          step="0.01"
+                          {...register('weight', { valueAsNumber: true })}
+                          className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                          placeholder="0.00"
+                          min="0"
+                        />
+                        <select
+                          {...register('weightUnit')}
+                          className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                        >
+                          <option value="kg">kg</option>
+                          <option value="g">g</option>
+                          <option value="lb">lb</option>
+                          <option value="oz">oz</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                    <div className="flex items-center">
+                      <input
+                        id="isActive"
+                        type="checkbox"
+                        {...register('isActive')}
+                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      />
+                      <label htmlFor="isActive" className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Active
+                      </label>
+                    </div>
+
+                    <div className="flex items-center">
+                      <input
+                        id="isFeatured"
+                        type="checkbox"
+                        {...register('isFeatured')}
+                        className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:bg-gray-700"
+                      />
+                      <label htmlFor="isFeatured" className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Featured
+                      </label>
+                    </div>
+
+                    <div className="flex items-center">
+                      <input
+                        id="requiresPrescription"
+                        type="checkbox"
+                        {...register('requiresPrescription')}
+                        className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:bg-gray-700"
+                      />
+                      <label htmlFor="requiresPrescription" className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Requires Prescription
+                      </label>
+                    </div>
+
+                    <div className="flex items-center">
+                      <input
+                        id="isOTC"
+                        type="checkbox"
+                        {...register('isOTC')}
+                        className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:bg-gray-700"
+                      />
+                      <label htmlFor="isOTC" className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Over-the-Counter (OTC)
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* SEO */}
+                <div className="pb-4 sm:pb-6">
+                  <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">SEO</h2>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label htmlFor="metaTitle" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Meta Title
+                      </label>
+                      <input
+                        id="metaTitle"
+                        type="text"
+                        {...register('metaTitle')}
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                        placeholder="SEO title"
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="metaDescription" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Meta Description
+                      </label>
+                      <textarea
+                        id="metaDescription"
+                        {...register('metaDescription')}
+                        rows={3}
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                        placeholder="SEO description"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 pt-4 sm:pt-6 border-t border-gray-200 dark:border-gray-700">
+                  <Link
+                    href={isSuperAdminUser && selectedTenantId
+                      ? `/dashboard/products?tenantId=${selectedTenantId}`
+                      : '/dashboard/products'}
+                    className="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition text-center text-sm sm:text-base text-gray-700 dark:text-gray-300"
+                  >
+                    Cancel
+                  </Link>
+                  <button
+                    type="submit"
+                    disabled={mutation.isPending}
+                    className="px-6 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-sm sm:text-base"
+                  >
+                    {mutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                    Create Product
                   </button>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Additional Information */}
-        <div className="border-b border-gray-200 dark:border-gray-700 pb-4 sm:pb-6">
-          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Additional Information</h2>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="manufacturer" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Manufacturer
-              </label>
-              <input
-                id="manufacturer"
-                type="text"
-                {...register('manufacturer')}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-                placeholder="Manufacturer name"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="weight" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Weight
-              </label>
-              <div className="flex space-x-2">
-                <input
-                  id="weight"
-                  type="number"
-                  step="0.01"
-                  {...register('weight', { valueAsNumber: true })}
-                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-                  placeholder="0.00"
-                  min="0"
-                />
-                <select
-                  {...register('weightUnit')}
-                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                >
-                  <option value="kg">kg</option>
-                  <option value="g">g</option>
-                  <option value="lb">lb</option>
-                  <option value="oz">oz</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-            <div className="flex items-center">
-              <input
-                id="isActive"
-                type="checkbox"
-                {...register('isActive')}
-                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-              />
-              <label htmlFor="isActive" className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                Active
-              </label>
-            </div>
-
-            <div className="flex items-center">
-              <input
-                id="isFeatured"
-                type="checkbox"
-                {...register('isFeatured')}
-                className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:bg-gray-700"
-              />
-              <label htmlFor="isFeatured" className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                Featured
-              </label>
-            </div>
-
-            <div className="flex items-center">
-              <input
-                id="requiresPrescription"
-                type="checkbox"
-                {...register('requiresPrescription')}
-                className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:bg-gray-700"
-              />
-              <label htmlFor="requiresPrescription" className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                Requires Prescription
-              </label>
-            </div>
-
-            <div className="flex items-center">
-              <input
-                id="isOTC"
-                type="checkbox"
-                {...register('isOTC')}
-                className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:bg-gray-700"
-              />
-              <label htmlFor="isOTC" className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                Over-the-Counter (OTC)
-              </label>
-            </div>
-          </div>
-        </div>
-
-        {/* SEO */}
-        <div className="pb-4 sm:pb-6">
-          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">SEO</h2>
-          
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="metaTitle" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Meta Title
-              </label>
-              <input
-                id="metaTitle"
-                type="text"
-                {...register('metaTitle')}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-                placeholder="SEO title"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="metaDescription" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Meta Description
-              </label>
-              <textarea
-                id="metaDescription"
-                {...register('metaDescription')}
-                rows={3}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-                placeholder="SEO description"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Actions */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 pt-4 sm:pt-6 border-t border-gray-200 dark:border-gray-700">
-          <Link
-            href={isSuperAdminUser && selectedTenantId 
-              ? `/dashboard/products?tenantId=${selectedTenantId}`
-              : '/dashboard/products'}
-            className="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition text-center text-sm sm:text-base text-gray-700 dark:text-gray-300"
-          >
-            Cancel
-          </Link>
-          <button
-            type="submit"
-            disabled={mutation.isPending}
-            className="px-6 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-sm sm:text-base"
-          >
-            {mutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-            Create Product
-          </button>
-        </div>
-      </form>
+              </form>
             )}
           </div>
         </>
@@ -990,445 +989,445 @@ function NewProductPageContent() {
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-          {/* Basic Information */}
-          <div className="border-b border-gray-200 dark:border-gray-700 pb-4 sm:pb-6">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Basic Information</h2>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Product Name *
-                </label>
-                <input
-                  id="name"
-                  type="text"
-                  {...register('name')}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-                  placeholder="e.g., Product Name"
-                />
-                {errors.name && (
-                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.name.message}</p>
-                )}
-              </div>
+            {/* Basic Information */}
+            <div className="border-b border-gray-200 dark:border-gray-700 pb-4 sm:pb-6">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Basic Information</h2>
 
-              <div>
-                <label htmlFor="slug" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Slug *
-                </label>
-                <input
-                  id="slug"
-                  type="text"
-                  {...register('slug')}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-                  placeholder="e.g., product-name"
-                />
-                {errors.slug && (
-                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.slug.message}</p>
-                )}
-              </div>
-            </div>
-
-            <div className="mt-4">
-              <label htmlFor="shortDescription" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Short Description
-              </label>
-              <input
-                id="shortDescription"
-                type="text"
-                {...register('shortDescription')}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-                placeholder="Brief product description"
-              />
-            </div>
-
-            <div className="mt-4">
-              <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Description
-              </label>
-              <textarea
-                id="description"
-                {...register('description')}
-                rows={4}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-                placeholder="Detailed product description"
-              />
-            </div>
-          </div>
-
-          {/* Pricing */}
-          <div className="border-b border-gray-200 dark:border-gray-700 pb-4 sm:pb-6">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Pricing</h2>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              <div>
-                <label htmlFor="price" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Price *
-                </label>
-                <input
-                  id="price"
-                  type="number"
-                  step="0.01"
-                  {...register('price', { valueAsNumber: true })}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-                  placeholder="0.00"
-                  min="0"
-                />
-                {errors.price && (
-                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.price.message}</p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="compareAtPrice" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Compare at Price
-                </label>
-                <input
-                  id="compareAtPrice"
-                  type="number"
-                  step="0.01"
-                  {...register('compareAtPrice', { valueAsNumber: true })}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-                  placeholder="0.00"
-                  min="0"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="costPrice" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Cost Price
-                </label>
-                <input
-                  id="costPrice"
-                  type="number"
-                  step="0.01"
-                  {...register('costPrice', { valueAsNumber: true })}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-                  placeholder="0.00"
-                  min="0"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Inventory */}
-          <div className="border-b border-gray-200 dark:border-gray-700 pb-4 sm:pb-6">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Inventory</h2>
-            
-            <div className="flex items-center mb-4">
-              <input
-                id="trackInventory"
-                type="checkbox"
-                {...register('trackInventory')}
-                className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:bg-gray-700"
-              />
-              <label htmlFor="trackInventory" className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                Track inventory
-              </label>
-            </div>
-
-            {trackInventory && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="stockQuantity" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Stock Quantity
+                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Product Name *
                   </label>
                   <input
-                    id="stockQuantity"
-                    type="number"
-                    {...register('stockQuantity', { valueAsNumber: true })}
+                    id="name"
+                    type="text"
+                    {...register('name')}
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-                    placeholder="0"
+                    placeholder="e.g., Product Name"
+                  />
+                  {errors.name && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.name.message}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label htmlFor="slug" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Slug *
+                  </label>
+                  <input
+                    id="slug"
+                    type="text"
+                    {...register('slug')}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                    placeholder="e.g., product-name"
+                  />
+                  {errors.slug && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.slug.message}</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="mt-4">
+                <label htmlFor="shortDescription" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Short Description
+                </label>
+                <input
+                  id="shortDescription"
+                  type="text"
+                  {...register('shortDescription')}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                  placeholder="Brief product description"
+                />
+              </div>
+
+              <div className="mt-4">
+                <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Description
+                </label>
+                <textarea
+                  id="description"
+                  {...register('description')}
+                  rows={4}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                  placeholder="Detailed product description"
+                />
+              </div>
+            </div>
+
+            {/* Pricing */}
+            <div className="border-b border-gray-200 dark:border-gray-700 pb-4 sm:pb-6">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Pricing</h2>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                <div>
+                  <label htmlFor="price" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Price *
+                  </label>
+                  <input
+                    id="price"
+                    type="number"
+                    step="0.01"
+                    {...register('price', { valueAsNumber: true })}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                    placeholder="0.00"
+                    min="0"
+                  />
+                  {errors.price && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.price.message}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label htmlFor="compareAtPrice" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Compare at Price
+                  </label>
+                  <input
+                    id="compareAtPrice"
+                    type="number"
+                    step="0.01"
+                    {...register('compareAtPrice', { valueAsNumber: true })}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                    placeholder="0.00"
                     min="0"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="lowStockThreshold" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Low Stock Threshold
+                  <label htmlFor="costPrice" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Cost Price
                   </label>
                   <input
-                    id="lowStockThreshold"
+                    id="costPrice"
                     type="number"
-                    {...register('lowStockThreshold', { valueAsNumber: true })}
+                    step="0.01"
+                    {...register('costPrice', { valueAsNumber: true })}
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-                    placeholder="10"
+                    placeholder="0.00"
                     min="0"
                   />
                 </div>
               </div>
-            )}
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-              <div>
-                <label htmlFor="sku" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  SKU
-                </label>
-                <input
-                  id="sku"
-                  type="text"
-                  {...register('sku')}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-                  placeholder="e.g., SKU-12345"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="barcode" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Barcode
-                </label>
-                <input
-                  id="barcode"
-                  type="text"
-                  {...register('barcode')}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-                  placeholder="e.g., 1234567890123"
-                />
-              </div>
             </div>
-          </div>
 
-          {/* Categories */}
-          <div className="border-b border-gray-200 dark:border-gray-700 pb-4 sm:pb-6">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Categories *</h2>
-            
-            {categoriesLoading ? (
-              <div className="text-gray-500 dark:text-gray-400">Loading categories...</div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-700/50">
-                {categories?.map((category) => (
-                  <label key={category.id} className="flex items-center space-x-2 cursor-pointer">
+            {/* Inventory */}
+            <div className="border-b border-gray-200 dark:border-gray-700 pb-4 sm:pb-6">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Inventory</h2>
+
+              <div className="flex items-center mb-4">
+                <input
+                  id="trackInventory"
+                  type="checkbox"
+                  {...register('trackInventory')}
+                  className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:bg-gray-700"
+                />
+                <label htmlFor="trackInventory" className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Track inventory
+                </label>
+              </div>
+
+              {trackInventory && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="stockQuantity" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Stock Quantity
+                    </label>
                     <input
-                      type="checkbox"
-                      checked={selectedCategories?.includes(category.id) || false}
-                      onChange={(e) => handleCategoryChange(category.id, e.target.checked)}
-                      className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:bg-gray-700"
+                      id="stockQuantity"
+                      type="number"
+                      {...register('stockQuantity', { valueAsNumber: true })}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                      placeholder="0"
+                      min="0"
                     />
-                    <span className="text-sm text-gray-700 dark:text-gray-300">{category.name}</span>
-                  </label>
-                ))}
-              </div>
-            )}
-            {errors.categoryIds && (
-              <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.categoryIds.message}</p>
-            )}
-          </div>
+                  </div>
 
-          {/* Images */}
-          <div className="border-b border-gray-200 dark:border-gray-700 pb-4 sm:pb-6">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Product Images</h2>
-            
-            {/* File Upload Area */}
-            <div
-              onDragOver={handleDragOver}
-              onDrop={handleDrop}
-              className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 mb-4 hover:border-blue-400 dark:hover:border-blue-500 transition-colors cursor-pointer bg-gray-50 dark:bg-gray-700/50"
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                className="hidden"
-                disabled={uploading}
-              />
-              <div className="text-center">
-                <Upload className="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-3" />
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                  {uploading ? 'Uploading...' : 'Click to upload or drag and drop'}
-                </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">PNG, JPG, GIF up to 5MB</p>
-              </div>
-            </div>
-
-            {/* URL Input */}
-            <div className="flex flex-col sm:flex-row gap-2 mb-4">
-              <input
-                type="url"
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-                placeholder="Or enter image URL"
-              />
-              <button
-                type="button"
-                onClick={handleAddImage}
-                disabled={!imageUrl}
-                className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Add URL
-            </button>
-          </div>
-
-          {watch('images') && watch('images')!.length > 0 && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-              {watch('images')!.map((image, index) => (
-                <div key={index} className="relative">
-                  <img
-                    src={image}
-                    alt={`Product image ${index + 1}`}
-                    className="w-full h-32 object-cover rounded-lg"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveImage(index)}
-                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
-                  >
-                    ×
-                  </button>
+                  <div>
+                    <label htmlFor="lowStockThreshold" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Low Stock Threshold
+                    </label>
+                    <input
+                      id="lowStockThreshold"
+                      type="number"
+                      {...register('lowStockThreshold', { valueAsNumber: true })}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                      placeholder="10"
+                      min="0"
+                    />
+                  </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
+              )}
 
-        {/* Additional Information */}
-        <div className="border-b border-gray-200 dark:border-gray-700 pb-4 sm:pb-6">
-          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Additional Information</h2>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="manufacturer" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Manufacturer
-              </label>
-              <input
-                id="manufacturer"
-                type="text"
-                {...register('manufacturer')}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-                placeholder="Manufacturer name"
-              />
-            </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                <div>
+                  <label htmlFor="sku" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    SKU
+                  </label>
+                  <input
+                    id="sku"
+                    type="text"
+                    {...register('sku')}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                    placeholder="e.g., SKU-12345"
+                  />
+                </div>
 
-            <div>
-              <label htmlFor="weight" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Weight
-              </label>
-              <div className="flex space-x-2">
-                <input
-                  id="weight"
-                  type="number"
-                  step="0.01"
-                  {...register('weight', { valueAsNumber: true })}
-                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-                  placeholder="0.00"
-                  min="0"
-                />
-                <select
-                  {...register('weightUnit')}
-                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                >
-                  <option value="kg">kg</option>
-                  <option value="g">g</option>
-                  <option value="lb">lb</option>
-                  <option value="oz">oz</option>
-                </select>
+                <div>
+                  <label htmlFor="barcode" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Barcode
+                  </label>
+                  <input
+                    id="barcode"
+                    type="text"
+                    {...register('barcode')}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                    placeholder="e.g., 1234567890123"
+                  />
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-            <div className="flex items-center">
-              <input
-                id="isActive"
-                type="checkbox"
-                {...register('isActive')}
-                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-              />
-              <label htmlFor="isActive" className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                Active
-              </label>
+            {/* Categories */}
+            <div className="border-b border-gray-200 dark:border-gray-700 pb-4 sm:pb-6">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Categories *</h2>
+
+              {categoriesLoading ? (
+                <div className="text-gray-500 dark:text-gray-400">Loading categories...</div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-700/50">
+                  {categories?.map((category) => (
+                    <label key={category.id} className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={selectedCategories?.includes(category.id) || false}
+                        onChange={(e) => handleCategoryChange(category.id, e.target.checked)}
+                        className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:bg-gray-700"
+                      />
+                      <span className="text-sm text-gray-700 dark:text-gray-300">{category.name}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
+              {errors.categoryIds && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.categoryIds.message}</p>
+              )}
             </div>
 
-            <div className="flex items-center">
-              <input
-                id="isFeatured"
-                type="checkbox"
-                {...register('isFeatured')}
-                className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:bg-gray-700"
-              />
-              <label htmlFor="isFeatured" className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                Featured
-              </label>
+            {/* Images */}
+            <div className="border-b border-gray-200 dark:border-gray-700 pb-4 sm:pb-6">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Product Images</h2>
+
+              {/* File Upload Area */}
+              <div
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
+                className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 mb-4 hover:border-blue-400 dark:hover:border-blue-500 transition-colors cursor-pointer bg-gray-50 dark:bg-gray-700/50"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="hidden"
+                  disabled={uploading}
+                />
+                <div className="text-center">
+                  <Upload className="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-3" />
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                    {uploading ? 'Uploading...' : 'Click to upload or drag and drop'}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">PNG, JPG, GIF up to 5MB</p>
+                </div>
+              </div>
+
+              {/* URL Input */}
+              <div className="flex flex-col sm:flex-row gap-2 mb-4">
+                <input
+                  type="url"
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                  placeholder="Or enter image URL"
+                />
+                <button
+                  type="button"
+                  onClick={handleAddImage}
+                  disabled={!imageUrl}
+                  className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Add URL
+                </button>
+              </div>
+
+              {watch('images') && watch('images')!.length > 0 && (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                  {watch('images')!.map((image, index) => (
+                    <div key={index} className="relative">
+                      <img
+                        src={image}
+                        alt={`Product image ${index + 1}`}
+                        className="w-full h-32 object-cover rounded-lg"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveImage(index)}
+                        className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
-            <div className="flex items-center">
-              <input
-                id="requiresPrescription"
-                type="checkbox"
-                {...register('requiresPrescription')}
-                className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:bg-gray-700"
-              />
-              <label htmlFor="requiresPrescription" className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                Requires Prescription
-              </label>
+            {/* Additional Information */}
+            <div className="border-b border-gray-200 dark:border-gray-700 pb-4 sm:pb-6">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Additional Information</h2>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="manufacturer" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Manufacturer
+                  </label>
+                  <input
+                    id="manufacturer"
+                    type="text"
+                    {...register('manufacturer')}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                    placeholder="Manufacturer name"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="weight" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Weight
+                  </label>
+                  <div className="flex space-x-2">
+                    <input
+                      id="weight"
+                      type="number"
+                      step="0.01"
+                      {...register('weight', { valueAsNumber: true })}
+                      className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                      placeholder="0.00"
+                      min="0"
+                    />
+                    <select
+                      {...register('weightUnit')}
+                      className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                    >
+                      <option value="kg">kg</option>
+                      <option value="g">g</option>
+                      <option value="lb">lb</option>
+                      <option value="oz">oz</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                <div className="flex items-center">
+                  <input
+                    id="isActive"
+                    type="checkbox"
+                    {...register('isActive')}
+                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  <label htmlFor="isActive" className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Active
+                  </label>
+                </div>
+
+                <div className="flex items-center">
+                  <input
+                    id="isFeatured"
+                    type="checkbox"
+                    {...register('isFeatured')}
+                    className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:bg-gray-700"
+                  />
+                  <label htmlFor="isFeatured" className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Featured
+                  </label>
+                </div>
+
+                <div className="flex items-center">
+                  <input
+                    id="requiresPrescription"
+                    type="checkbox"
+                    {...register('requiresPrescription')}
+                    className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:bg-gray-700"
+                  />
+                  <label htmlFor="requiresPrescription" className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Requires Prescription
+                  </label>
+                </div>
+
+                <div className="flex items-center">
+                  <input
+                    id="isOTC"
+                    type="checkbox"
+                    {...register('isOTC')}
+                    className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:bg-gray-700"
+                  />
+                  <label htmlFor="isOTC" className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Over-the-Counter (OTC)
+                  </label>
+                </div>
+              </div>
             </div>
 
-            <div className="flex items-center">
-              <input
-                id="isOTC"
-                type="checkbox"
-                {...register('isOTC')}
-                className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:bg-gray-700"
-              />
-              <label htmlFor="isOTC" className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                Over-the-Counter (OTC)
-              </label>
-            </div>
-          </div>
-        </div>
+            {/* SEO */}
+            <div className="pb-4 sm:pb-6">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">SEO</h2>
 
-        {/* SEO */}
-        <div className="pb-4 sm:pb-6">
-          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">SEO</h2>
-          
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="metaTitle" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Meta Title
-              </label>
-              <input
-                id="metaTitle"
-                type="text"
-                {...register('metaTitle')}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-                placeholder="SEO title"
-              />
+              <div className="space-y-4">
+                <div>
+                  <label htmlFor="metaTitle" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Meta Title
+                  </label>
+                  <input
+                    id="metaTitle"
+                    type="text"
+                    {...register('metaTitle')}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                    placeholder="SEO title"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="metaDescription" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Meta Description
+                  </label>
+                  <textarea
+                    id="metaDescription"
+                    {...register('metaDescription')}
+                    rows={3}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                    placeholder="SEO description"
+                  />
+                </div>
+              </div>
             </div>
 
-            <div>
-              <label htmlFor="metaDescription" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Meta Description
-              </label>
-              <textarea
-                id="metaDescription"
-                {...register('metaDescription')}
-                rows={3}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-                placeholder="SEO description"
-              />
+            {/* Actions */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 pt-4 sm:pt-6 border-t border-gray-200 dark:border-gray-700">
+              <Link
+                href="/dashboard/products"
+                className="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition text-center text-sm sm:text-base text-gray-700 dark:text-gray-300"
+              >
+                Cancel
+              </Link>
+              <button
+                type="submit"
+                disabled={mutation.isPending}
+                className="px-6 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-sm sm:text-base"
+              >
+                {mutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                Create Product
+              </button>
             </div>
-          </div>
-        </div>
-
-        {/* Actions */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 pt-4 sm:pt-6 border-t border-gray-200 dark:border-gray-700">
-          <Link
-            href="/dashboard/products"
-            className="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition text-center text-sm sm:text-base text-gray-700 dark:text-gray-300"
-          >
-            Cancel
-          </Link>
-          <button
-            type="submit"
-            disabled={mutation.isPending}
-            className="px-6 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-sm sm:text-base"
-          >
-            {mutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-            Create Product
-          </button>
-        </div>
-      </form>
+          </form>
         </div>
       )}
     </div>

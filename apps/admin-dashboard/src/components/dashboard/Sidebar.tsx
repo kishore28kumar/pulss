@@ -24,54 +24,60 @@ import { Permission, getUserRole } from '@/lib/permissions';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { 
+  {
     name: 'Tenants', // Shows as 'Tenants' for SUPER_ADMIN, 'Staff' for ADMIN/STAFF
-    href: '/dashboard/staff', 
+    href: '/dashboard/staff',
     icon: UserCog,
     permission: Permission.STAFF_VIEW,
   },
-  { 
-    name: 'Customers', 
-    href: '/dashboard/customers', 
+  {
+    name: 'Customers',
+    href: '/dashboard/customers',
     icon: Users,
     requireAdminOrStaff: true, // Only ADMIN and STAFF can see Customers
   },
-  { 
-    name: 'Orders', 
-    href: '/dashboard/orders', 
+  {
+    name: 'Orders',
+    href: '/dashboard/orders',
     icon: ShoppingCart,
     requireAdminOrStaff: true, // Only ADMIN and STAFF can see Orders
   },
   { name: 'Products', href: '/dashboard/products', icon: Package },
-  { 
-    name: 'Categories', 
-    href: '/dashboard/categories', 
+  {
+    name: 'Categories',
+    href: '/dashboard/categories',
     icon: FolderTree,
     requireAdminOrStaff: true, // Only ADMIN and STAFF can see Categories
   },
-  { 
-    name: 'Analytics', 
-    href: '/dashboard/analytics', 
+  {
+    name: 'Analytics',
+    href: '/dashboard/analytics',
     icon: BarChart3,
     permission: Permission.ANALYTICS_VIEW,
   },
-  { 
-    name: 'Chat', 
-    href: '/dashboard/chat', 
+  {
+    name: 'Chat',
+    href: '/dashboard/chat',
     icon: MessageCircle,
     requireAdminOrStaff: true, // ADMIN, STAFF, and SUPER_ADMIN can see Chat
     allowSuperAdmin: true, // Explicitly allow SUPER_ADMIN
   },
-  { 
-    name: 'Broadcasts', 
-    href: '/dashboard/broadcasts', 
-    icon: Megaphone,
+  {
+    name: 'Broadcasts',
+    href: '/dashboard/broadcasts',
+    icon: MessageCircle,
     requireAdminOrStaff: true, // ADMIN, STAFF, and SUPER_ADMIN can see Broadcasts
     allowSuperAdmin: true, // Explicitly allow SUPER_ADMIN
   },
-  { 
-    name: 'Mail', 
-    href: '/dashboard/mail', 
+  {
+    name: 'Ad Permissions',
+    href: '/dashboard/ads',
+    icon: Megaphone,
+    permission: Permission.ADS_VIEW,  // Use permission guard
+  },
+  {
+    name: 'Mail',
+    href: '/dashboard/mail',
     icon: Mail,
     requireAdminOrStaff: true, // Only SUPER_ADMIN and ADMIN can see Mail
     allowSuperAdmin: true,
@@ -136,11 +142,11 @@ export default function Sidebar({ onClose }: SidebarProps) {
           if ((item as any).requireSuperAdminOrAdmin && (!mounted || !['SUPER_ADMIN', 'ADMIN'].includes(userRole || ''))) {
             return null;
           }
-          
+
           // Skip items that require Admin or Staff if user is not ADMIN or STAFF
           // Exception: if allowSuperAdmin is true, also allow SUPER_ADMIN
           if (item.requireAdminOrStaff) {
-            const allowedRoles = item.allowSuperAdmin 
+            const allowedRoles = item.allowSuperAdmin
               ? ['ADMIN', 'STAFF', 'SUPER_ADMIN']
               : ['ADMIN', 'STAFF'];
             if (!mounted || !allowedRoles.includes(userRole || '')) {
@@ -148,15 +154,16 @@ export default function Sidebar({ onClose }: SidebarProps) {
             }
           }
 
-          // Determine display name: "Tenants" for SUPER_ADMIN, "Staff" for others
-          const displayName = item.name === 'Tenants' && mounted && userRole !== 'SUPER_ADMIN' 
-            ? 'Staff' 
+          // Determine display name: "Store Admins" for SUPER_ADMIN, "Staff" for others
+          const displayName = item.name === 'Tenants' && mounted
+            ? (userRole === 'SUPER_ADMIN' ? 'Store Admins' : 'Staff')
             : item.name;
 
           // For Dashboard, only match exact path. For other routes, match exact or sub-routes
-          const isActive = item.href === '/dashboard' 
+          const isActive = item.href === '/dashboard'
             ? pathname === '/dashboard' || pathname === '/dashboard/'
             : pathname === item.href || pathname.startsWith(item.href + '/');
+
           const navItem = (
             <Link
               key={item.name}
@@ -196,4 +203,3 @@ export default function Sidebar({ onClose }: SidebarProps) {
     </div>
   );
 }
-

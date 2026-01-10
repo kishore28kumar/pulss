@@ -77,6 +77,7 @@ export const getIO = () => {
 
 export const initializeSocketIO = (httpServer: HTTPServer) => {
   // Import getCorsOrigins to match Express CORS configuration
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { getCorsOrigins } = require('../config/urls');
   const allowedOrigins = getCorsOrigins();
   const FALLBACK_ORIGINS = [
@@ -86,7 +87,7 @@ export const initializeSocketIO = (httpServer: HTTPServer) => {
     'https://pulss-storefront.onrender.com',
   ];
   const allAllowedOrigins = [...new Set([...allowedOrigins, ...FALLBACK_ORIGINS])];
-  
+
   console.log('[Socket.io] Allowed origins:', allAllowedOrigins);
 
   const io = new SocketIOServer(httpServer, {
@@ -97,16 +98,16 @@ export const initializeSocketIO = (httpServer: HTTPServer) => {
           if (!origin) {
             return callback(null, true);
           }
-          
+
           // Normalize origin (remove trailing slash)
           const normalizedOrigin = origin.replace(/\/$/, '');
-          
+
           // Check if origin is in allowed list
           const isAllowed = allAllowedOrigins.some(allowed => {
             const normalizedAllowed = allowed.replace(/\/$/, '');
             return normalizedAllowed === normalizedOrigin || allowed === origin;
           }) || (process.env.NODE_ENV !== 'production' && origin.includes('localhost'));
-          
+
           if (isAllowed) {
             callback(null, true);
           } else {
@@ -117,8 +118,8 @@ export const initializeSocketIO = (httpServer: HTTPServer) => {
           console.error('[Socket.io] Error in origin callback:', error);
           // In development, allow on error; in production, reject
           if (process.env.NODE_ENV === 'development') {
-          callback(null, true);
-        } else {
+            callback(null, true);
+          } else {
             callback(new Error('CORS validation failed'));
           }
         }
@@ -190,23 +191,23 @@ export const initializeSocketIO = (httpServer: HTTPServer) => {
         const { text, tenantId, tenantSlug, customerId: messageCustomerId } = data;
         const senderId = socket.userId!;
         const senderRole = socket.userRole!;
-        
+
         // Verify sender exists in database
         const sender = await prisma.users.findUnique({
           where: { id: senderId },
           select: { id: true, role: true },
         });
-        
+
         if (!sender) {
           console.error(`[Socket] Sender not found in database: ${senderId}`);
           socket.emit('error', { message: 'User not found. Please log in again.' });
           return;
         }
-        
+
         // Super Admins can send to any tenant, Admins only to their own tenant
         let targetTenantId: string;
         let targetTenantSlug: string;
-        
+
         if (senderRole === 'SUPER_ADMIN') {
           // Super Admin must provide tenantSlug (which we'll resolve to tenantId)
           const slug = tenantSlug || tenantId; // Accept either slug or ID for backward compatibility
@@ -214,18 +215,18 @@ export const initializeSocketIO = (httpServer: HTTPServer) => {
             socket.emit('error', { message: 'Tenant slug is required for Super Admin' });
             return;
           }
-          
+
           // Resolve tenant slug to tenant ID
           const tenant = await prisma.tenants.findUnique({
             where: { slug: slug, status: 'ACTIVE' },
             select: { id: true, slug: true },
           });
-          
+
           if (!tenant) {
             socket.emit('error', { message: 'Tenant not found' });
             return;
           }
-          
+
           targetTenantId = tenant.id;
           targetTenantSlug = tenant.slug;
         } else {
@@ -264,10 +265,10 @@ export const initializeSocketIO = (httpServer: HTTPServer) => {
         // Save message to database
         // For customers, customerId is their own customer ID
         // For admins/staff/super_admin, customerId is the customer they're replying to (from data)
-        let dbCustomerId: string | null = senderRole === 'CUSTOMER' 
+        let dbCustomerId: string | null = senderRole === 'CUSTOMER'
           ? (socket.customerId || null)
           : (messageCustomerId || null);
-        
+
         // Log customer ID resolution for debugging
         if (senderRole === 'CUSTOMER') {
           console.log('[Socket] Customer message:', {
@@ -276,7 +277,7 @@ export const initializeSocketIO = (httpServer: HTTPServer) => {
             senderId,
             tenantId: targetTenantId,
           });
-          
+
           // If customerId is not set, try to get it from the customer record
           if (!dbCustomerId && socket.userId) {
             try {
@@ -297,7 +298,7 @@ export const initializeSocketIO = (httpServer: HTTPServer) => {
               console.error('[Socket] Error resolving customerId:', err);
             }
           }
-          
+
           // Final check: if still no customerId, log warning and don't save message
           if (!dbCustomerId) {
             console.error('[Socket] ERROR: customerId is null for customer message! Cannot save message.', {
@@ -305,13 +306,13 @@ export const initializeSocketIO = (httpServer: HTTPServer) => {
               senderRole,
               socketCustomerId: socket.customerId,
             });
-            socket.emit('error', { 
-              message: 'Unable to save message: Customer ID not found. Please refresh and try again.' 
+            socket.emit('error', {
+              message: 'Unable to save message: Customer ID not found. Please refresh and try again.'
             });
             return;
           }
         }
-        
+
         // Define message type
         type MessageWithSender = {
           id: string;
@@ -329,7 +330,7 @@ export const initializeSocketIO = (httpServer: HTTPServer) => {
             avatar: string | null;
           };
         };
-        
+
         let message: MessageWithSender;
         try {
           // Log message details for debugging
@@ -341,34 +342,34 @@ export const initializeSocketIO = (httpServer: HTTPServer) => {
             tenantId: targetTenantId,
             textLength: text.trim().length,
           });
-          
+
           const dbMessage = await prisma.messages.create({
-          data: {
-            text: text.trim(),
-            senderId, // This is now the user ID (resolved from customer ID if needed)
-            senderType,
-            tenantId: targetTenantId,
-            customerId: dbCustomerId,
-          },
-          include: {
-            sender: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                email: true,
-                avatar: true,
+            data: {
+              text: text.trim(),
+              senderId, // This is now the user ID (resolved from customer ID if needed)
+              senderType,
+              tenantId: targetTenantId,
+              customerId: dbCustomerId,
+            },
+            include: {
+              sender: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                  email: true,
+                  avatar: true,
+                },
               },
             },
-          },
-        });
-          
+          });
+
           console.log('[Socket] Message saved successfully:', {
             id: dbMessage.id,
             customerId: dbMessage.customerId,
             tenantId: dbMessage.tenantId,
           });
-          
+
           message = {
             id: dbMessage.id,
             text: dbMessage.text,
@@ -396,7 +397,7 @@ export const initializeSocketIO = (httpServer: HTTPServer) => {
                 avatar: true,
               },
             });
-            
+
             // Create temporary message object (won't be persisted)
             message = {
               id: `temp_${Date.now()}`,
@@ -435,7 +436,7 @@ export const initializeSocketIO = (httpServer: HTTPServer) => {
         // Broadcast to all users in the tenant room (use slug for room name)
         console.log(`📤 Broadcasting message to room: tenant:${targetTenantSlug}`);
         io.to(`tenant:${targetTenantSlug}`).emit('message', formattedMessage);
-        
+
         // Also send to sender (in case they're not in the room yet)
         socket.emit('message', formattedMessage);
 

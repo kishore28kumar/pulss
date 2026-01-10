@@ -12,6 +12,8 @@ import routes from './routes';
 import { getCorsOrigins } from './config/urls';
 import { connectWithRetry, checkConnection, prisma } from '@pulss/database';
 import { initializeSocketIO } from './socket/socketHandler';
+import adRoutes from './routes/adRoutes';
+
 
 dotenv.config();
 
@@ -70,27 +72,27 @@ const corsOptions = {
       if (!origin) {
         return callback(null, true);
       }
-      
+
       // Normalize origin (remove trailing slash if present)
       const normalizedOrigin = origin.replace(/\/$/, '');
-      
+
       // Check if origin is in allowed list (check both original and normalized versions)
-      const isAllowed = normalizedAllowedOrigins.includes(normalizedOrigin) || 
-                       allAllowedOrigins.includes(origin) ||
-                       allAllowedOrigins.some(allowed => {
-                         const normalizedAllowed = allowed.replace(/\/$/, '');
-                         return normalizedAllowed === normalizedOrigin;
-                       });
-      
+      const isAllowed = normalizedAllowedOrigins.includes(normalizedOrigin) ||
+        allAllowedOrigins.includes(origin) ||
+        allAllowedOrigins.some(allowed => {
+          const normalizedAllowed = allowed.replace(/\/$/, '');
+          return normalizedAllowed === normalizedOrigin;
+        });
+
       if (isAllowed) {
         return callback(null, true);
       }
-      
-        // In development, allow localhost with any port
+
+      // In development, allow localhost with any port
       if (process.env.NODE_ENV !== 'production' && origin.includes('localhost')) {
         return callback(null, true);
       }
-      
+
       // Log rejected origin for debugging (only first few times to avoid log spam)
       const rejectCount = (global as any).corsRejectCount || 0;
       if (rejectCount < 10) {
@@ -99,20 +101,20 @@ const corsOptions = {
         console.log(`[CORS] Allowed origins:`, allAllowedOrigins);
         (global as any).corsRejectCount = rejectCount + 1;
       }
-      
+
       // For production, reject unknown origins
       callback(new Error(`Not allowed by CORS. Origin: ${origin}`));
     } catch (error) {
       // If there's an error in the callback, log it but allow the request to prevent breaking CORS entirely
       console.error('[CORS] Error in origin callback:', error);
       callback(null, true); // Fallback to allowing the request
-      }
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Tenant-Slug', 'X-Requested-With'],
-    exposedHeaders: ['Content-Type', 'Authorization'],
-    maxAge: 86400, // 24 hours
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Tenant-Slug', 'X-Requested-With'],
+  exposedHeaders: ['Content-Type', 'Authorization'],
+  maxAge: 86400, // 24 hours
   preflightContinue: false, // CORS middleware handles preflight and doesn't pass to next
   optionsSuccessStatus: 204,
 };
@@ -124,14 +126,14 @@ app.use(cors(corsOptions));
 // This runs AFTER CORS middleware to ensure we catch any OPTIONS requests that weren't handled
 app.options('*', (req: express.Request, res: express.Response): void => {
   const origin = req.headers.origin;
-  
+
   // Log OPTIONS request for debugging (only first few)
   const optionsLogCount = (global as any).optionsLogCount || 0;
   if (optionsLogCount < 5) {
     console.log(`[CORS Preflight] OPTIONS ${req.path}`, { origin, headers: req.headers });
     (global as any).optionsLogCount = optionsLogCount + 1;
   }
-  
+
   // Always set CORS headers for OPTIONS requests if origin is present and allowed
   if (origin) {
     const normalizedOrigin = origin.replace(/\/$/, '');
@@ -139,7 +141,7 @@ app.options('*', (req: express.Request, res: express.Response): void => {
       const normalizedAllowed = allowed.replace(/\/$/, '');
       return normalizedAllowed === normalizedOrigin || allowed === origin;
     }) || (process.env.NODE_ENV !== 'production' && origin.includes('localhost'));
-    
+
     if (isAllowed) {
       // Set headers if not already set by CORS middleware
       if (!res.getHeader('Access-Control-Allow-Origin')) {
@@ -167,7 +169,7 @@ app.options('*', (req: express.Request, res: express.Response): void => {
       }
     }
   }
-  
+
   // If no origin or not allowed, respond with 204 but without CORS headers
   // Browser will reject this, which is correct behavior
   res.status(204).end();
@@ -185,7 +187,7 @@ app.use((req: express.Request, res: express.Response, next: express.NextFunction
         const normalizedAllowed = allowed.replace(/\/$/, '');
         return normalizedAllowed === normalizedOrigin || allowed === origin;
       }) || (process.env.NODE_ENV !== 'production' && origin.includes('localhost'));
-      
+
       if (isAllowed) {
         res.setHeader('Access-Control-Allow-Origin', origin);
         res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -197,7 +199,7 @@ app.use((req: express.Request, res: express.Response, next: express.NextFunction
     // Don't call next() for OPTIONS - let it end here
     return;
   }
-  
+
   // For non-OPTIONS requests, set CORS headers as backup
   const origin = req.headers.origin;
   if (origin && !res.getHeader('Access-Control-Allow-Origin')) {
@@ -206,7 +208,7 @@ app.use((req: express.Request, res: express.Response, next: express.NextFunction
       const normalizedAllowed = allowed.replace(/\/$/, '');
       return normalizedAllowed === normalizedOrigin || allowed === origin;
     }) || (process.env.NODE_ENV !== 'production' && origin.includes('localhost'));
-    
+
     if (isAllowed) {
       res.setHeader('Access-Control-Allow-Origin', origin);
       res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -255,10 +257,10 @@ app.use(tenantMiddleware);
 // Health check endpoint (must be before error handler)
 app.get('/health', async (_req, res) => {
   try {
-  const dbConnected = await checkConnection();
-    res.status(200).json({ 
-    status: 'ok', 
-    message: 'Pulss API is running',
+    const dbConnected = await checkConnection();
+    res.status(200).json({
+      status: 'ok',
+      message: 'Pulss API is running',
       database: dbConnected ? 'connected' : 'disconnected',
       timestamp: new Date().toISOString()
     });
@@ -341,6 +343,7 @@ app.get('/health', async (_req, res) => {
 });
 
 app.use('/api', routes);
+app.use('/api/ads', adRoutes);
 
 // ============================================
 // ERROR HANDLING
@@ -374,7 +377,7 @@ httpServer.listen(PORT, '0.0.0.0', () => {
   console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🔌 Socket.io server initialized`);
   console.log(`🌐 Server listening on 0.0.0.0:${PORT}`);
-  
+
   // Log health check endpoint
   console.log(`💚 Health check: http://localhost:${PORT}/`);
 });
@@ -410,7 +413,7 @@ process.on('uncaughtException', (error) => {
     // Give time for logs to be written
     setTimeout(() => process.exit(1), 1000);
   } else {
-  process.exit(1);
+    process.exit(1);
   }
 });
 
@@ -431,7 +434,7 @@ process.on('SIGTERM', () => {
     console.log('✅ HTTP server closed');
     process.exit(0);
   });
-  
+
   // Force close after 10 seconds
   setTimeout(() => {
     console.error('⚠️  Forcing shutdown after timeout');
@@ -445,11 +448,11 @@ process.on('SIGINT', () => {
     console.log('✅ HTTP server closed');
     process.exit(0);
   });
-  
+
   // Force close after 10 seconds
   setTimeout(() => {
     console.error('⚠️  Forcing shutdown after timeout');
-  process.exit(1);
+    process.exit(1);
   }, 10000);
 });
 

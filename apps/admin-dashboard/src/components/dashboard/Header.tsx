@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { LogOut, User, Store, Menu, MessageCircle, Mail } from 'lucide-react';
+import { LogOut, User, Store, Menu, MessageCircle, Mail, ExternalLink } from 'lucide-react';
+import { getStorefrontUrl } from '@/lib/config/urls';
 import NotificationDropdown from './NotificationDropdown';
 import { authService } from '@/lib/auth';
 import { useRouter, usePathname } from 'next/navigation';
@@ -20,7 +21,7 @@ function ChatNotificationButton() {
   const router = useRouter();
   const pathname = usePathname();
   const { unreadCount } = useChat();
-  
+
   // Only show notification when NOT on chat page and there are unread messages
   const isOnChatPage = pathname === '/dashboard/chat';
   const showNotification = !isOnChatPage && unreadCount > 0;
@@ -59,7 +60,7 @@ function MailNotificationButton() {
   if (!mounted || !['SUPER_ADMIN', 'ADMIN'].includes(userRole || '')) {
     return null;
   }
-  
+
   // Only show notification when NOT on mail page and there are unread messages
   const isOnMailPage = pathname === '/dashboard/mail';
   const showNotification = !isOnMailPage && unreadCount > 0;
@@ -153,28 +154,37 @@ export default function Header({ onMenuClick }: HeaderProps) {
             </div>
           </div>
           <div className="hidden sm:flex items-center space-x-2 mt-1">
-            {user?.tenant && (
-              <>
-                <Store className="w-4 h-4 text-gray-400 dark:text-gray-500 flex-shrink-0" />
-                <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{user.tenant.name}</p>
-              </>
+            {user?.tenant && user.tenant.name && isLoaded && (userRole === 'ADMIN' || userRole === 'STAFF') && (
+              <a
+                href={user.tenant.slug ? `${getStorefrontUrl()}/${user.tenant.slug}` : getStorefrontUrl()}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center space-x-2 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors group"
+                title="View Live Store"
+              >
+                <Store className="w-4 h-4 flex-shrink-0" />
+                <p className="text-sm font-medium truncate">{user.tenant.name}</p>
+                <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </a>
             )}
           </div>
         </div>
       </div>
 
       <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
-        {/* Theme Toggle */}
-        <ThemeToggle />
+        <div className="hidden sm:flex items-center space-x-2 sm:space-x-4">
+          {/* Theme Toggle */}
+          <ThemeToggle />
 
-        {/* Chat Notifications */}
-        <ChatNotificationButton />
+          {/* Chat Notifications */}
+          <ChatNotificationButton />
 
-        {/* Mail Notifications */}
-        <MailNotificationButton />
+          {/* Mail Notifications */}
+          <MailNotificationButton />
 
-        {/* Notifications */}
-        <NotificationDropdown />
+          {/* Notifications */}
+          <NotificationDropdown />
+        </div>
 
         {/* User Menu */}
         <div className="relative" ref={menuRef}>
@@ -194,10 +204,51 @@ export default function Header({ onMenuClick }: HeaderProps) {
           </button>
 
           {showMenu && (
-            <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-50 transition-colors">
+            <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-50 transition-colors">
+              {/* Mobile Only Actions */}
+              <div className="sm:hidden border-b border-gray-100 dark:border-gray-700 pb-2 mb-2 px-4 space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-gray-500 uppercase">Theme</span>
+                  <ThemeToggle />
+                </div>
+
+                {userRole === 'SUPER_ADMIN' && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium text-gray-500 uppercase">Role</span>
+                    <RoleBadge />
+                  </div>
+                )}
+
+                {(userRole === 'ADMIN' || userRole === 'STAFF') && user?.tenant?.name && (
+                  <a
+                    href={user.tenant.slug ? `${getStorefrontUrl()}/${user.tenant.slug}` : getStorefrontUrl()}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center space-x-2 text-sm text-blue-600 dark:text-blue-400 font-medium py-1"
+                  >
+                    <Store className="w-4 h-4" />
+                    <span>View Store</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                )}
+
+                <div className="flex items-center justify-around pt-2">
+                  <ChatNotificationButton />
+                  <MailNotificationButton />
+                  <NotificationDropdown />
+                </div>
+              </div>
+
+              <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700 sm:hidden">
+                <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
+                  {user?.firstName} {user?.lastName}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.email}</p>
+              </div>
+
               <button
                 onClick={handleLogout}
-                className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                className="w-full flex items-center space-x-2 px-4 py-3 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
               >
                 <LogOut className="w-4 h-4" />
                 <span>Logout</span>
