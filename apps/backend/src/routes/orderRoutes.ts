@@ -5,6 +5,7 @@ import {
   createOrder,
   updateOrderStatus,
   getCustomerOrders,
+  exportOrders,
 } from '../controllers/orderController';
 import { authenticateUser, authenticateCustomer, requireAdminOrStaff } from '../middleware/authMiddleware';
 import { requireTenant, ensureTenantAccess } from '../middleware/tenantMiddleware';
@@ -18,6 +19,16 @@ router.get('/my-orders', authenticateCustomer, requireTenant, getCustomerOrders)
 router.get('/customer/:id', authenticateCustomer, requireTenant, getOrder);
 
 // Admin/Staff routes
+router.get(
+  '/export',
+  authenticateUser,
+  requireAdminOrStaff,
+  requireTenant,
+  ensureTenantAccess,
+  requirePermission(Permission.ORDERS_EXPORT),
+  exportOrders
+);
+
 router.get(
   '/',
   authenticateUser,
