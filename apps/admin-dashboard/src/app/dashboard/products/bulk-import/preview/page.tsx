@@ -306,65 +306,65 @@ export default function BulkImportPreviewPage() {
       <div>
         <Link
           href="/dashboard/products/bulk-import"
-          className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-2 text-sm sm:text-base"
+          className="inline-flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 mb-2 text-sm sm:text-base"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Import
         </Link>
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Review & Validate Products</h1>
-        <p className="text-sm sm:text-base text-gray-500 mt-1">Review your products before publishing</p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Review & Validate Products</h1>
+        <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-1">Review your products before publishing</p>
       </div>
 
       {/* Summary */}
-      <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
         <div className="grid grid-cols-3 gap-3 sm:gap-4">
           <div className="text-center">
-            <div className="text-3xl font-bold text-gray-900">{products.length}</div>
-            <div className="text-sm text-gray-500">Total Products</div>
+            <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">{products.length}</div>
+            <div className="text-sm text-gray-500 dark:text-gray-400">Total Products</div>
           </div>
           <div className="text-center">
-            <div className="text-3xl font-bold text-green-600">{validCount}</div>
-            <div className="text-sm text-gray-500">Valid</div>
+            <div className="text-3xl font-bold text-green-600 dark:text-green-500">{validCount}</div>
+            <div className="text-sm text-gray-500 dark:text-gray-400">Valid</div>
           </div>
           <div className="text-center">
-            <div className="text-3xl font-bold text-red-600">{invalidCount}</div>
-            <div className="text-sm text-gray-500">Invalid</div>
+            <div className="text-3xl font-bold text-red-600 dark:text-red-500">{invalidCount}</div>
+            <div className="text-sm text-gray-500 dark:text-gray-400">Invalid</div>
           </div>
         </div>
       </div>
 
       {/* Products Table */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
+            <thead className="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Product Name
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Slug
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Price
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Stock
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Category
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
               {products.map((product) => (
-                <tr key={product.id} className="hover:bg-gray-50">
+                <tr key={product.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                   <td className="px-6 py-4 whitespace-nowrap">
                     {product.isValid ? (
                       <CheckCircle className="w-5 h-5 text-green-500" />
@@ -378,13 +378,13 @@ export default function BulkImportPreviewPage() {
                         type="text"
                         value={editingProduct.name}
                         onChange={(e) => handleFieldChange('name', e.target.value)}
-                        className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                        className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                       />
                     ) : (
-                      <div className="text-sm font-medium text-gray-900">{product.name}</div>
+                      <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{product.name}</div>
                     )}
                     {product.errors.length > 0 && (
-                      <div className="text-xs text-red-600 mt-1">
+                      <div className="text-xs text-red-600 dark:text-red-400 mt-1">
                         {product.errors[0]}
                         {product.errors.length > 1 && ` (+${product.errors.length - 1} more)`}
                       </div>
@@ -396,10 +396,10 @@ export default function BulkImportPreviewPage() {
                         type="text"
                         value={editingProduct.slug}
                         onChange={(e) => handleFieldChange('slug', e.target.value)}
-                        className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                        className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                       />
                     ) : (
-                      <div className="text-sm text-gray-500">{product.slug}</div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400">{product.slug}</div>
                     )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -409,18 +409,18 @@ export default function BulkImportPreviewPage() {
                         step="0.01"
                         value={editingProduct.price}
                         onChange={(e) => handleFieldChange('price', e.target.value)}
-                        className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                        className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                       />
                     ) : (
-                      <div className="text-sm text-gray-900">
+                      <div className="text-sm text-gray-900 dark:text-gray-100">
                         {formatCurrency(parseFloat(product.price || '0'))}
                       </div>
                     )}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                     {product.stockQuantity || '0'}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                     {product.categorySlug || 'N/A'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -435,7 +435,7 @@ export default function BulkImportPreviewPage() {
                         </button>
                         <button
                           onClick={handleCancelEdit}
-                          className="p-2 text-gray-400 hover:text-gray-600 transition"
+                          className="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition"
                           title="Cancel"
                         >
                           <XCircle className="w-4 h-4" />
@@ -445,14 +445,14 @@ export default function BulkImportPreviewPage() {
                       <div className="flex items-center justify-end space-x-2">
                         <button
                           onClick={() => handleEdit(product)}
-                          className="p-2 text-gray-400 hover:text-blue-600 transition"
+                          className="p-2 text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 transition"
                           title="Edit"
                         >
                           <Edit className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleRemove(product.id)}
-                          className="p-2 text-gray-400 hover:text-red-600 transition"
+                          className="p-2 text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 transition"
                           title="Remove"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -468,13 +468,13 @@ export default function BulkImportPreviewPage() {
       </div>
 
       {/* Actions */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-white rounded-xl border border-gray-200 p-4 sm:p-6">
-        <div className="text-xs sm:text-sm text-gray-500 text-center sm:text-left">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
+        <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 text-center sm:text-left">
           {validCount > 0 && (
-            <span className="text-green-600 font-medium block sm:inline">{validCount} product(s) ready to publish</span>
+            <span className="text-green-600 dark:text-green-500 font-medium block sm:inline">{validCount} product(s) ready to publish</span>
           )}
           {invalidCount > 0 && (
-            <span className="text-red-600 font-medium block sm:inline sm:ml-4 mt-1 sm:mt-0">
+            <span className="text-red-600 dark:text-red-500 font-medium block sm:inline sm:ml-4 mt-1 sm:mt-0">
               {invalidCount} product(s) need attention
             </span>
           )}
@@ -482,14 +482,14 @@ export default function BulkImportPreviewPage() {
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
           <Link
             href="/dashboard/products/bulk-import"
-            className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition text-center text-sm sm:text-base"
+            className="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition text-center text-sm sm:text-base text-gray-700 dark:text-gray-300"
           >
             Cancel
           </Link>
           <button
             onClick={handlePublish}
             disabled={publishMutation.isPending || validCount === 0}
-            className="inline-flex items-center justify-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+            className="inline-flex items-center justify-center px-6 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
           >
             {publishMutation.isPending ? (
               <>
