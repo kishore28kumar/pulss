@@ -34,18 +34,26 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
+    // Listen for custom event (same-tab updates)
+    const handleUserUpdate = (e: CustomEvent) => {
+      setUser(e.detail.user);
+    };
+
     window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    window.addEventListener('userUpdated', handleUserUpdate as EventListener);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('userUpdated', handleUserUpdate as EventListener);
+    };
   }, []);
 
   // Update user in both state and localStorage
   const updateUser = useCallback((updatedUser: AuthUser) => {
     setUser(updatedUser);
     localStorage.setItem('user', JSON.stringify(updatedUser));
-    // Dispatch custom event for same-tab updates
-    window.dispatchEvent(new StorageEvent('storage', {
-      key: 'user',
-      newValue: JSON.stringify(updatedUser),
+    // Dispatch custom event for same-tab updates (not StorageEvent which is for cross-tab)
+    window.dispatchEvent(new CustomEvent('userUpdated', {
+      detail: { user: updatedUser },
     }));
   }, []);
 

@@ -10,10 +10,9 @@ export const authService = {
     localStorage.setItem('refreshToken', tokens.refreshToken);
     localStorage.setItem('user', JSON.stringify(user));
 
-    // Dispatch storage event for UserContext
-    window.dispatchEvent(new StorageEvent('storage', {
-      key: 'user',
-      newValue: JSON.stringify(user),
+    // Dispatch custom event for same-tab updates (not StorageEvent which is for cross-tab)
+    window.dispatchEvent(new CustomEvent('userUpdated', {
+      detail: { user },
     }));
 
     return { user, tokens };
@@ -39,10 +38,9 @@ export const authService = {
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
     
-    // Dispatch storage event for UserContext
-    window.dispatchEvent(new StorageEvent('storage', {
-      key: 'user',
-      newValue: null,
+    // Dispatch custom event for same-tab updates (not StorageEvent which is for cross-tab)
+    window.dispatchEvent(new CustomEvent('userUpdated', {
+      detail: { user: null },
     }));
     
     window.location.href = '/login';
@@ -57,10 +55,9 @@ export const authService = {
   updateStoredUser(updatedUser: AuthUser) {
     if (typeof window === 'undefined') return;
     localStorage.setItem('user', JSON.stringify(updatedUser));
-    // Dispatch storage event for UserContext
-    window.dispatchEvent(new StorageEvent('storage', {
-      key: 'user',
-      newValue: JSON.stringify(updatedUser),
+    // Dispatch custom event for same-tab updates (not StorageEvent which is for cross-tab)
+    window.dispatchEvent(new CustomEvent('userUpdated', {
+      detail: { user: updatedUser },
     }));
   },
 

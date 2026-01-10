@@ -333,13 +333,24 @@ export const updateUserProfile = asyncHandler(
 
     const { firstName, lastName, phone } = req.body;
 
+    // Validate phone number format if provided
+    if (phone !== undefined && phone !== null && phone !== '') {
+      // Basic phone validation: allows digits, spaces, hyphens, parentheses, and + for international
+      // Minimum 10 digits, maximum 20 characters
+      const phoneRegex = /^[\+]?[(]?[0-9]{1,4}[)]?[-\s\.]?[(]?[0-9]{1,4}[)]?[-\s\.]?[0-9]{1,9}$/;
+      const digitsOnly = phone.replace(/\D/g, '');
+      if (digitsOnly.length < 10 || digitsOnly.length > 15 || !phoneRegex.test(phone)) {
+        throw new AppError('Invalid phone number format. Please provide a valid phone number (10-15 digits).', 400);
+      }
+    }
+
     // Update user profile
     const updatedUser = await prisma.users.update({
       where: { id: req.user.userId },
       data: {
         ...(firstName !== undefined && { firstName }),
         ...(lastName !== undefined && { lastName }),
-        ...(phone !== undefined && { phone }),
+        ...(phone !== undefined && { phone: phone || null }),
         updatedAt: new Date(),
       },
       include: {

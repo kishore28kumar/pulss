@@ -33,14 +33,16 @@ export const exportAnalytics = asyncHandler(
     const { start, end } = getDateRange(startDate, endDate);
     const sectionsList = (sections as string).split(',');
 
-    // Helper function to escape CSV
+    // Helper function to escape CSV and prevent CSV injection
     const escapeCSV = (value: string | number | null | undefined): string => {
       if (value === null || value === undefined) return '';
       const str = String(value);
-      if (str.includes(',') || str.includes('"') || str.includes('\n')) {
-        return `"${str.replace(/"/g, '""')}"`;
+      // Prevent CSV injection by prepending single quote to formula characters
+      const sanitized = /^[=+\-@]/.test(str) ? `'${str}` : str;
+      if (sanitized.includes(',') || sanitized.includes('"') || sanitized.includes('\n')) {
+        return `"${sanitized.replace(/"/g, '""')}"`;
       }
-      return str;
+      return sanitized;
     };
 
     if (format === 'xlsx') {

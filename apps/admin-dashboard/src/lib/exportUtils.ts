@@ -15,10 +15,12 @@ export function convertToCSV(data: ExportData): string {
   const escapeCSV = (value: string | number | null | undefined): string => {
     if (value === null || value === undefined) return '';
     const str = String(value);
-    if (str.includes(',') || str.includes('"') || str.includes('\n')) {
-      return `"${str.replace(/"/g, '""')}"`;
+    // Prevent CSV injection by prepending single quote to formula characters
+    const sanitized = /^[=+\-@]/.test(str) ? `'${str}` : str;
+    if (sanitized.includes(',') || sanitized.includes('"') || sanitized.includes('\n')) {
+      return `"${sanitized.replace(/"/g, '""')}"`;
     }
-    return str;
+    return sanitized;
   };
 
   const csvRows = [
@@ -86,12 +88,8 @@ export function formatExportFilename(
   endDate: string,
   extension: 'csv' | 'xlsx'
 ): string {
-  const formatDate = (dateStr: string) => {
-    return dateStr.split('T')[0].replace(/-/g, '-');
-  };
-  
-  const start = formatDate(startDate);
-  const end = formatDate(endDate);
+  const start = startDate.split('T')[0];
+  const end = endDate.split('T')[0];
   
   return `${baseName}-${start}-to-${end}.${extension}`;
 }

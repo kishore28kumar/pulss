@@ -37,7 +37,7 @@ router.get('/customers', requirePermission(Permission.ANALYTICS_VIEW), getCustom
 router.get('/global-top-searches', getGlobalTopSearches);
 router.get('/top-search-locations', getTopSearchLocations);
 router.get('/tenant-performance', getTenantPerformance);
-router.get('/export', exportAnalytics); // Export analytics (SUPER_ADMIN only)
+router.get('/export', requirePermission(Permission.ANALYTICS_VIEW), exportAnalytics); // Export analytics (SUPER_ADMIN only)
 
 export default router;
 

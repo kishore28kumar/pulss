@@ -555,7 +555,12 @@ export const exportOrders = asyncHandler(
       startDate,
       endDate,
       search,
+      limit = 10000, // Maximum orders to export
     } = req.query as any;
+
+    // Enforce maximum limit to prevent memory exhaustion
+    const maxLimit = 10000;
+    const exportLimit = Math.min(parseInt(limit) || maxLimit, maxLimit);
 
     const where: any = {
       tenantId: req.tenantId,
@@ -581,7 +586,7 @@ export const exportOrders = asyncHandler(
       ];
     }
 
-    // Fetch all orders matching the filters
+    // Fetch orders matching the filters with limit
     const orders = await prisma.orders.findMany({
       where,
       include: {
@@ -609,6 +614,7 @@ export const exportOrders = asyncHandler(
         },
       },
       orderBy: { createdAt: 'desc' },
+      take: exportLimit,
     });
 
     // CSV Headers
@@ -630,14 +636,16 @@ export const exportOrders = asyncHandler(
       'SKUs',
     ];
 
-    // Helper to escape CSV values
+    // Helper to escape CSV values and prevent CSV injection
     const escapeCSV = (value: string | number | null | undefined): string => {
       if (value === null || value === undefined) return '';
       const str = String(value);
-      if (str.includes(',') || str.includes('"') || str.includes('\n')) {
-        return `"${str.replace(/"/g, '""')}"`;
+      // Prevent CSV injection by prepending single quote to formula characters
+      const sanitized = /^[=+\-@]/.test(str) ? `'${str}` : str;
+      if (sanitized.includes(',') || sanitized.includes('"') || sanitized.includes('\n')) {
+        return `"${sanitized.replace(/"/g, '""')}"`;
       }
-      return str;
+      return sanitized;
     };
 
     // Convert orders to CSV rows
