@@ -67,7 +67,7 @@ function AnalyticsExportPageContent() {
     // Get dates from URL params if available
     const urlStartDate = searchParams?.get('startDate');
     const urlEndDate = searchParams?.get('endDate');
-    
+
     if (urlStartDate && urlEndDate) {
       setStartDate(urlStartDate);
       setEndDate(urlEndDate);
@@ -136,26 +136,26 @@ function AnalyticsExportPageContent() {
 
       // Create blob and download
       const blob = new Blob([response.data], {
-        type: exportFormat === 'csv' 
-          ? 'text/csv;charset=utf-8;' 
+        type: exportFormat === 'csv'
+          ? 'text/csv;charset=utf-8;'
           : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       });
-      
+
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      
+
       // Extract filename from Content-Disposition header or generate
       const contentDisposition = response.headers['content-disposition'];
       let filename = formatExportFilename('analytics-export', startDate, endDate, exportFormat);
-      
+
       if (contentDisposition) {
         const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
         if (filenameMatch && filenameMatch[1]) {
           filename = filenameMatch[1].replace(/['"]/g, '');
         }
       }
-      
+
       link.setAttribute('download', filename);
       document.body.appendChild(link);
       link.click();
@@ -186,17 +186,17 @@ function AnalyticsExportPageContent() {
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
           <button
             onClick={() => router.push('/dashboard/analytics')}
-            className="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition"
+            className="p-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl transition shadow-sm"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
           </button>
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Export Analytics</h1>
-            <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-1">Select sections and date range to export</p>
+            <p className="text-sm text-gray-500 font-medium">Select sections and date range to export</p>
           </div>
         </div>
       </div>
@@ -257,11 +257,10 @@ function AnalyticsExportPageContent() {
               type="button"
               onClick={() => setExportFormat('csv')}
               disabled={isExporting}
-              className={`flex items-center space-x-2 px-4 py-3 rounded-lg border-2 transition ${
-                exportFormat === 'csv'
+              className={`flex items-center space-x-2 px-4 py-3 rounded-lg border-2 transition ${exportFormat === 'csv'
                   ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
                   : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-gray-400 dark:hover:border-gray-500'
-              } disabled:opacity-50`}
+                } disabled:opacity-50`}
             >
               <FileText className="w-5 h-5" />
               <span className="font-medium">CSV</span>
@@ -270,11 +269,10 @@ function AnalyticsExportPageContent() {
               type="button"
               onClick={() => setExportFormat('xlsx')}
               disabled={isExporting}
-              className={`flex items-center space-x-2 px-4 py-3 rounded-lg border-2 transition ${
-                exportFormat === 'xlsx'
+              className={`flex items-center space-x-2 px-4 py-3 rounded-lg border-2 transition ${exportFormat === 'xlsx'
                   ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
                   : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-gray-400 dark:hover:border-gray-500'
-              } disabled:opacity-50`}
+                } disabled:opacity-50`}
             >
               <FileSpreadsheet className="w-5 h-5" />
               <span className="font-medium">Excel</span>
@@ -301,11 +299,10 @@ function AnalyticsExportPageContent() {
             {EXPORT_SECTIONS.map((section) => (
               <label
                 key={section.id}
-                className={`flex items-start space-x-3 p-3 rounded-lg cursor-pointer transition ${
-                  selectedSections.has(section.id)
+                className={`flex items-start space-x-3 p-3 rounded-lg cursor-pointer transition ${selectedSections.has(section.id)
                     ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800'
                     : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
-                } ${isExporting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  } ${isExporting ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 <div className="mt-0.5">
                   {selectedSections.has(section.id) ? (

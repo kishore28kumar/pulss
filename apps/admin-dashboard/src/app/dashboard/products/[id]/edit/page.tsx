@@ -125,7 +125,7 @@ export default function EditProductPage() {
       setValue('lowStockThreshold', product.lowStockThreshold || 10);
       setValue('weight', product.weight || undefined);
       setValue('weightUnit', product.weightUnit || 'kg');
-      
+
       // Set category: use existing category if available, otherwise use first available category as default
       const existingCategoryId = product.categories?.[0]?.id;
       if (existingCategoryId) {
@@ -134,7 +134,7 @@ export default function EditProductPage() {
         // Default to first category if product has no category
         setValue('categoryIds', [categories[0].id]);
       }
-      
+
       setValue('images', product.images || []);
       setValue('isActive', product.isActive ?? true);
       setValue('isFeatured', product.isFeatured ?? false);
@@ -177,7 +177,7 @@ export default function EditProductPage() {
 
       console.log('Sending payload to API:', payload);
       console.log('isFeatured in payload:', payload.isFeatured);
-      
+
       return await api.put(`/products/${productId}`, payload);
     },
     onSuccess: (response) => {
@@ -234,22 +234,23 @@ export default function EditProductPage() {
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
           <Link
             href="/dashboard/products"
-            className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-2 text-sm sm:text-base"
+            className="p-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl transition shadow-sm"
           >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Products
+            <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
           </Link>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Edit Product</h1>
-          <p className="text-sm sm:text-base text-gray-500 mt-1">Update product information</p>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Edit Product</h1>
+            <p className="text-sm text-gray-500 font-medium">Update product information</p>
+          </div>
         </div>
       </div>
 
       {/* Form */}
-      <form 
+      <form
         onSubmit={handleSubmit(
           (data) => {
             console.log('Form submitted with data:', data);
@@ -264,13 +265,13 @@ export default function EditProductPage() {
             });
             toast.error(`Please fix form errors: ${errorMessages.join(', ')}`);
           }
-        )} 
+        )}
         className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 space-y-4 sm:space-y-6"
       >
         {/* Basic Information */}
         <div className="border-b border-gray-200 pb-4 sm:pb-6">
           <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Basic Information</h2>
-          
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
@@ -335,7 +336,7 @@ export default function EditProductPage() {
         {/* Pricing */}
         <div className="border-b border-gray-200 pb-4 sm:pb-6">
           <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Pricing</h2>
-          
+
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             <div>
               <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-2">
@@ -390,7 +391,7 @@ export default function EditProductPage() {
         {/* Inventory */}
         <div className="border-b border-gray-200 pb-4 sm:pb-6">
           <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Inventory</h2>
-          
+
           <div className="flex items-center mb-4">
             <input
               id="trackInventory"
@@ -467,7 +468,7 @@ export default function EditProductPage() {
         {/* Categories */}
         <div className="border-b border-gray-200 pb-4 sm:pb-6">
           <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Categories *</h2>
-          
+
           {categoriesLoading ? (
             <div className="text-gray-500">Loading categories...</div>
           ) : (
@@ -493,7 +494,7 @@ export default function EditProductPage() {
         {/* Images */}
         <div className="border-b border-gray-200 pb-4 sm:pb-6">
           <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Product Images</h2>
-          
+
           <div className="flex flex-col sm:flex-row gap-2 mb-4">
             <input
               type="url"
@@ -536,7 +537,7 @@ export default function EditProductPage() {
         {/* Additional Information */}
         <div className="border-b border-gray-200 pb-4 sm:pb-6">
           <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Additional Information</h2>
-          
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label htmlFor="manufacturer" className="block text-sm font-medium text-gray-700 mb-2">
@@ -636,7 +637,7 @@ export default function EditProductPage() {
         {/* SEO */}
         <div className="pb-4 sm:pb-6">
           <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">SEO</h2>
-          
+
           <div className="space-y-4">
             <div>
               <label htmlFor="metaTitle" className="block text-sm font-medium text-gray-700 mb-2">

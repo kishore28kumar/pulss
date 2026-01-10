@@ -41,21 +41,21 @@ const generateStrongPassword = (): string => {
   const numbers = '0123456789';
   const special = '!@#$%^&*()_+-=[]{}|;:,.<>?';
   const allChars = uppercase + lowercase + numbers + special;
-  
+
   let password = '';
-  
+
   // Ensure at least one character from each required set
   password += uppercase[Math.floor(Math.random() * uppercase.length)];
   password += lowercase[Math.floor(Math.random() * lowercase.length)];
   password += numbers[Math.floor(Math.random() * numbers.length)];
   password += special[Math.floor(Math.random() * special.length)];
-  
+
   // Fill the rest randomly (minimum 12 characters total)
   const remainingLength = Math.max(8, 12 - password.length);
   for (let i = 0; i < remainingLength; i++) {
     password += allChars[Math.floor(Math.random() * allChars.length)];
   }
-  
+
   // Shuffle the password to avoid predictable patterns
   return password.split('').sort(() => Math.random() - 0.5).join('');
 };
@@ -128,7 +128,7 @@ export default function NewStaffPage() {
     if (isCreatingAdmin && storeRoute) {
       // Construct storefront URL using config
       const { getStorefrontUrl } = require('@/lib/config/urls');
-      const storefrontBase = typeof window !== 'undefined' 
+      const storefrontBase = typeof window !== 'undefined'
         ? getStorefrontUrl()
         : (process.env.NEXT_PUBLIC_STOREFRONT_URL || 'http://localhost:3000');
       setStorefrontUrl(`${storefrontBase}/${storeRoute}`);
@@ -178,11 +178,11 @@ export default function NewStaffPage() {
     onSuccess: (_response, variables) => {
       const roleLabel = userRole === 'SUPER_ADMIN' ? 'Admin' : 'Staff';
       toast.success(`${roleLabel} user created successfully`);
-      
+
       // If store route was provided, copy URL to clipboard
       if (isCreatingAdmin && variables.storeRoute) {
         const { getStorefrontUrl } = require('@/lib/config/urls');
-        const storefrontBase = typeof window !== 'undefined' 
+        const storefrontBase = typeof window !== 'undefined'
           ? getStorefrontUrl()
           : (process.env.NEXT_PUBLIC_STOREFRONT_URL || 'http://localhost:3000');
         const url = `${storefrontBase}/${variables.storeRoute}`;
@@ -191,10 +191,10 @@ export default function NewStaffPage() {
           toast.success('Storefront URL copied to clipboard!');
         }
       }
-      
+
       queryClient.invalidateQueries({ queryKey: ['staff'] });
       queryClient.invalidateQueries({ queryKey: ['tenants'] });
-      
+
       // Navigate back to staff page
       router.push('/dashboard/staff');
     },
@@ -213,17 +213,17 @@ export default function NewStaffPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
           <button
             onClick={() => router.back()}
-            className="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition"
+            className="p-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl transition shadow-sm"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
           </button>
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">{title}</h1>
-            <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-1">
+            <p className="text-sm text-gray-500 font-medium">
               Add a new {roleLabel.toLowerCase()} member to your team
             </p>
           </div>
@@ -337,7 +337,7 @@ export default function NewStaffPage() {
                 </label>
                 <div className="flex items-center space-x-2">
                   <span className="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                    {typeof window !== 'undefined' 
+                    {typeof window !== 'undefined'
                       ? window.location.origin.replace(':3001', ':3000')
                       : 'http://localhost:3000'}
                     /
@@ -366,7 +366,7 @@ export default function NewStaffPage() {
                 {errors.storeRoute && (
                   <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.storeRoute.message}</p>
                 )}
-                
+
                 {/* Storefront URL Preview */}
                 {storeRoute && storefrontUrl && (
                   <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
@@ -543,7 +543,7 @@ export default function NewStaffPage() {
           {/* Info Box */}
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
             <p className="text-sm text-blue-800 dark:text-blue-300">
-              <strong>Note:</strong> {mounted && userRole === 'SUPER_ADMIN' 
+              <strong>Note:</strong> {mounted && userRole === 'SUPER_ADMIN'
                 ? 'You are creating a Tenant Admin who will have full access to manage this tenant.'
                 : 'You are creating a Staff user who will have limited access to manage products and orders.'}
             </p>

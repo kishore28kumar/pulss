@@ -7,7 +7,7 @@ import { useForm, useFieldArray } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
-import { Plus, Trash2, Image as ImageIcon } from 'lucide-react';
+import { Plus, Trash2, Image as ImageIcon, ArrowLeft } from 'lucide-react';
 import api from '@/lib/api';
 import Link from 'next/link';
 
@@ -16,8 +16,8 @@ const adSchema = z.object({
     description: z.string().min(10, 'Description must be at least 10 characters').optional().or(z.literal('')),
     items: z.array(z.object({
         imageUrl: z.string().url('Must be a valid image URL').min(1, 'Image URL is required'),
-        // link: z.string().url('Must be a valid target URL').optional().or(z.literal('')),
-    })).min(1, 'At least one image URL is required').max(4, 'Maximum 4 images allowed'),
+        productName: z.string().min(1, 'Product name is required for search redirection'),
+    })).min(1, 'At least one image is required').max(4, 'Maximum 4 images allowed'),
 });
 
 type AdForm = z.infer<typeof adSchema>;
@@ -31,7 +31,7 @@ export default function NewAdPage() {
         defaultValues: {
             title: '',
             description: '',
-            items: [{ imageUrl: '' }], // link: '' commented out
+            items: [{ imageUrl: '', productName: '' }],
         }
     });
 
@@ -48,7 +48,7 @@ export default function NewAdPage() {
                 title: data.title,
                 description: data.description,
                 images: data.items.map(item => item.imageUrl),
-                links: data.items.map(() => ''), // Commented out link mapping, sending empty strings
+                links: data.items.map(item => item.productName),
             };
 
             await api.post('/ads', payload);
@@ -66,8 +66,14 @@ export default function NewAdPage() {
 
     return (
         <div className="max-w-4xl mx-auto space-y-6">
-            <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Request New Ad</h1>
+            <div className="flex items-center gap-4">
+                <Link href="/dashboard/ads" className="p-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl transition shadow-sm">
+                    <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                </Link>
+                <div>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Request New Ad</h1>
+                    <p className="text-sm text-gray-500 font-medium italic">Create a new advertisement campaign for your store</p>
+                </div>
             </div>
 
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
@@ -101,12 +107,12 @@ export default function NewAdPage() {
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
                             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                                Ad Assets (Images & Links)
+                                Ad Assets (Images & Product Names)
                             </label>
                             {fields.length < 4 && (
                                 <button
                                     type="button"
-                                    onClick={() => append({ imageUrl: '' })}
+                                    onClick={() => append({ imageUrl: '', productName: '' })}
                                     className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
                                 >
                                     <Plus className="w-4 h-4" /> Add Another
@@ -127,7 +133,7 @@ export default function NewAdPage() {
                                         </button>
                                     )}
 
-                                    <div className="grid grid-cols-1 gap-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div>
                                             <div className="flex items-center gap-2 mb-1.5">
                                                 <ImageIcon className="w-4 h-4 text-gray-400" />
@@ -142,34 +148,32 @@ export default function NewAdPage() {
                                                 <p className="text-red-500 text-xs mt-1">{errors.items[index]?.imageUrl?.message}</p>
                                             )}
                                         </div>
-                                        {/* Target Link Commented Out
                                         <div>
                                             <div className="flex items-center gap-2 mb-1.5">
-                                                <LinkIcon className="w-4 h-4 text-gray-400" />
-                                                <span className="text-xs font-medium text-gray-500 uppercase">Target Link (Optional)</span>
+                                                <Plus className="w-4 h-4 text-gray-400" />
+                                                <span className="text-xs font-medium text-gray-500 uppercase">Product Name (for redirection)</span>
                                             </div>
                                             <input
-                                                {...register(`items.${index}.link`)}
+                                                {...register(`items.${index}.productName`)}
                                                 className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 outline-none transition"
-                                                placeholder="https://myshop.com/promo"
+                                                placeholder="e.g. iPhone 15 Pro"
                                             />
-                                            {errors.items?.[index]?.link && (
-                                                <p className="text-red-500 text-xs mt-1">{errors.items[index]?.link?.message}</p>
+                                            {errors.items?.[index]?.productName && (
+                                                <p className="text-red-500 text-xs mt-1">{errors.items[index]?.productName?.message}</p>
                                             )}
                                         </div>
-                                        */}
                                     </div>
 
                                     {/* Live Preview Hint if URL is valid-ish */}
                                     {fields[index].imageUrl && (
                                         <div className="mt-3">
-                                            <div className="text-[10px] text-gray-400 uppercase mb-1">Preview</div>
-                                            <div className="h-20 w-full rounded border border-gray-200 overflow-hidden bg-gray-100 flex items-center justify-center">
+                                            <div className="text-[10px] text-gray-400 uppercase mb-1">Preview (Actual Storefront Size)</div>
+                                            <div className="border border-gray-200 dark:border-gray-700 overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center rounded-lg">
                                                 <img
                                                     src={fields[index].imageUrl}
                                                     alt="Preview"
-                                                    className="h-full object-contain"
-                                                    onError={(e) => (e.currentTarget.src = 'https://via.placeholder.com/150?text=Invalid+Image+URL')}
+                                                    className="w-[456px] h-[456px] object-cover"
+                                                    onError={(e) => (e.currentTarget.src = 'https://via.placeholder.com/456?text=Invalid+Image+URL')}
                                                 />
                                             </div>
                                         </div>

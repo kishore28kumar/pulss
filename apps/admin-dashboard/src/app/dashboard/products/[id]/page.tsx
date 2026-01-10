@@ -51,17 +51,18 @@ export default function ProductDetailPage() {
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
           <Link
             href="/dashboard/products"
-            className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-2 text-sm sm:text-base"
+            className="p-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl transition shadow-sm"
           >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Products
+            <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
           </Link>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{product.name}</h1>
-          <p className="text-sm sm:text-base text-gray-500 mt-1">Product Details</p>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">{product.name}</h1>
+            <p className="text-sm text-gray-500 font-medium">Product Details</p>
+          </div>
         </div>
         <PermissionGuard permission={Permission.PRODUCTS_UPDATE}>
           <Link
@@ -107,20 +108,18 @@ export default function ProductDetailPage() {
 
             <div>
               <h3 className="text-sm font-medium text-gray-500">Stock</h3>
-              <p className={`text-lg font-semibold ${
-                product.stock > product.lowStockThreshold ? 'text-green-600' : 'text-red-600'
-              }`}>
+              <p className={`text-lg font-semibold ${product.stock > product.lowStockThreshold ? 'text-green-600' : 'text-red-600'
+                }`}>
                 {product.stock} units
               </p>
             </div>
 
             <div>
               <h3 className="text-sm font-medium text-gray-500">Status</h3>
-              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                product.isActive
+              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${product.isActive
                   ? 'bg-green-100 text-green-800'
                   : 'bg-gray-100 text-gray-800'
-              }`}>
+                }`}>
                 {product.isActive ? 'Active' : 'Inactive'}
               </span>
             </div>

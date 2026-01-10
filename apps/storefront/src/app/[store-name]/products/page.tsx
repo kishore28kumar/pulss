@@ -1,22 +1,34 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useSearchParams } from 'next/navigation';
 import { Filter } from 'lucide-react';
 import api from '@/lib/api';
 import ProductCard from '@/components/products/ProductCard';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 
 function ProductsPageContent() {
+  const searchParams = useSearchParams();
+  const initialSearch = searchParams.get('search') || '';
+
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState({
-    search: '',
+    search: initialSearch,
     categoryId: '',
     minPrice: '',
     maxPrice: '',
     sortBy: 'createdAt',
     sortOrder: 'desc',
   });
+
+  // Update categories if URL search changes
+  useEffect(() => {
+    const search = searchParams.get('search');
+    if (search !== null) {
+      setFilters(prev => ({ ...prev, search }));
+    }
+  }, [searchParams]);
 
   const { data, isLoading } = useQuery({
     queryKey: ['products', { ...filters, page }],

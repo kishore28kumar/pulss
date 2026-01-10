@@ -3,10 +3,11 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRight, Sparkles, ExternalLink } from 'lucide-react';
+import { ArrowRight, Sparkles } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import api from '@/lib/api';
 import { useQuery } from '@tanstack/react-query';
+import { useParams, useRouter } from 'next/navigation';
 
 interface HeroSectionProps {
   isAuthenticated?: boolean;
@@ -14,6 +15,9 @@ interface HeroSectionProps {
 }
 
 export default function HeroSection({ isAuthenticated, customerName }: HeroSectionProps) {
+  const params = useParams();
+  const router = useRouter();
+  const storeName = params['store-name'] as string;
   const [currentSlide, setCurrentSlide] = useState(0);
 
   // Fetch active ads
@@ -101,7 +105,7 @@ export default function HeroSection({ isAuthenticated, customerName }: HeroSecti
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-2">
               <Link
-                href="/products"
+                href={`/${storeName}/products`}
                 className="group inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold text-lg shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 transform hover:-translate-y-0.5"
               >
                 <span>Shop Now</span>
@@ -109,7 +113,7 @@ export default function HeroSection({ isAuthenticated, customerName }: HeroSecti
               </Link>
 
               <Link
-                href={isAuthenticated ? "/categories" : "/login"}
+                href={isAuthenticated ? `/${storeName}/categories` : `/${storeName}/login`}
                 className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-gray-900 rounded-xl font-semibold text-lg border-2 border-gray-200 hover:border-blue-600 hover:text-blue-600 transition-all duration-300 shadow-sm hover:shadow-md"
               >
                 {isAuthenticated ? "Browse Categories" : "Create Account"}
@@ -154,23 +158,21 @@ export default function HeroSection({ isAuthenticated, customerName }: HeroSecti
                       className={`absolute inset-0 bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-100 transition-opacity duration-1000 ease-in-out ${idx === currentSlide ? 'opacity-100 z-10' : 'opacity-0 z-0'
                         } ${isLinked ? 'cursor-pointer' : 'cursor-default'}`}
                       onClick={() => {
-                        if (isLinked) window.open(link, '_blank');
+                        if (isLinked) {
+                          // Redirection with product name search
+                          router.push(`/${storeName}/products?search=${encodeURIComponent(link)}`);
+                        }
                       }}
                     >
                       <Image
                         src={img}
                         alt={`Showcase ${idx + 1}`}
                         fill
-                        className="object-cover"
+                        className="object-cover transition-transform duration-700 ease-in-out group-hover:scale-110"
                         priority={idx === 0}
                         sizes="(max-width: 768px) 100vw, 50vw"
                       />
-                      {/* Hover overlay hint if linked */}
-                      {isLinked && (
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none">
-                          <ExternalLink className="text-white w-12 h-12 drop-shadow-lg" />
-                        </div>
-                      )}
+
                     </div>
                   );
                 })}
