@@ -420,8 +420,8 @@ function NewProductPageContent() {
                       }
                     }}
                     className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-600 transition ${selectedTenantId === admin.tenants?.id
-                        ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
-                        : 'text-gray-700 dark:text-gray-300'
+                      ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+                      : 'text-gray-700 dark:text-gray-300'
                       }`}
                   >
                     {admin.firstName} {admin.lastName} ({admin.tenants?.name || 'No Store'})
@@ -439,7 +439,7 @@ function NewProductPageContent() {
       )}
 
       {/* Divider with Toggle */}
-      {selectedTenantId && (
+      {(!isSuperAdminUser || selectedTenantId) && (
         <>
           {/* Bulk Upload Section */}
           <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">

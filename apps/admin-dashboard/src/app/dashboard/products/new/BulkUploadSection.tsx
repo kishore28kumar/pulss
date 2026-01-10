@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 import api from '@/lib/api';
 
 interface BulkUploadSectionProps {
-  selectedTenantId: string;
+  selectedTenantId: string | null;
   categories: Array<{ id: string; name: string; slug: string }>;
   isSuperAdminUser: boolean;
   adminsData?: Array<{
@@ -185,21 +185,21 @@ export default function BulkUploadSection({
   const validateProducts = (productsToValidate: BulkProduct[]): BulkProduct[] => {
     return productsToValidate.map((product) => {
       const errors: string[] = [];
-      
+
       if (!product.name || product.name.length < 2) {
         errors.push('Name must be at least 2 characters');
       }
-      
+
       if (!product.slug || product.slug.length < 2) {
         errors.push('Slug must be at least 2 characters');
       } else if (!/^[a-z0-9-]+$/.test(product.slug)) {
         errors.push('Slug must contain only lowercase letters, numbers, and hyphens');
       }
-      
+
       if (!product.price || product.price < 0) {
         errors.push('Price must be 0 or greater');
       }
-      
+
       if (product.categorySlug) {
         const category = categories.find(cat => cat.slug === product.categorySlug);
         if (category) {
@@ -234,7 +234,7 @@ export default function BulkUploadSection({
           errors.push('Category is required');
         }
       }
-      
+
       if (product.images && product.images.length > 0) {
         product.images.forEach((img, imgIndex) => {
           try {
@@ -244,7 +244,7 @@ export default function BulkUploadSection({
           }
         });
       }
-      
+
       return {
         ...product,
         errors: errors.length > 0 ? errors : undefined,
@@ -266,14 +266,14 @@ export default function BulkUploadSection({
         const text = e.target?.result as string;
         const parsed = parseCSV(text);
         const validated = validateProducts(parsed);
-        
+
         setProducts(validated);
         // Store products in sessionStorage for preview page
         sessionStorage.setItem('bulkUploadProducts', JSON.stringify(validated));
-        
+
         const validCount = validated.filter(p => p.isValid).length;
         const invalidCount = validated.length - validCount;
-        
+
         toast.success(`Parsed ${validated.length} products. ${validCount} valid, ${invalidCount} need attention.`);
       } catch (error: any) {
         toast.error(error.message || 'Failed to parse CSV file');
@@ -314,11 +314,11 @@ export default function BulkUploadSection({
   const handleCellEdit = (rowIndex: number, col: string, value: any) => {
     const updated = [...products];
     updated[rowIndex] = { ...updated[rowIndex], [col]: value };
-    
+
     // Re-validate the product
     const validated = validateProducts([updated[rowIndex]]);
     updated[rowIndex] = validated[0];
-    
+
     setProducts(updated);
     // Update sessionStorage
     sessionStorage.setItem('bulkUploadProducts', JSON.stringify(updated));
@@ -334,8 +334,8 @@ export default function BulkUploadSection({
   // Bulk upload mutation
   const bulkUploadMutation = useMutation({
     mutationFn: async (productsToUpload: BulkProduct[]) => {
-      if (!selectedTenantId) {
-        throw new Error('Tenant ID is required. Please select a tenant.');
+      if (isSuperAdminUser && !selectedTenantId) {
+        throw new Error('Tenant ID is required for Super Admin. Please select a tenant.');
       }
 
       const config: any = {};
@@ -373,10 +373,10 @@ export default function BulkUploadSection({
         })),
       };
 
-      console.log('Bulk upload payload:', { 
-        tenantId: payload.tenantId, 
+      console.log('Bulk upload payload:', {
+        tenantId: payload.tenantId,
         productCount: payload.products.length,
-        config 
+        config
       });
 
       return await api.post('/products/bulk', payload, config);
@@ -400,7 +400,7 @@ export default function BulkUploadSection({
     const validProducts = products.filter(p => p.isValid);
     const invalidProducts = products.filter(p => !p.isValid);
     const categoriesUsed = new Set(products.map(p => p.categorySlug).filter(Boolean));
-    
+
     return {
       total: products.length,
       valid: validProducts.length,
@@ -413,7 +413,7 @@ export default function BulkUploadSection({
   // Handle bulk upload
   const handleBulkUpload = () => {
     const validProducts = products.filter(p => p.isValid);
-    
+
     if (validProducts.length === 0) {
       toast.error('No valid products to upload');
       return;
@@ -453,9 +453,8 @@ export default function BulkUploadSection({
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           onClick={() => csvFileInputRef.current?.click()}
-          className={`border-2 border-dashed rounded-lg p-12 text-center transition-colors cursor-pointer ${
-            isDragging ? 'border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/30' : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50'
-          }`}
+          className={`border-2 border-dashed rounded-lg p-12 text-center transition-colors cursor-pointer ${isDragging ? 'border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/30' : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50'
+            }`}
         >
           <input
             ref={csvFileInputRef}
@@ -632,7 +631,7 @@ export default function BulkUploadSection({
                           onChange={(e) => {
                             const selectedSlug = e.target.value || undefined;
                             const category = categories.find(c => c.slug === selectedSlug);
-                            
+
                             // Update both categorySlug and categoryId in a single state update
                             const updated = [...products];
                             updated[index] = {
@@ -640,11 +639,11 @@ export default function BulkUploadSection({
                               categorySlug: selectedSlug,
                               categoryId: category?.id || undefined,
                             };
-                            
+
                             // Re-validate the product
                             const validated = validateProducts([updated[index]]);
                             updated[index] = validated[0];
-                            
+
                             setProducts(updated);
                             // Update sessionStorage
                             sessionStorage.setItem('bulkUploadProducts', JSON.stringify(updated));
@@ -765,12 +764,12 @@ export default function BulkUploadSection({
                   <X className="w-5 h-5" />
                 </button>
               </div>
-              
+
               <div className="mb-6">
                 <p className="text-gray-700 dark:text-gray-300 mb-4">
                   Are you sure you want to upload <span className="font-semibold text-blue-600 dark:text-blue-400">{summary.valid}</span> products?
                 </p>
-                
+
                 <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600 dark:text-gray-400">Total Products:</span>
@@ -793,12 +792,12 @@ export default function BulkUploadSection({
                     <span className="font-medium text-gray-900 dark:text-gray-100">~{summary.estimatedTime} seconds</span>
                   </div>
                 </div>
-                
+
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-4">
                   Note: Invalid products will be skipped and shown in the summary after upload.
                 </p>
               </div>
-              
+
               <div className="flex items-center justify-end space-x-3">
                 <button
                   onClick={() => setShowConfirmModal(false)}
@@ -838,7 +837,7 @@ export default function BulkUploadSection({
               <X className="w-5 h-5" />
             </button>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-green-200 dark:border-green-800">
               <div className="text-3xl font-bold text-green-600 dark:text-green-400">{summaryData.successCount || 0}</div>
