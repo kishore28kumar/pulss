@@ -42,6 +42,9 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# Reinstall to ensure workspace dependencies are properly linked after copying
+RUN npm install
+
 # Build shared packages first
 WORKDIR /app/packages/types
 RUN npm run build
@@ -51,7 +54,6 @@ RUN npx prisma generate
 RUN npm run build
 
 # Build backend
-# Run TypeScript compilation from backend directory to ensure proper module resolution
 WORKDIR /app/apps/backend
 RUN npm run build
 
