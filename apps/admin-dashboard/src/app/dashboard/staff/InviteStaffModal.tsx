@@ -171,8 +171,8 @@ export default function InviteStaffModal({ onClose, onSuccess }: InviteStaffModa
     mutation.mutate(data);
   };
 
-  const roleLabel = mounted && userRole === 'SUPER_ADMIN' ? 'Admin' : 'Staff';
-  const title = mounted && userRole === 'SUPER_ADMIN' ? 'Create Admin User' : 'Add Staff Member';
+  const roleLabel = mounted && userRole === 'SUPER_ADMIN' ? 'Tenant' : 'Staff';
+  const title = mounted && userRole === 'SUPER_ADMIN' ? 'Create Tenant Admin' : 'Add Staff Member';
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -407,7 +407,7 @@ export default function InviteStaffModal({ onClose, onSuccess }: InviteStaffModa
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <p className="text-sm text-blue-800">
               <strong>Note:</strong> {mounted && userRole === 'SUPER_ADMIN' 
-                ? 'You are creating an Admin user who will have full access to manage this tenant.'
+                ? 'You are creating a Tenant Admin who will have full access to manage this tenant.'
                 : 'You are creating a Staff user who will have limited access to manage products and orders.'}
             </p>
           </div>

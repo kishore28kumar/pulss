@@ -207,8 +207,8 @@ export default function NewStaffPage() {
     mutation.mutate(data);
   };
 
-  const roleLabel = mounted && userRole === 'SUPER_ADMIN' ? 'Admin' : 'Staff';
-  const title = mounted && userRole === 'SUPER_ADMIN' ? 'Create Admin User' : 'Add Staff Member';
+  const roleLabel = mounted && userRole === 'SUPER_ADMIN' ? 'Tenant' : 'Staff';
+  const title = mounted && userRole === 'SUPER_ADMIN' ? 'Create Tenant Admin' : 'Add Staff Member';
 
   return (
     <div className="space-y-6">
@@ -544,7 +544,7 @@ export default function NewStaffPage() {
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
             <p className="text-sm text-blue-800 dark:text-blue-300">
               <strong>Note:</strong> {mounted && userRole === 'SUPER_ADMIN' 
-                ? 'You are creating an Admin user who will have full access to manage this tenant.'
+                ? 'You are creating a Tenant Admin who will have full access to manage this tenant.'
                 : 'You are creating a Staff user who will have limited access to manage products and orders.'}
             </p>
           </div>
