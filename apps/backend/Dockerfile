@@ -51,9 +51,9 @@ RUN npx prisma generate
 RUN npm run build
 
 # Build backend
-# Run TypeScript compilation from workspace root to ensure proper module resolution
-WORKDIR /app
-RUN npx tsc -p apps/backend/tsconfig.json
+# Run TypeScript compilation from backend directory to ensure proper module resolution
+WORKDIR /app/apps/backend
+RUN npm run build
 
 # Production stage
 FROM base AS production

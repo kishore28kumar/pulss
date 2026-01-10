@@ -41,7 +41,7 @@ export default function ProfileTab({ readOnly = false }: ProfileTabProps) {
     defaultValues: {
       firstName: user?.firstName || '',
       lastName: user?.lastName || '',
-      phone: user?.phone || '',
+      phone: (user as AuthUser & { phone?: string })?.phone || '',
     },
   });
 
