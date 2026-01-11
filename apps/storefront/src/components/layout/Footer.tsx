@@ -2,12 +2,12 @@
 
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { Facebook, Twitter, Instagram, Mail } from 'lucide-react';
+import { Facebook, Twitter, Instagram /*, Mail */ } from 'lucide-react';
 
 export default function Footer() {
   const params = useParams();
   const storeName = params?.['store-name'] as string | undefined;
-  
+
   // Helper to get tenant-aware path
   const getPath = (path: string) => {
     if (storeName) {
@@ -27,14 +27,14 @@ export default function Footer() {
   return (
     <footer className="bg-gray-900 text-gray-300">
       <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* About */}
           <div>
             <h3 className="text-white font-bold text-lg mb-4">Pulss Store</h3>
             <p className="text-sm text-gray-400 mb-4">
               Your trusted source for quality products. We deliver excellence with every order.
             </p>
-            <div className="flex space-x-4">
+            {/* <div className="flex space-x-4">
               <a href="#" className="text-gray-400 hover:text-white transition">
                 <Facebook className="w-5 h-5" />
               </a>
@@ -44,7 +44,7 @@ export default function Footer() {
               <a href="#" className="text-gray-400 hover:text-white transition">
                 <Instagram className="w-5 h-5" />
               </a>
-            </div>
+            </div> */}
           </div>
 
           {/* Quick Links */}
@@ -69,7 +69,7 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Newsletter */}
+          {/* Newsletter - Commented out as requested
           <div>
             <h3 className="text-white font-semibold mb-4">Newsletter</h3>
             <p className="text-sm text-gray-400 mb-4">
@@ -86,11 +86,12 @@ export default function Footer() {
               </button>
             </div>
           </div>
+          */}
         </div>
 
         {/* Bottom Bar */}
         <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-400">
-          <p>&copy; 2024 Pulss. All rights reserved. Built with ❤️ for local businesses.</p>
+          <p>&copy; 2024 Pulss. All rights reserved. Built with ❤️ for local businesses and their customers.</p>
         </div>
       </div>
     </footer>
