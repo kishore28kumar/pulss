@@ -1,22 +1,26 @@
 'use client';
 
-import { useState } from 'react';
-import { 
-  Mail, 
-  Phone, 
-  MapPin, 
+// import { useState } from 'react';
+import {
+  Mail,
+  Phone,
+  MapPin,
   Clock,
-  Send,
+  // Send,
   MessageCircle,
   Headphones,
   Building,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Loader2
 } from 'lucide-react';
-import { toast } from 'sonner';
+// import { toast } from 'sonner';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import { useTenant } from '@/contexts/TenantContext';
 
 function ContactPageContent() {
+  const { tenant, isLoading: tenantLoading } = useTenant();
+  /* Commented out as variables are unused due to form being commented out
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -31,7 +35,7 @@ function ContactPageContent() {
 
     // Simulate form submission
     await new Promise(resolve => setTimeout(resolve, 1500));
-    
+
     toast.success('Message sent successfully! We\'ll get back to you soon.');
     setFormData({ name: '', email: '', subject: '', message: '' });
     setIsSubmitting(false);
@@ -43,12 +47,21 @@ function ContactPageContent() {
       [e.target.name]: e.target.value
     });
   };
+  */
+
+  if (tenantLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-12 h-12 text-blue-600 animate-spin" />
+      </div>
+    );
+  }
 
   const contactInfo = [
     {
       icon: Phone,
       title: 'Phone',
-      details: ['+1 (555) 123-4567', '+1 (555) 987-6543'],
+      details: tenant?.phone ? [tenant.phone] : ['Contact support for phone'],
       color: 'from-blue-500 to-cyan-600',
       bgColor: 'bg-blue-50',
       iconColor: 'text-blue-600'
@@ -56,7 +69,7 @@ function ContactPageContent() {
     {
       icon: Mail,
       title: 'Email',
-      details: ['support@pulss.com', 'info@pulss.com'],
+      details: tenant?.email ? [tenant.email] : ['support@pulss.com'],
       color: 'from-purple-500 to-indigo-600',
       bgColor: 'bg-purple-50',
       iconColor: 'text-purple-600'
@@ -64,7 +77,9 @@ function ContactPageContent() {
     {
       icon: MapPin,
       title: 'Office',
-      details: ['123 Commerce Street', 'New York, NY 10001'],
+      details: tenant?.address
+        ? [tenant.address, `${tenant.city || ''}${tenant.state ? `, ${tenant.state}` : ''} ${tenant.pincode || ''}`.trim()]
+        : ['Online Store'],
       color: 'from-green-500 to-emerald-600',
       bgColor: 'bg-green-50',
       iconColor: 'text-green-600'
@@ -79,32 +94,34 @@ function ContactPageContent() {
     }
   ];
 
+  /* Commented out as team is unused
   const team = [
     {
       name: 'Sarah Johnson',
       role: 'Customer Support Manager',
-      email: 'sarah.johnson@pulss.com',
+      email: tenant?.email || 'sarah.johnson@pulss.com',
       image: '👩‍💼'
     },
     {
       name: 'Michael Chen',
       role: 'Technical Support Lead',
-      email: 'michael.chen@pulss.com',
+      email: tenant?.email || 'michael.chen@pulss.com',
       image: '👨‍💻'
     },
     {
       name: 'Emily Rodriguez',
       role: 'Sales Director',
-      email: 'emily.rodriguez@pulss.com',
+      email: tenant?.email || 'emily.rodriguez@pulss.com',
       image: '👩‍💼'
     },
     {
       name: 'David Kim',
       role: 'Partnership Manager',
-      email: 'david.kim@pulss.com',
+      email: tenant?.email || 'david.kim@pulss.com',
       image: '👨‍💼'
     }
   ];
+  */
 
   const faqs = [
     {
@@ -180,8 +197,8 @@ function ContactPageContent() {
       {/* Contact Form + Map Section */}
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
-          <div className="grid lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
-            {/* Contact Form */}
+          <div className="max-w-3xl mx-auto">
+            {/* Contact Form - Commented out as requested
             <div>
               <div className="mb-8">
                 <h2 className="text-3xl font-bold text-gray-900 mb-4">
@@ -281,10 +298,11 @@ function ContactPageContent() {
                 </button>
               </form>
             </div>
+            */}
 
             {/* Map / Additional Info */}
             <div>
-              <div className="mb-8">
+              <div className="mb-8 text-center">
                 <h2 className="text-3xl font-bold text-gray-900 mb-4">
                   Visit Our Office
                 </h2>
@@ -294,7 +312,7 @@ function ContactPageContent() {
               </div>
 
               {/* Map Placeholder */}
-              <div className="bg-gradient-to-br from-blue-100 to-indigo-100 rounded-xl h-64 mb-6 flex items-center justify-center relative overflow-hidden">
+              <div className="bg-gradient-to-br from-blue-100 to-indigo-100 rounded-xl h-64 mb-6 flex items-center justify-center relative overflow-hidden max-w-2xl mx-auto">
                 <div className="absolute inset-0 opacity-20">
                   <div className="absolute inset-0" style={{
                     backgroundImage: 'radial-gradient(circle at 2px 2px, #3b82f6 1px, transparent 0)',
@@ -303,13 +321,13 @@ function ContactPageContent() {
                 </div>
                 <div className="text-center z-10">
                   <MapPin className="w-16 h-16 text-blue-600 mx-auto mb-4" />
-                  <p className="text-gray-700 font-semibold">123 Commerce Street</p>
-                  <p className="text-gray-600">New York, NY 10001</p>
+                  <p className="text-gray-700 font-semibold">{tenant?.address || 'Online Only'}</p>
+                  <p className="text-gray-600">{tenant?.city ? `${tenant.city}${tenant.state ? `, ${tenant.state}` : ''}` : ''}</p>
                 </div>
               </div>
 
               {/* Quick Contact Cards */}
-              <div className="space-y-4">
+              <div className="space-y-4 max-w-2xl mx-auto">
                 <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
                   <div className="flex items-start space-x-3">
                     <CheckCircle className="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" />
@@ -340,7 +358,7 @@ function ContactPageContent() {
                     <div>
                       <h4 className="font-semibold text-gray-900 mb-1">Emergency Support</h4>
                       <p className="text-sm text-gray-600">
-                        For urgent issues, call our 24/7 hotline: +1 (555) 911-HELP
+                        For urgent issues, call our {tenant?.phone ? <span>hotline: <a href={`tel:${tenant.phone}`} className="font-bold hover:underline">{tenant.phone}</a></span> : '24/7 support line.'}
                       </p>
                     </div>
                   </div>
@@ -351,7 +369,7 @@ function ContactPageContent() {
         </div>
       </section>
 
-      {/* Team Section */}
+      {/* Team Section - Commented out as requested
       <section className="py-16 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
@@ -375,7 +393,7 @@ function ContactPageContent() {
                 <p className="text-sm text-blue-600 font-semibold mb-3">
                   {member.role}
                 </p>
-                <a 
+                <a
                   href={`mailto:${member.email}`}
                   className="text-sm text-gray-600 hover:text-blue-600 transition break-all"
                 >
@@ -386,6 +404,7 @@ function ContactPageContent() {
           </div>
         </div>
       </section>
+      */}
 
       {/* FAQ Section */}
       <section className="py-16 bg-white">
@@ -426,15 +445,17 @@ function ContactPageContent() {
             Our support team is standing by to help you with any inquiries.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+            {tenant?.phone && (
+              <a
+                href={`tel:${tenant.phone}`}
+                className="px-8 py-3 bg-white text-blue-600 rounded-lg font-semibold hover:bg-gray-100 transition w-full sm:w-auto text-center"
+              >
+                Call Us Now
+              </a>
+            )}
             <a
-              href="tel:+15551234567"
-              className="px-8 py-3 bg-white text-blue-600 rounded-lg font-semibold hover:bg-gray-100 transition w-full sm:w-auto"
-            >
-              Call Us Now
-            </a>
-            <a
-              href="mailto:support@pulss.com"
-              className="px-8 py-3 border-2 border-white text-white rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition w-full sm:w-auto"
+              href={`mailto:${tenant?.email || 'support@pulss.com'}`}
+              className="px-8 py-3 border-2 border-white text-white rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition w-full sm:w-auto text-center"
             >
               Email Support
             </a>
