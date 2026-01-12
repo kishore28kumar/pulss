@@ -20,6 +20,10 @@ interface Tenant {
   state?: string;
   country?: string;
   pincode?: string;
+  gstNumber?: string;
+  drugLicNumber?: string;
+  pharmacistName?: string;
+  pharmacistRegNumber?: string;
 }
 
 interface TenantContextType {
