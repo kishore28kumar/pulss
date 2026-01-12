@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Loader2, UserPlus, Eye, EyeOff, RefreshCw, Store, Copy } from 'lucide-react';
+import { ArrowLeft, Loader2, UserPlus, Eye, EyeOff, RefreshCw, Store, Copy, ShieldCheck } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -30,6 +30,11 @@ const inviteSchema = z.object({
   state: z.string().min(2, 'State must be at least 2 characters').optional(),
   country: z.string().default('India'),
   pincode: z.string().min(6, 'Pincode must be at least 6 characters').max(6, 'Pincode must be 6 characters').optional(),
+  // Regulatory fields
+  gstNumber: z.string().min(1, 'GST number is required').optional(),
+  drugLicNumber: z.string().min(1, 'Drug License number is required').optional(),
+  pharmacistName: z.string().min(1, 'Pharmacist Name is required').optional(),
+  pharmacistRegNumber: z.string().min(1, 'Pharmacist Registration number is required').optional(),
 });
 
 type InviteFormData = z.infer<typeof inviteSchema>;
@@ -99,6 +104,10 @@ export default function NewStaffPage() {
       state: '',
       country: 'India',
       pincode: '',
+      gstNumber: '',
+      drugLicNumber: '',
+      pharmacistName: '',
+      pharmacistRegNumber: '',
     },
   });
 
@@ -117,6 +126,10 @@ export default function NewStaffPage() {
       state: '',
       country: 'India',
       pincode: '',
+      gstNumber: '',
+      drugLicNumber: '',
+      pharmacistName: '',
+      pharmacistRegNumber: '',
     });
   }, [reset]);
 
@@ -171,6 +184,15 @@ export default function NewStaffPage() {
         payload.state = data.state;
         payload.country = data.country || 'India';
         payload.pincode = data.pincode;
+
+        // Include regulatory fields
+        if (!data.gstNumber || !data.drugLicNumber || !data.pharmacistName || !data.pharmacistRegNumber) {
+          throw new Error('All regulatory details are required when creating an Admin');
+        }
+        payload.gstNumber = data.gstNumber;
+        payload.drugLicNumber = data.drugLicNumber;
+        payload.pharmacistName = data.pharmacistName;
+        payload.pharmacistRegNumber = data.pharmacistRegNumber;
       }
 
       return await api.post('/staff/invite', payload);
@@ -490,6 +512,86 @@ export default function NewStaffPage() {
                   />
                   {errors.pincode && (
                     <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.pincode.message}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Regulatory Details */}
+              <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
+                  <ShieldCheck className="w-5 h-5 mr-2" />
+                  Regulatory/Pharmacy Details
+                </h3>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* GST Number */}
+                <div>
+                  <label htmlFor="gstNumber" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    GST Number *
+                  </label>
+                  <input
+                    id="gstNumber"
+                    type="text"
+                    {...register('gstNumber', { required: isCreatingAdmin })}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 uppercase"
+                    placeholder="27AAAAA0000A1Z5"
+                  />
+                  {errors.gstNumber && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.gstNumber.message}</p>
+                  )}
+                </div>
+
+                {/* Drug License Number */}
+                <div>
+                  <label htmlFor="drugLicNumber" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Drug License Number *
+                  </label>
+                  <input
+                    id="drugLicNumber"
+                    type="text"
+                    {...register('drugLicNumber', { required: isCreatingAdmin })}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                    placeholder="DL NO: 123456"
+                  />
+                  {errors.drugLicNumber && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.drugLicNumber.message}</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Pharmacist Name */}
+                <div>
+                  <label htmlFor="pharmacistName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Registered Pharmacist Name *
+                  </label>
+                  <input
+                    id="pharmacistName"
+                    type="text"
+                    {...register('pharmacistName', { required: isCreatingAdmin })}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                    placeholder="John Doe"
+                  />
+                  {errors.pharmacistName && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.pharmacistName.message}</p>
+                  )}
+                </div>
+
+                {/* Pharmacist Registration Number */}
+                <div>
+                  <label htmlFor="pharmacistRegNumber" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Pharmacist Registration Number *
+                  </label>
+                  <input
+                    id="pharmacistRegNumber"
+                    type="text"
+                    {...register('pharmacistRegNumber', { required: isCreatingAdmin })}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                    placeholder="REG-12345/2023"
+                  />
+                  {errors.pharmacistRegNumber && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.pharmacistRegNumber.message}</p>
                   )}
                 </div>
               </div>

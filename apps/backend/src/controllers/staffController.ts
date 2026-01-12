@@ -160,7 +160,11 @@ export const inviteStaff = asyncHandler(
       throw new AppError('Authentication required', 401);
     }
 
-    const { email, firstName, lastName, phone, role, password, storeName, storeRoute, address, city, state, country, pincode } = req.body;
+    const {
+      email, firstName, lastName, phone, role, password,
+      storeName, storeRoute, address, city, state, country, pincode,
+      gstNumber, drugLicNumber, pharmacistName, pharmacistRegNumber
+    } = req.body;
 
     if (!email || !firstName || !lastName) {
       throw new AppError('Email, first name, and last name are required', 400);
@@ -169,49 +173,54 @@ export const inviteStaff = asyncHandler(
     // Determine allowed role based on current user's role
     let allowedRole: string;
     let targetTenantId: string | undefined;
-    
+
     if (req.user.role === 'SUPER_ADMIN') {
       // Super Admin can create Admin users
       allowedRole = 'ADMIN';
       if (role && role !== 'ADMIN') {
         throw new AppError('Super Admin can only create Admin users', 400);
       }
-      
+
       // If storeName and storeRoute are provided, create a new tenant
       if (storeName && storeRoute) {
         // Validate store route length
         if (storeRoute.length > 15) {
           throw new AppError('Store route must be at most 15 characters', 400);
         }
-        
+
         if (storeRoute.length < 2) {
           throw new AppError('Store route must be at least 2 characters', 400);
         }
-        
+
         // Validate store route format (lowercase, alphanumeric, hyphens only)
         if (!/^[a-z0-9-]+$/.test(storeRoute)) {
           throw new AppError('Store route must contain only lowercase letters, numbers, and hyphens', 400);
         }
-        
+
         // Validate address fields
         if (!address || !city || !state || !pincode) {
           throw new AppError('Address, city, state, and pincode are required when creating a tenant', 400);
         }
-        
+
+        // Validate regulatory fields
+        if (!gstNumber || !drugLicNumber || !pharmacistName || !pharmacistRegNumber) {
+          throw new AppError('GST Number, Drug License Number, Pharmacist Name, and Registration Number are required', 400);
+        }
+
         // Validate pincode format (6 digits)
         if (!/^\d{6}$/.test(pincode)) {
           throw new AppError('Pincode must be exactly 6 digits', 400);
         }
-        
+
         // Check if tenant slug already exists
         const existingTenant = await prisma.tenants.findUnique({
           where: { slug: storeRoute },
         });
-        
+
         if (existingTenant) {
           throw new AppError('Store route already exists. Please choose a different one.', 400);
         }
-        
+
         // Create new tenant
         const tenant = await prisma.tenants.create({
           data: {
@@ -225,10 +234,14 @@ export const inviteStaff = asyncHandler(
             state: state,
             country: country || 'India',
             pincode: pincode,
+            gstNumber: gstNumber,
+            drugLicNumber: drugLicNumber,
+            pharmacistName: pharmacistName,
+            pharmacistRegNumber: pharmacistRegNumber,
             updatedAt: new Date(),
           },
         });
-        
+
         targetTenantId = tenant.id;
       } else {
         // Use current tenant if no store info provided (fallback)
@@ -340,8 +353,8 @@ export const updateStaff = asyncHandler(
 
     // SUPER_ADMIN can update any Admin, others can only update from their tenant
     if (req.user.role !== 'SUPER_ADMIN') {
-    if (!req.tenantId) {
-      throw new AppError('Tenant not found', 400);
+      if (!req.tenantId) {
+        throw new AppError('Tenant not found', 400);
       }
       whereClause.tenantId = req.tenantId;
     }
@@ -433,8 +446,8 @@ export const deleteStaff = asyncHandler(
 
     // SUPER_ADMIN can delete any Admin, others can only delete from their tenant
     if (req.user.role !== 'SUPER_ADMIN') {
-    if (!req.tenantId) {
-      throw new AppError('Tenant not found', 400);
+      if (!req.tenantId) {
+        throw new AppError('Tenant not found', 400);
       }
       whereClause.tenantId = req.tenantId;
     }

@@ -367,6 +367,9 @@ model tenants {
   pincode            String?
   gstNumber          String?
   panNumber          String?
+  drugLicNumber      String?
+  pharmacistName     String?
+  pharmacistRegNumber String?
   logoUrl            String?
   faviconUrl         String?
   primaryColor       String?          @default("#3B82F6")

@@ -261,6 +261,14 @@ export default function DashboardPage() {
     ]
     : [];
 
+  // Filter stats based on role
+  const filteredStats = useMemo(() => {
+    if (userRole === 'SUPER_ADMIN') {
+      return stats.filter(stat => stat.name !== 'Products');
+    }
+    return stats;
+  }, [stats, userRole]);
+
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Header */}
@@ -298,7 +306,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className={`grid grid-cols-1 md:grid-cols-2 ${filteredStats.length === 3 ? 'lg:grid-cols-3' : 'lg:grid-cols-4'} gap-6`}>
         {statsLoading ? (
           // Loading skeleton
           Array.from({ length: 4 }).map((_, i) => (
@@ -315,7 +323,7 @@ export default function DashboardPage() {
             </div>
           ))
         ) : (
-          stats.map((stat) => (
+          filteredStats.map((stat) => (
             <div
               key={stat.name}
               className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition"

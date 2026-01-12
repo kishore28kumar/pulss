@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Save, Building2, Mail, Phone, MapPin, Tag, CreditCard, Calendar, FileText } from 'lucide-react';
+import { Save, Building2, Mail, Phone, MapPin, Tag, CreditCard, Calendar, FileText, ShieldCheck } from 'lucide-react';
 import { getUserRole } from '@/lib/permissions';
 
 const tenantInfoSchema = z.object({
@@ -18,6 +18,9 @@ const tenantInfoSchema = z.object({
   pincode: z.string().optional(),
   gstNumber: z.string().optional(),
   panNumber: z.string().optional(),
+  drugLicNumber: z.string().optional(),
+  pharmacistName: z.string().optional(),
+  pharmacistRegNumber: z.string().optional(),
 });
 
 type TenantInfoForm = z.infer<typeof tenantInfoSchema>;
@@ -56,6 +59,9 @@ export default function TenantInfoTab({ settings, onSave, isSaving, readOnly = f
       pincode: settings?.pincode || '',
       gstNumber: settings?.gstNumber || '',
       panNumber: settings?.panNumber || '',
+      drugLicNumber: settings?.drugLicNumber || '',
+      pharmacistName: settings?.pharmacistName || '',
+      pharmacistRegNumber: settings?.pharmacistRegNumber || '',
     },
   });
 
@@ -72,6 +78,9 @@ export default function TenantInfoTab({ settings, onSave, isSaving, readOnly = f
         pincode: settings.pincode || '',
         gstNumber: settings.gstNumber || '',
         panNumber: settings.panNumber || '',
+        drugLicNumber: settings.drugLicNumber || '',
+        pharmacistName: settings.pharmacistName || '',
+        pharmacistRegNumber: settings.pharmacistRegNumber || '',
       });
     }
   }, [settings, reset]);
@@ -111,9 +120,9 @@ export default function TenantInfoTab({ settings, onSave, isSaving, readOnly = f
       )}
 
       {/* Tenant Basic Information */}
-        <div className="border-b border-gray-200 dark:border-gray-700 pb-4 sm:pb-6">
+      <div className="border-b border-gray-200 dark:border-gray-700 pb-4 sm:pb-6">
         <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Basic Information</h3>
-        
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Tenant Name */}
           <div>
@@ -127,9 +136,8 @@ export default function TenantInfoTab({ settings, onSave, isSaving, readOnly = f
                 type="text"
                 {...register('name')}
                 disabled={isReadOnly}
-                className={`w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 ${
-                  isReadOnly ? 'bg-gray-50 dark:bg-gray-700/50 cursor-not-allowed' : ''
-                }`}
+                className={`w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 ${isReadOnly ? 'bg-gray-50 dark:bg-gray-700/50 cursor-not-allowed' : ''
+                  }`}
                 placeholder="Tenant Name"
               />
             </div>
@@ -211,9 +219,9 @@ export default function TenantInfoTab({ settings, onSave, isSaving, readOnly = f
       </div>
 
       {/* Contact Information */}
-        <div className="border-b border-gray-200 dark:border-gray-700 pb-4 sm:pb-6">
+      <div className="border-b border-gray-200 dark:border-gray-700 pb-4 sm:pb-6">
         <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Contact Information</h3>
-        
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -226,9 +234,8 @@ export default function TenantInfoTab({ settings, onSave, isSaving, readOnly = f
                 type="email"
                 {...register('email')}
                 disabled={isReadOnly}
-                className={`w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 ${
-                  isReadOnly ? 'bg-gray-50 dark:bg-gray-700/50 cursor-not-allowed' : ''
-                }`}
+                className={`w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 ${isReadOnly ? 'bg-gray-50 dark:bg-gray-700/50 cursor-not-allowed' : ''
+                  }`}
                 placeholder="tenant@example.com"
               />
             </div>
@@ -248,9 +255,8 @@ export default function TenantInfoTab({ settings, onSave, isSaving, readOnly = f
                 type="tel"
                 {...register('phone')}
                 disabled={isReadOnly}
-                className={`w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 ${
-                  isReadOnly ? 'bg-gray-50 dark:bg-gray-700/50 cursor-not-allowed' : ''
-                }`}
+                className={`w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 ${isReadOnly ? 'bg-gray-50 dark:bg-gray-700/50 cursor-not-allowed' : ''
+                  }`}
                 placeholder="+1 (555) 123-4567"
               />
             </div>
@@ -259,9 +265,9 @@ export default function TenantInfoTab({ settings, onSave, isSaving, readOnly = f
       </div>
 
       {/* Address Information */}
-        <div className="border-b border-gray-200 dark:border-gray-700 pb-4 sm:pb-6">
+      <div className="border-b border-gray-200 dark:border-gray-700 pb-4 sm:pb-6">
         <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Address Information</h3>
-        
+
         <div className="mb-4">
           <label htmlFor="address" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Street Address
@@ -273,9 +279,8 @@ export default function TenantInfoTab({ settings, onSave, isSaving, readOnly = f
               {...register('address')}
               disabled={isReadOnly}
               rows={2}
-              className={`w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 ${
-                isReadOnly ? 'bg-gray-50 dark:bg-gray-700/50 cursor-not-allowed' : ''
-              }`}
+              className={`w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 ${isReadOnly ? 'bg-gray-50 dark:bg-gray-700/50 cursor-not-allowed' : ''
+                }`}
               placeholder="123 Main Street, Suite 100"
             />
           </div>
@@ -291,8 +296,7 @@ export default function TenantInfoTab({ settings, onSave, isSaving, readOnly = f
               type="text"
               {...register('city')}
               disabled={isReadOnly}
-                className={`w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 ${
-                  isReadOnly ? 'bg-gray-50 dark:bg-gray-700/50 cursor-not-allowed' : ''
+              className={`w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 ${isReadOnly ? 'bg-gray-50 dark:bg-gray-700/50 cursor-not-allowed' : ''
                 }`}
               placeholder="New York"
             />
@@ -307,8 +311,7 @@ export default function TenantInfoTab({ settings, onSave, isSaving, readOnly = f
               type="text"
               {...register('state')}
               disabled={isReadOnly}
-                className={`w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 ${
-                  isReadOnly ? 'bg-gray-50 dark:bg-gray-700/50 cursor-not-allowed' : ''
+              className={`w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 ${isReadOnly ? 'bg-gray-50 dark:bg-gray-700/50 cursor-not-allowed' : ''
                 }`}
               placeholder="NY"
             />
@@ -323,8 +326,7 @@ export default function TenantInfoTab({ settings, onSave, isSaving, readOnly = f
               type="text"
               {...register('pincode')}
               disabled={isReadOnly}
-                className={`w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 ${
-                  isReadOnly ? 'bg-gray-50 dark:bg-gray-700/50 cursor-not-allowed' : ''
+              className={`w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 ${isReadOnly ? 'bg-gray-50 dark:bg-gray-700/50 cursor-not-allowed' : ''
                 }`}
               placeholder="10001"
             />
@@ -339,8 +341,7 @@ export default function TenantInfoTab({ settings, onSave, isSaving, readOnly = f
               type="text"
               {...register('country')}
               disabled={isReadOnly}
-                className={`w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 ${
-                  isReadOnly ? 'bg-gray-50 dark:bg-gray-700/50 cursor-not-allowed' : ''
+              className={`w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 ${isReadOnly ? 'bg-gray-50 dark:bg-gray-700/50 cursor-not-allowed' : ''
                 }`}
               placeholder="United States"
             />
@@ -349,9 +350,9 @@ export default function TenantInfoTab({ settings, onSave, isSaving, readOnly = f
       </div>
 
       {/* Tax Information */}
-        <div className="border-b border-gray-200 dark:border-gray-700 pb-4 sm:pb-6">
+      <div className="border-b border-gray-200 dark:border-gray-700 pb-4 sm:pb-6">
         <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Tax Information</h3>
-        
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label htmlFor="gstNumber" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -363,13 +364,12 @@ export default function TenantInfoTab({ settings, onSave, isSaving, readOnly = f
                 id="gstNumber"
                 type="text"
                 {...register('gstNumber')}
-                disabled={isReadOnly}
-                className={`w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 ${
-                  isReadOnly ? 'bg-gray-50 dark:bg-gray-700/50 cursor-not-allowed' : ''
-                }`}
+                disabled={true}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700/50 cursor-not-allowed text-gray-900 dark:text-gray-100 uppercase"
                 placeholder="GST123456789"
               />
             </div>
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">GST Number cannot be changed</p>
           </div>
 
           <div>
@@ -383,9 +383,8 @@ export default function TenantInfoTab({ settings, onSave, isSaving, readOnly = f
                 type="text"
                 {...register('panNumber')}
                 disabled={isReadOnly}
-                className={`w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 ${
-                  isReadOnly ? 'bg-gray-50 dark:bg-gray-700/50 cursor-not-allowed' : ''
-                }`}
+                className={`w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 ${isReadOnly ? 'bg-gray-50 dark:bg-gray-700/50 cursor-not-allowed' : ''
+                  }`}
                 placeholder="ABCDE1234F"
               />
             </div>
@@ -393,11 +392,75 @@ export default function TenantInfoTab({ settings, onSave, isSaving, readOnly = f
         </div>
       </div>
 
+      {/* Regulatory / Pharmacy Details (Read-only) */}
+      <div className="border-b border-gray-200 dark:border-gray-700 pb-4 sm:pb-6">
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
+          <ShieldCheck className="w-5 h-5 mr-2" />
+          Regulatory / Pharmacy Details
+        </h3>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="drugLicNumber" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Drug License Number
+            </label>
+            <div className="relative">
+              <FileText className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
+              <input
+                id="drugLicNumber"
+                type="text"
+                {...register('drugLicNumber')}
+                disabled={true}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700/50 cursor-not-allowed text-gray-900 dark:text-gray-100"
+                placeholder="DL-123456"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="pharmacistRegNumber" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Pharmacist Registration Number
+            </label>
+            <div className="relative">
+              <FileText className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
+              <input
+                id="pharmacistRegNumber"
+                type="text"
+                {...register('pharmacistRegNumber')}
+                disabled={true}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700/50 cursor-not-allowed text-gray-900 dark:text-gray-100"
+                placeholder="REG-12345/2023"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-4">
+          <label htmlFor="pharmacistName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Registered Pharmacist Name
+          </label>
+          <div className="relative">
+            <FileText className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
+            <input
+              id="pharmacistName"
+              type="text"
+              {...register('pharmacistName')}
+              disabled={true}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700/50 cursor-not-allowed text-gray-900 dark:text-gray-100"
+              placeholder="John Doe"
+            />
+          </div>
+        </div>
+        <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+          Regulatory details are managed by system administrators and cannot be changed here.
+        </p>
+      </div>
+
       {/* Statistics (Read-only) */}
       {settings?._count && (
         <div className="border-t border-gray-200 dark:border-gray-700 pt-4 sm:pt-6 pb-4 sm:pb-6">
           <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Statistics</h3>
-          
+
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
             <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
               <div className="text-sm text-gray-500 dark:text-gray-400">Users</div>
