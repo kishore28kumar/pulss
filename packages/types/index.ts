@@ -80,6 +80,7 @@ export interface CreateTenantDTO {
   city?: string;
   state?: string;
   country?: string;
+  returnPolicy?: string;
   // Admin user
   adminEmail: string;
   adminPassword: string;
@@ -100,6 +101,7 @@ export interface UpdateTenantDTO {
   primaryColor?: string;
   secondaryColor?: string;
   scheduleDrugEligible?: boolean;
+  returnPolicy?: string;
 }
 
 // ============================================

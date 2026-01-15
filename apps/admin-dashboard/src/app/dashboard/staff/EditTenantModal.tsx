@@ -21,6 +21,7 @@ interface Tenant {
   country?: string;
   pincode?: string;
   scheduleDrugEligible?: boolean;
+  returnPolicy?: string;
 }
 
 interface StaffMember {
@@ -45,6 +46,7 @@ const editSchema = z.object({
   phone: z.string().optional(),
   isActive: z.boolean(),
   scheduleDrugEligible: z.boolean(),
+  returnPolicy: z.string().optional(),
 });
 
 type EditFormData = z.infer<typeof editSchema>;
@@ -77,6 +79,7 @@ export default function EditTenantModal({ tenantId, tenantName, staffMember, onC
       phone: staffMember.phone || '',
       isActive: staffMember.isActive ?? true,
       scheduleDrugEligible: false,
+      returnPolicy: '',
     },
   });
 
@@ -94,6 +97,7 @@ export default function EditTenantModal({ tenantId, tenantName, staffMember, onC
         phone: staffMember.phone || '',
         isActive: staffMember.isActive ?? true,
         scheduleDrugEligible: tenantData.scheduleDrugEligible ?? false,
+        returnPolicy: tenantData.returnPolicy || '',
       });
     }
   }, [tenantData, staffMember, reset]);
@@ -111,6 +115,7 @@ export default function EditTenantModal({ tenantId, tenantName, staffMember, onC
       // Update tenant
       await api.put(`/tenants/${tenantId}`, {
         scheduleDrugEligible: data.scheduleDrugEligible,
+        returnPolicy: data.returnPolicy,
       });
     },
     onSuccess: () => {
@@ -280,6 +285,26 @@ export default function EditTenantModal({ tenantId, tenantName, staffMember, onC
               </div>
               {errors.scheduleDrugEligible && (
                 <p className="mt-2 text-sm text-red-600 dark:text-red-400">{errors.scheduleDrugEligible.message}</p>
+              )}
+            </div>
+
+            {/* Return Policy */}
+            <div className="mt-4">
+              <label htmlFor="returnPolicy" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Return and Refund Policy
+              </label>
+              <textarea
+                id="returnPolicy"
+                {...register('returnPolicy')}
+                rows={12}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 text-sm whitespace-pre-wrap"
+                placeholder="Enter your return and refund policy. Use clear section separators (like dashes or blank lines) to organize your content."
+              />
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                This content will be displayed on your storefront returns page. Line breaks and spacing will be preserved.
+              </p>
+              {errors.returnPolicy && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.returnPolicy.message}</p>
               )}
             </div>
           </div>

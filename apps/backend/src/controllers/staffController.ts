@@ -164,7 +164,7 @@ export const inviteStaff = asyncHandler(
       email, firstName, lastName, phone, role, password,
       storeName, storeRoute, address, city, state, country, pincode,
       gstNumber, drugLicNumber, pharmacistName, pharmacistRegNumber,
-      scheduleDrugEligible
+      scheduleDrugEligible, returnPolicy
     } = req.body;
 
     if (!email || !firstName || !lastName) {
@@ -223,7 +223,7 @@ export const inviteStaff = asyncHandler(
         }
 
         // Create new tenant
-        // Using type assertion for scheduleDrugEligible until Prisma client regenerates
+        // Using type assertion for scheduleDrugEligible and returnPolicy until Prisma client regenerates
         const tenant = await prisma.tenants.create({
           data: {
             id: `tenant_${Date.now()}`,
@@ -241,6 +241,7 @@ export const inviteStaff = asyncHandler(
             pharmacistName: pharmacistName,
             pharmacistRegNumber: pharmacistRegNumber,
             scheduleDrugEligible: scheduleDrugEligible ?? false,
+            returnPolicy: returnPolicy || null,
             updatedAt: new Date(),
           } as any,
         });

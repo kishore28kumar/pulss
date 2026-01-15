@@ -372,6 +372,7 @@ model tenants {
   pharmacistName     String?
   pharmacistRegNumber String?
   scheduleDrugEligible Boolean        @default(false)
+  returnPolicy        String?         @db.Text
   logoUrl            String?
   faviconUrl         String?
   primaryColor       String?          @default("#3B82F6")

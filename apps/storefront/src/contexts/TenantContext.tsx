@@ -11,6 +11,7 @@ interface Tenant {
   status?: string;
   adminFrozen?: boolean;
   scheduleDrugEligible?: boolean;
+  returnPolicy?: string;
   logoUrl?: string;
   faviconUrl?: string;
   primaryColor?: string;

@@ -100,6 +100,7 @@ export const createTenant = asyncHandler(
     const hashedPassword = await hashPassword(data.adminPassword);
 
     // Create tenant with admin user
+    // Using type assertion for returnPolicy until Prisma client regenerates
     const tenant = await prisma.tenants.create({
       data: {
         id: randomUUID(),
@@ -111,6 +112,7 @@ export const createTenant = asyncHandler(
         city: data.city,
         state: data.state,
         country: data.country || 'India',
+        returnPolicy: data.returnPolicy || null,
         status: 'ACTIVE',
         subscriptionPlan: 'FREE',
         updatedAt: new Date(),
@@ -127,7 +129,7 @@ export const createTenant = asyncHandler(
             updatedAt: new Date(),
           },
         },
-      },
+      } as any,
       include: {
         users: true,
       },
@@ -213,15 +215,20 @@ export const updateTenant = asyncHandler(
       if (data.logo !== undefined) updateData.logoUrl = data.logo;
       if (data.primaryColor !== undefined) updateData.primaryColor = data.primaryColor;
       if (data.secondaryColor !== undefined) updateData.secondaryColor = data.secondaryColor;
-      // Only SUPER_ADMIN can update scheduleDrugEligible
+      // Only SUPER_ADMIN can update scheduleDrugEligible and returnPolicy
       if (data.scheduleDrugEligible !== undefined) {
         updateData.scheduleDrugEligible = data.scheduleDrugEligible;
       }
+      if (data.returnPolicy !== undefined) {
+        updateData.returnPolicy = data.returnPolicy;
+      }
     }
 
-    // Handle scheduleDrugEligible separately using raw SQL to avoid Prisma type issues
+    // Handle scheduleDrugEligible and returnPolicy separately using raw SQL to avoid Prisma type issues
     const scheduleDrugValue = updateData.scheduleDrugEligible;
+    const returnPolicyValue = updateData.returnPolicy;
     delete updateData.scheduleDrugEligible; // Remove from updateData to avoid Prisma errors
+    delete updateData.returnPolicy; // Remove from updateData to avoid Prisma errors
     
     // Update other fields first if any
     let updatedTenant;
@@ -280,6 +287,38 @@ export const updateTenant = asyncHandler(
         console.error('Error updating scheduleDrugEligible:', error);
         throw new AppError(
           `Failed to update scheduleDrugEligible: ${error.message}`,
+          500
+        );
+      }
+    }
+
+    // Update returnPolicy using raw SQL if provided
+    if (returnPolicyValue !== undefined) {
+      try {
+        // First, ensure the column exists (idempotent)
+        await prisma.$executeRawUnsafe(`
+          DO $$
+          BEGIN
+            IF NOT EXISTS (
+              SELECT 1 FROM information_schema.columns 
+              WHERE table_name = 'tenants' 
+              AND column_name = 'returnPolicy'
+            ) THEN
+              ALTER TABLE tenants ADD COLUMN "returnPolicy" TEXT;
+            END IF;
+          END $$;
+        `);
+        
+        // Now update the value
+        await prisma.$executeRawUnsafe(
+          `UPDATE tenants SET "returnPolicy" = $1 WHERE id = $2`,
+          returnPolicyValue || null,
+          id
+        );
+      } catch (error: any) {
+        console.error('Error updating returnPolicy:', error);
+        throw new AppError(
+          `Failed to update returnPolicy: ${error.message}`,
           500
         );
       }
@@ -462,7 +501,7 @@ export const getTenantInfo = asyncHandler(
     }
 
     // Manually construct response with only needed fields
-    // Using type assertion for scheduleDrugEligible until Prisma client regenerates
+    // Using type assertion for scheduleDrugEligible and returnPolicy until Prisma client regenerates
     const tenantData = {
       id: tenant.id,
       name: tenant.name,
@@ -484,6 +523,7 @@ export const getTenantInfo = asyncHandler(
       pharmacistName: tenant.pharmacistName,
       pharmacistRegNumber: tenant.pharmacistRegNumber,
       scheduleDrugEligible: (tenant as any).scheduleDrugEligible ?? false,
+      returnPolicy: (tenant as any).returnPolicy || null,
       features: tenant.features,
       metadata: tenant.metadata,
     };

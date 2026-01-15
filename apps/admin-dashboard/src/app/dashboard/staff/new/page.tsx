@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Loader2, UserPlus, Eye, EyeOff, RefreshCw, Store, Copy, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Loader2, UserPlus, Eye, EyeOff, RefreshCw, Store, Copy, ShieldCheck, RotateCcw } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -36,9 +36,48 @@ const inviteSchema = z.object({
   pharmacistName: z.string().min(1, 'Pharmacist Name is required').optional(),
   pharmacistRegNumber: z.string().min(1, 'Pharmacist Registration number is required').optional(),
   scheduleDrugEligible: z.boolean().default(false).optional(),
+  returnPolicy: z.string().optional(),
 });
 
 type InviteFormData = z.infer<typeof inviteSchema>;
+
+// Default Return Policy Template (Plain Text)
+const DEFAULT_RETURN_POLICY = `RETURN POLICY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+30-DAY RETURN WINDOW
+You have 30 days from the date of delivery to initiate a return.
+
+ORIGINAL CONDITION REQUIRED
+Items must be unused, unwashed, and in original packaging with tags attached.
+
+FREE RETURN SHIPPING
+We provide free return shipping labels for eligible returns.
+
+QUICK REFUND PROCESSING
+Refunds are processed within 5-7 business days after we receive your return.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+NON-RETURNABLE ITEMS
+• Perishable goods (food, beverages, etc.)
+• Personalized or custom-made items
+• Items damaged by misuse or normal wear
+• Items without original packaging or tags
+• Gift cards and digital products
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+REFUND INFORMATION
+
+Refund Method
+Refunds will be issued to the original payment method used for the purchase. Processing time may vary by payment method.
+
+Refund Timeline
+Once we receive your return, we'll inspect it and process your refund within 5-7 business days. You'll receive an email confirmation when the refund is processed.
+
+Partial Refunds
+If you're returning only part of your order, you'll receive a partial refund for the returned items. Shipping costs are non-refundable unless the return is due to our error.`;
 
 // Generate a strong random password
 const generateStrongPassword = (): string => {
@@ -110,6 +149,7 @@ export default function NewStaffPage() {
       pharmacistName: '',
       pharmacistRegNumber: '',
       scheduleDrugEligible: false,
+      returnPolicy: DEFAULT_RETURN_POLICY,
     },
   });
 
@@ -133,6 +173,7 @@ export default function NewStaffPage() {
       pharmacistName: '',
       pharmacistRegNumber: '',
       scheduleDrugEligible: false,
+      returnPolicy: DEFAULT_RETURN_POLICY,
     });
   }, [reset]);
 
@@ -197,6 +238,7 @@ export default function NewStaffPage() {
         payload.pharmacistName = data.pharmacistName;
         payload.pharmacistRegNumber = data.pharmacistRegNumber;
         payload.scheduleDrugEligible = data.scheduleDrugEligible ?? false;
+        payload.returnPolicy = data.returnPolicy || DEFAULT_RETURN_POLICY;
       }
 
       return await api.post('/staff/invite', payload);
@@ -635,6 +677,35 @@ export default function NewStaffPage() {
                       {...register('scheduleDrugEligible')}
                     />
                   </div>
+                </div>
+              </div>
+
+              {/* Return Policy */}
+              <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
+                  <RotateCcw className="w-5 h-5 mr-2" />
+                  Return and Refund Policy
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                  Customize the return and refund policy that will be displayed on the storefront returns page. You can edit this later.
+                </p>
+                <div>
+                  <label htmlFor="returnPolicy" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Return and Refund Policy
+                  </label>
+                  <textarea
+                    id="returnPolicy"
+                    {...register('returnPolicy')}
+                    rows={15}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 text-sm whitespace-pre-wrap"
+                    placeholder="Enter your return and refund policy. Use clear section separators (like dashes or blank lines) to organize your content."
+                  />
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    This content will be displayed on your storefront returns page. Line breaks and spacing will be preserved.
+                  </p>
+                  {errors.returnPolicy && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.returnPolicy.message}</p>
+                  )}
                 </div>
               </div>
             </>
