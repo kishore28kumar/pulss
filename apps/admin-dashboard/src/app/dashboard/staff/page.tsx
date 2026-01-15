@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Search, Edit, Trash2, UserPlus, Mail, Phone, CheckCircle, XCircle, ExternalLink, Store, Download, X, LayoutDashboard, Snowflake, Unlock } from 'lucide-react';
+import { Search, Edit, Trash2, UserPlus, Mail, Phone, CheckCircle, XCircle, ExternalLink, Store, Download, X, LayoutDashboard, Snowflake, Unlock, Building2 } from 'lucide-react';
 import api from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -11,6 +11,8 @@ import { Permission } from '@/lib/permissions';
 import { getUserRole } from '@/lib/permissions';
 import { authService } from '@/lib/auth';
 import EditStaffModal from './EditStaffModal';
+import EditTenantModal from './EditTenantModal';
+import StaffActionsPopover from './StaffActionsPopover';
 import { useRouter } from 'next/navigation';
 import { getStorefrontUrl } from '@/lib/config/urls';
 
@@ -43,12 +45,14 @@ export default function StaffPage() {
   const [selectedCity, setSelectedCity] = useState('');
   const [page, setPage] = useState(1);
   const [editingStaff, setEditingStaff] = useState<StaffMember | null>(null);
+  const [editingTenant, setEditingTenant] = useState<{ id: string; name: string } | null>(null);
   const [freezingStaff, setFreezingStaff] = useState<StaffMember | null>(null);
   const [unfreezingStaff, setUnfreezingStaff] = useState<StaffMember | null>(null);
   const [freezeReason, setFreezeReason] = useState('');
   const [mounted, setMounted] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [tenantSlug, setTenantSlug] = useState<string | null>(null);
+  const [openPopoverId, setOpenPopoverId] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -153,6 +157,7 @@ export default function StaffPage() {
   const meta = data?.meta;
 
   const handleDelete = (member: StaffMember) => {
+    setOpenPopoverId(null); // Close popover when opening delete confirmation
     if (confirm(`Are you sure you want to remove ${member.firstName} ${member.lastName}?`)) {
       deleteMutation.mutate(member.id);
     }
@@ -160,11 +165,13 @@ export default function StaffPage() {
 
   const handleEdit = (member: StaffMember) => {
     setEditingStaff(member);
+    setOpenPopoverId(null); // Close popover when opening edit modal
   };
 
   const handleFreeze = (member: StaffMember) => {
     setFreezingStaff(member);
     setFreezeReason('');
+    setOpenPopoverId(null); // Close popover when opening freeze modal
   };
 
   const handleConfirmFreeze = () => {
@@ -178,6 +185,7 @@ export default function StaffPage() {
 
   const handleUnfreeze = (member: StaffMember) => {
     setUnfreezingStaff(member);
+    setOpenPopoverId(null); // Close popover when opening unfreeze modal
   };
 
   const handleConfirmUnfreeze = () => {
@@ -465,7 +473,6 @@ export default function StaffPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex items-center justify-end space-x-2">
-                          {/* View Storefront Link - Show for all staff members */}
                           {/* Dashboard Link - SUPER_ADMIN only */}
                           {mounted && userRole === 'SUPER_ADMIN' && (
                             <button
@@ -478,6 +485,7 @@ export default function StaffPage() {
                               <ExternalLink className="w-3 h-3 ml-1" />
                             </button>
                           )}
+                          {/* Store Link */}
                           {(() => {
                             // For SUPER_ADMIN viewing admins, use the admin's tenant
                             // For others, use the logged-in user's tenant
@@ -508,58 +516,31 @@ export default function StaffPage() {
                               </a>
                             ) : null;
                           })()}
-                          {/* Download Customers - SUPER_ADMIN only */}
-                          {mounted && userRole === 'SUPER_ADMIN' && member.tenants?.id && (
-                            <button
-                              onClick={() => handleDownloadCustomers(member.tenants!.id, member.tenants!.name)}
-                              className="p-2 text-gray-400 hover:text-purple-600 transition"
-                              title={`Download Customer Data for ${member.tenants!.name}`}
-                            >
-                              <Download className="w-4 h-4" />
-                            </button>
-                          )}
-                          {/* Freeze/Unfreeze buttons - SUPER_ADMIN only */}
-                          {mounted && userRole === 'SUPER_ADMIN' && (
-                            <>
-                              {member.isActive ? (
-                                <button
-                                  onClick={() => handleFreeze(member)}
-                                  className="p-2 text-gray-400 hover:text-orange-600 transition"
-                                  title="Freeze Account"
-                                >
-                                  <Snowflake className="w-4 h-4" />
-                                </button>
-                              ) : (
-                                <button
-                                  onClick={() => handleUnfreeze(member)}
-                                  className="p-2 text-gray-400 hover:text-green-600 transition"
-                                  disabled={unfreezeMutation.isPending}
-                                  title="Unfreeze Account"
-                                >
-                                  <Unlock className="w-4 h-4" />
-                                </button>
-                              )}
-                            </>
-                          )}
-                          <PermissionGuard permission={Permission.STAFF_UPDATE}>
-                            <button
-                              onClick={() => handleEdit(member)}
-                              className="p-2 text-gray-400 hover:text-blue-600 transition"
-                              title={mounted && userRole === 'SUPER_ADMIN' ? 'Edit Admin' : 'Edit Staff Member'}
-                            >
-                              <Edit className="w-4 h-4" />
-                            </button>
-                          </PermissionGuard>
-                          <PermissionGuard permission={Permission.STAFF_DELETE}>
-                            <button
-                              onClick={() => handleDelete(member)}
-                              className="p-2 text-gray-400 hover:text-red-600 transition"
-                              disabled={deleteMutation.isPending}
-                              title={mounted && userRole === 'SUPER_ADMIN' ? 'Delete Admin' : 'Delete Staff Member'}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </PermissionGuard>
+                          {/* Actions Popover */}
+                          <StaffActionsPopover
+                            member={member}
+                            userRole={userRole}
+                            mounted={mounted}
+                            isOpen={openPopoverId === member.id}
+                            onToggle={(memberId) => setOpenPopoverId(memberId)}
+                            onEditStaff={() => handleEdit(member)}
+                            onEditTenant={() => {
+                              if (member.tenants?.id) {
+                                setEditingTenant({ id: member.tenants.id, name: member.tenants.name });
+                                setOpenPopoverId(null); // Close popover when opening tenant edit modal
+                              }
+                            }}
+                            onFreeze={() => handleFreeze(member)}
+                            onUnfreeze={() => handleUnfreeze(member)}
+                            onDownloadCustomers={() => {
+                              if (member.tenants?.id) {
+                                handleDownloadCustomers(member.tenants.id, member.tenants.name);
+                              }
+                            }}
+                            onDelete={() => handleDelete(member)}
+                            isUnfreezePending={unfreezeMutation.isPending}
+                            isDeletePending={deleteMutation.isPending}
+                          />
                         </div>
                       </td>
                     </tr>
@@ -738,6 +719,19 @@ export default function StaffPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Edit Tenant Modal */}
+      {editingTenant && (
+        <EditTenantModal
+          tenantId={editingTenant.id}
+          tenantName={editingTenant.name}
+          onClose={() => setEditingTenant(null)}
+          onSuccess={() => {
+            setEditingTenant(null);
+            queryClient.invalidateQueries({ queryKey: ['staff'] });
+          }}
+        />
       )}
     </div>
   );

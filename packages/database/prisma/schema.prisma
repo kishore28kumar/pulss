@@ -293,6 +293,7 @@ model products {
   images               String[]
   thumbnail            String?
   requiresPrescription Boolean            @default(false)
+  drugSchedule         String?            // 'H', 'H1', 'X', or null for non-schedule drugs
   genericName          String?
   manufacturer         String?
   expiryDate           DateTime?
@@ -370,6 +371,7 @@ model tenants {
   drugLicNumber      String?
   pharmacistName     String?
   pharmacistRegNumber String?
+  scheduleDrugEligible Boolean        @default(false)
   logoUrl            String?
   faviconUrl         String?
   primaryColor       String?          @default("#3B82F6")

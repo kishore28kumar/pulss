@@ -6,6 +6,8 @@ import { ShoppingCart, Heart } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { useCart } from '@/hooks/useCart';
 import { useWishlist } from '@/hooks/useWishlist';
+import { useTenant } from '@/contexts/TenantContext';
+import ScheduleDrugWarning from '@/components/store/ScheduleDrugWarning';
 
 interface ProductCardProps {
   product: any;
@@ -14,6 +16,7 @@ interface ProductCardProps {
 export default function ProductCard({ product }: ProductCardProps) {
   const params = useParams();
   const storeName = params?.['store-name'] as string | undefined;
+  const { tenant } = useTenant();
   
   // Helper to get tenant-aware path
   const getPath = (path: string) => {
@@ -34,6 +37,10 @@ export default function ProductCard({ product }: ProductCardProps) {
   const { addToCart, isAddingToCart } = useCart();
   const { addToWishlist, isInWishlist, removeFromWishlist, isLoaded } = useWishlist();
   const isWishlisted = isLoaded && isInWishlist(product.id);
+  
+  // Check if product is Schedule H/H1/X and tenant is not eligible
+  const isScheduleDrug = product.drugSchedule && ['H', 'H1', 'X'].includes(product.drugSchedule);
+  const showWarning = isScheduleDrug && tenant?.scheduleDrugEligible === false;
 
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -110,6 +117,13 @@ export default function ProductCard({ product }: ProductCardProps) {
           <h3 className="font-semibold text-gray-900 mb-1 line-clamp-2 group-hover:text-blue-600 transition">
             {product.name}
           </h3>
+          
+          {/* Show warning if Schedule H/H1/X and tenant not eligible */}
+          {showWarning && (
+            <div className="mb-2">
+              <ScheduleDrugWarning variant="product" />
+            </div>
+          )}
           
           {product.categories?.[0] && (
             <p className="text-xs text-gray-500 mb-2">

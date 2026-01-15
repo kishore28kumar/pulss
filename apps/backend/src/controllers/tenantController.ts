@@ -181,7 +181,7 @@ export const updateTenant = asyncHandler(
       updateData.primaryColor = data.primaryColor;
       updateData.secondaryColor = data.secondaryColor;
     } else {
-      // SUPER_ADMIN can update all fields
+      // SUPER_ADMIN can update all fields including scheduleDrugEligible
       updateData.name = data.name;
       updateData.email = data.email;
       updateData.phone = data.phone;
@@ -193,6 +193,10 @@ export const updateTenant = asyncHandler(
       updateData.logoUrl = data.logo;
       updateData.primaryColor = data.primaryColor;
       updateData.secondaryColor = data.secondaryColor;
+      // Only SUPER_ADMIN can update scheduleDrugEligible
+      if (data.scheduleDrugEligible !== undefined) {
+        updateData.scheduleDrugEligible = data.scheduleDrugEligible;
+      }
     }
 
     const updatedTenant = await prisma.tenants.update({
@@ -345,36 +349,42 @@ export const getTenantInfo = asyncHandler(
       throw new AppError('Tenant not found', 400);
     }
 
+    // Fetch tenant - using findUnique without select to get all fields including scheduleDrugEligible
+    // This works even before Prisma client is regenerated
     const tenant = await prisma.tenants.findUnique({
       where: { id: req.tenantId },
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        status: true,
-        logoUrl: true,
-        faviconUrl: true,
-        primaryColor: true,
-        secondaryColor: true,
-        email: true,
-        phone: true,
-        address: true,
-        city: true,
-        state: true,
-        country: true,
-        pincode: true,
-        gstNumber: true,
-        drugLicNumber: true,
-        pharmacistName: true,
-        pharmacistRegNumber: true,
-        features: true,
-        metadata: true,
-      },
     });
 
     if (!tenant) {
       throw new AppError('Tenant not found', 404);
     }
+
+    // Manually construct response with only needed fields
+    // Using type assertion for scheduleDrugEligible until Prisma client regenerates
+    const tenantData = {
+      id: tenant.id,
+      name: tenant.name,
+      slug: tenant.slug,
+      status: tenant.status,
+      logoUrl: tenant.logoUrl,
+      faviconUrl: tenant.faviconUrl,
+      primaryColor: tenant.primaryColor,
+      secondaryColor: tenant.secondaryColor,
+      email: tenant.email,
+      phone: tenant.phone,
+      address: tenant.address,
+      city: tenant.city,
+      state: tenant.state,
+      country: tenant.country,
+      pincode: tenant.pincode,
+      gstNumber: tenant.gstNumber,
+      drugLicNumber: tenant.drugLicNumber,
+      pharmacistName: tenant.pharmacistName,
+      pharmacistRegNumber: tenant.pharmacistRegNumber,
+      scheduleDrugEligible: (tenant as any).scheduleDrugEligible ?? false,
+      features: tenant.features,
+      metadata: tenant.metadata,
+    };
 
     // Check if admin is frozen (if tenant has any active admin)
     const activeAdmins = await prisma.users.findMany({
@@ -394,7 +404,7 @@ export const getTenantInfo = asyncHandler(
     const response: ApiResponse = {
       success: true,
       data: {
-        ...tenant,
+        ...tenantData,
         adminFrozen, // Add flag to indicate if admin is frozen
       },
     };

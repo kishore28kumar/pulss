@@ -99,6 +99,7 @@ export interface UpdateTenantDTO {
   logo?: string;
   primaryColor?: string;
   secondaryColor?: string;
+  scheduleDrugEligible?: boolean;
 }
 
 // ============================================

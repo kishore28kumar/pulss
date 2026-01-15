@@ -10,6 +10,7 @@ interface Tenant {
   slug: string;
   status?: string;
   adminFrozen?: boolean;
+  scheduleDrugEligible?: boolean;
   logoUrl?: string;
   faviconUrl?: string;
   primaryColor?: string;

@@ -35,6 +35,7 @@ const inviteSchema = z.object({
   drugLicNumber: z.string().min(1, 'Drug License number is required').optional(),
   pharmacistName: z.string().min(1, 'Pharmacist Name is required').optional(),
   pharmacistRegNumber: z.string().min(1, 'Pharmacist Registration number is required').optional(),
+  scheduleDrugEligible: z.boolean().default(false).optional(),
 });
 
 type InviteFormData = z.infer<typeof inviteSchema>;
@@ -108,6 +109,7 @@ export default function NewStaffPage() {
       drugLicNumber: '',
       pharmacistName: '',
       pharmacistRegNumber: '',
+      scheduleDrugEligible: false,
     },
   });
 
@@ -130,6 +132,7 @@ export default function NewStaffPage() {
       drugLicNumber: '',
       pharmacistName: '',
       pharmacistRegNumber: '',
+      scheduleDrugEligible: false,
     });
   }, [reset]);
 
@@ -193,6 +196,7 @@ export default function NewStaffPage() {
         payload.drugLicNumber = data.drugLicNumber;
         payload.pharmacistName = data.pharmacistName;
         payload.pharmacistRegNumber = data.pharmacistRegNumber;
+        payload.scheduleDrugEligible = data.scheduleDrugEligible ?? false;
       }
 
       return await api.post('/staff/invite', payload);
@@ -593,6 +597,44 @@ export default function NewStaffPage() {
                   {errors.pharmacistRegNumber && (
                     <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.pharmacistRegNumber.message}</p>
                   )}
+                </div>
+              </div>
+
+              {/* Schedule Drug Eligibility Toggle */}
+              <div className="mt-4">
+                <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
+                  <div className="flex-1">
+                    <label htmlFor="scheduleDrugEligible" className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
+                      Eligible to sell Schedule H, H1, and X
+                    </label>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Enable this if the store is licensed to sell Schedule H, H1, and X drugs
+                    </p>
+                  </div>
+                  <div className="ml-4">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const currentValue = watch('scheduleDrugEligible') ?? false;
+                        setValue('scheduleDrugEligible', !currentValue);
+                      }}
+                      className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                        watch('scheduleDrugEligible') ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-600'
+                      }`}
+                      role="switch"
+                      aria-checked={watch('scheduleDrugEligible') ?? false}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                          watch('scheduleDrugEligible') ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                    <input
+                      type="hidden"
+                      {...register('scheduleDrugEligible')}
+                    />
+                  </div>
                 </div>
               </div>
             </>
