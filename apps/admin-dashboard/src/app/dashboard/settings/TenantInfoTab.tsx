@@ -4,8 +4,11 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Save, Building2, Mail, Phone, MapPin, Tag, CreditCard, Calendar, FileText, ShieldCheck } from 'lucide-react';
+import { Save, Building2, Mail, Phone, MapPin, Tag, CreditCard, Calendar, FileText, ShieldCheck, Image as ImageIcon, Upload, X } from 'lucide-react';
 import { getUserRole } from '@/lib/permissions';
+import { useState, useRef } from 'react';
+import api from '@/lib/api';
+import { toast } from 'sonner';
 
 const tenantInfoSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -21,6 +24,7 @@ const tenantInfoSchema = z.object({
   drugLicNumber: z.string().optional(),
   pharmacistName: z.string().optional(),
   pharmacistRegNumber: z.string().optional(),
+  pharmacistPhoto: z.string().url('Must be a valid URL').optional().or(z.literal('')),
 });
 
 type TenantInfoForm = z.infer<typeof tenantInfoSchema>;
@@ -35,6 +39,9 @@ interface TenantInfoTabProps {
 export default function TenantInfoTab({ settings, onSave, isSaving, readOnly = false }: TenantInfoTabProps) {
   const [mounted, setMounted] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [pharmacistPhotoUrl, setPharmacistPhotoUrl] = useState(settings?.pharmacistPhoto || '');
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -62,6 +69,7 @@ export default function TenantInfoTab({ settings, onSave, isSaving, readOnly = f
       drugLicNumber: settings?.drugLicNumber || '',
       pharmacistName: settings?.pharmacistName || '',
       pharmacistRegNumber: settings?.pharmacistRegNumber || '',
+      pharmacistPhoto: settings?.pharmacistPhoto || '',
     },
   });
 
@@ -81,9 +89,64 @@ export default function TenantInfoTab({ settings, onSave, isSaving, readOnly = f
         drugLicNumber: settings.drugLicNumber || '',
         pharmacistName: settings.pharmacistName || '',
         pharmacistRegNumber: settings.pharmacistRegNumber || '',
+        pharmacistPhoto: settings.pharmacistPhoto || '',
       });
+      setPharmacistPhotoUrl(settings.pharmacistPhoto || '');
     }
   }, [settings, reset]);
+
+  const handleFileUpload = async (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload an image file');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size must be less than 5MB');
+      return;
+    }
+
+    setUploadingPhoto(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await api.post('/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      const uploadedUrl = response.data.data.url;
+      setPharmacistPhotoUrl(uploadedUrl);
+      toast.success('Photo uploaded successfully');
+      
+      // Update form value
+      const form = document.querySelector('form');
+      if (form) {
+        const photoInput = form.querySelector('[name="pharmacistPhoto"]') as HTMLInputElement;
+        if (photoInput) {
+          photoInput.value = uploadedUrl;
+        }
+      }
+
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to upload photo');
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleFileUpload(file);
+    }
+  };
 
   const onSubmit = (data: TenantInfoForm) => {
     onSave({
@@ -97,6 +160,7 @@ export default function TenantInfoTab({ settings, onSave, isSaving, readOnly = f
       zipCode: data.pincode || undefined,
       gstNumber: data.gstNumber || undefined,
       panNumber: data.panNumber || undefined,
+      pharmacistPhoto: pharmacistPhotoUrl || undefined,
     });
   };
 
@@ -451,8 +515,99 @@ export default function TenantInfoTab({ settings, onSave, isSaving, readOnly = f
             />
           </div>
         </div>
+
+        {/* Pharmacist Photo */}
+        {!isReadOnly && (
+          <div className="mt-4">
+            <label htmlFor="pharmacistPhoto" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Pharmacist Photo
+            </label>
+            <div className="space-y-3">
+              {/* Photo URL Input */}
+              <div className="relative">
+                <ImageIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
+                <input
+                  id="pharmacistPhoto"
+                  type="url"
+                  {...register('pharmacistPhoto')}
+                  value={pharmacistPhotoUrl}
+                  onChange={(e) => setPharmacistPhotoUrl(e.target.value)}
+                  disabled={isReadOnly}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:cursor-not-allowed bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                  placeholder="https://example.com/photo.jpg or upload below"
+                />
+              </div>
+              
+              {/* File Upload */}
+              <div className="flex items-center space-x-3">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="hidden"
+                  disabled={isReadOnly || uploadingPhoto}
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isReadOnly || uploadingPhoto}
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {uploadingPhoto ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin mr-2" />
+                      Uploading...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-4 h-4 mr-2" />
+                      Upload Photo
+                    </>
+                  )}
+                </button>
+                {pharmacistPhotoUrl && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPharmacistPhotoUrl('');
+                      const form = document.querySelector('form');
+                      if (form) {
+                        const photoInput = form.querySelector('[name="pharmacistPhoto"]') as HTMLInputElement;
+                        if (photoInput) {
+                          photoInput.value = '';
+                        }
+                      }
+                    }}
+                    className="inline-flex items-center px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+
+              {/* Photo Preview */}
+              {pharmacistPhotoUrl && (
+                <div className="mt-2">
+                  <img
+                    src={pharmacistPhotoUrl}
+                    alt="Pharmacist"
+                    className="w-32 h-32 object-cover rounded-lg border border-gray-300 dark:border-gray-600"
+                    onError={() => {
+                      toast.error('Failed to load image. Please check the URL.');
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Upload a photo or enter a URL. Recommended size: 200x200px. Supports PNG, JPG formats.
+            </p>
+          </div>
+        )}
+
         <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-          Regulatory details are managed by system administrators and cannot be changed here.
+          Regulatory details (name, registration number) are managed by system administrators and cannot be changed here.
         </p>
       </div>
 

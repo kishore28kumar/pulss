@@ -371,6 +371,7 @@ model tenants {
   drugLicNumber      String?
   pharmacistName     String?
   pharmacistRegNumber String?
+  pharmacistPhoto    String?
   scheduleDrugEligible Boolean        @default(false)
   returnPolicy        String?         @db.Text
   logoUrl            String?

@@ -102,6 +102,7 @@ export interface UpdateTenantDTO {
   secondaryColor?: string;
   scheduleDrugEligible?: boolean;
   returnPolicy?: string;
+  pharmacistPhoto?: string;
 }
 
 // ============================================

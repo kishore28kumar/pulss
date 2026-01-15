@@ -202,6 +202,8 @@ export const updateTenant = asyncHandler(
       if (data.logo !== undefined) updateData.logoUrl = data.logo;
       if (data.primaryColor !== undefined) updateData.primaryColor = data.primaryColor;
       if (data.secondaryColor !== undefined) updateData.secondaryColor = data.secondaryColor;
+      // ADMIN can update pharmacist details
+      if (data.pharmacistPhoto !== undefined) updateData.pharmacistPhoto = data.pharmacistPhoto;
     } else {
       // SUPER_ADMIN can update all fields including scheduleDrugEligible
       if (data.name !== undefined) updateData.name = data.name;
@@ -222,13 +224,17 @@ export const updateTenant = asyncHandler(
       if (data.returnPolicy !== undefined) {
         updateData.returnPolicy = data.returnPolicy;
       }
+      // SUPER_ADMIN can also update pharmacistPhoto
+      if (data.pharmacistPhoto !== undefined) updateData.pharmacistPhoto = data.pharmacistPhoto;
     }
 
-    // Handle scheduleDrugEligible and returnPolicy separately using raw SQL to avoid Prisma type issues
+    // Handle scheduleDrugEligible, returnPolicy, and pharmacistPhoto separately using raw SQL to avoid Prisma type issues
     const scheduleDrugValue = updateData.scheduleDrugEligible;
     const returnPolicyValue = updateData.returnPolicy;
+    const pharmacistPhotoValue = updateData.pharmacistPhoto;
     delete updateData.scheduleDrugEligible; // Remove from updateData to avoid Prisma errors
     delete updateData.returnPolicy; // Remove from updateData to avoid Prisma errors
+    delete updateData.pharmacistPhoto; // Remove from updateData to avoid Prisma errors
     
     // Update other fields first if any
     let updatedTenant;
@@ -319,6 +325,38 @@ export const updateTenant = asyncHandler(
         console.error('Error updating returnPolicy:', error);
         throw new AppError(
           `Failed to update returnPolicy: ${error.message}`,
+          500
+        );
+      }
+    }
+
+    // Update pharmacistPhoto using raw SQL if provided
+    if (pharmacistPhotoValue !== undefined) {
+      try {
+        // First, ensure the column exists (idempotent)
+        await prisma.$executeRawUnsafe(`
+          DO $$
+          BEGIN
+            IF NOT EXISTS (
+              SELECT 1 FROM information_schema.columns 
+              WHERE table_name = 'tenants' 
+              AND column_name = 'pharmacistPhoto'
+            ) THEN
+              ALTER TABLE tenants ADD COLUMN "pharmacistPhoto" TEXT;
+            END IF;
+          END $$;
+        `);
+        
+        // Now update the value
+        await prisma.$executeRawUnsafe(
+          `UPDATE tenants SET "pharmacistPhoto" = $1 WHERE id = $2`,
+          pharmacistPhotoValue || null,
+          id
+        );
+      } catch (error: any) {
+        console.error('Error updating pharmacistPhoto:', error);
+        throw new AppError(
+          `Failed to update pharmacistPhoto: ${error.message}`,
           500
         );
       }
@@ -522,6 +560,7 @@ export const getTenantInfo = asyncHandler(
       drugLicNumber: tenant.drugLicNumber,
       pharmacistName: tenant.pharmacistName,
       pharmacistRegNumber: tenant.pharmacistRegNumber,
+      pharmacistPhoto: (tenant as any).pharmacistPhoto || null,
       scheduleDrugEligible: (tenant as any).scheduleDrugEligible ?? false,
       returnPolicy: (tenant as any).returnPolicy || null,
       features: tenant.features,
