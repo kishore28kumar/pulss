@@ -5,12 +5,18 @@ import { TenantProvider, useTenant } from '@/contexts/TenantContext';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import FrozenStoreMessage from '@/components/store/FrozenStoreMessage';
+import FrozenAdminMessage from '@/components/store/FrozenAdminMessage';
 import ChatWidget from '@/components/chat/ChatWidget';
 
 function StoreLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isLoginPage = pathname?.endsWith('/login');
   const { tenant, isLoading } = useTenant();
+
+  // Show frozen admin message if admin is frozen (except on login page)
+  if (!isLoginPage && !isLoading && tenant?.adminFrozen) {
+    return <FrozenAdminMessage storeName={tenant.name} />;
+  }
 
   // Show frozen message if tenant is frozen (except on login page)
   if (!isLoginPage && !isLoading && tenant?.status === 'FROZEN') {

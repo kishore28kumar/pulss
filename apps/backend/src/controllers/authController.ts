@@ -35,9 +35,14 @@ export const loginUser = asyncHandler(
       },
     });
 
-    // Check if user exists, is active, and is not a customer
-    if (!user || !user.isActive || user.role === 'CUSTOMER') {
+    // Check if user exists and is not a customer
+    if (!user || user.role === 'CUSTOMER') {
       throw new AppError('Invalid credentials', 401);
+    }
+
+    // Check if user account is frozen
+    if (!user.isActive) {
+      throw new AppError('Your account has been frozen. Please contact Super Admin for assistance.', 403);
     }
 
     // Verify password
@@ -301,6 +306,11 @@ export const getCurrentUser = asyncHandler(
 
     if (!user) {
       throw new AppError('User not found', 404);
+    }
+
+    // Check if user account is frozen
+    if (!user.isActive) {
+      throw new AppError('Your account has been frozen. Please contact Super Admin for assistance.', 403);
     }
 
     const response: ApiResponse = {
@@ -676,8 +686,13 @@ export const verifyLoginToken = asyncHandler(
         },
       });
 
-      if (!user || !user.isActive || user.role === 'CUSTOMER') {
+      if (!user || user.role === 'CUSTOMER') {
         throw new AppError('Invalid or expired token', 401);
+      }
+
+      // Check if user account is frozen
+      if (!user.isActive) {
+        throw new AppError('Your account has been frozen. Please contact Super Admin for assistance.', 403);
       }
 
       // Generate tokens

@@ -376,9 +376,27 @@ export const getTenantInfo = asyncHandler(
       throw new AppError('Tenant not found', 404);
     }
 
+    // Check if admin is frozen (if tenant has any active admin)
+    const activeAdmins = await prisma.users.findMany({
+      where: {
+        tenantId: req.tenantId,
+        role: 'ADMIN',
+        isActive: true,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    // If no active admins exist, the storefront should be blocked
+    const adminFrozen = activeAdmins.length === 0;
+
     const response: ApiResponse = {
       success: true,
-      data: tenant,
+      data: {
+        ...tenant,
+        adminFrozen, // Add flag to indicate if admin is frozen
+      },
     };
 
     res.json(response);

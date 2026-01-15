@@ -9,6 +9,7 @@ interface Tenant {
   name: string;
   slug: string;
   status?: string;
+  adminFrozen?: boolean;
   logoUrl?: string;
   faviconUrl?: string;
   primaryColor?: string;

@@ -427,6 +427,199 @@ export const updateStaff = asyncHandler(
 );
 
 // ============================================
+// FREEZE STAFF MEMBER (SUPER_ADMIN only)
+// ============================================
+
+export const freezeStaff = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { reason } = req.body;
+
+    if (!req.user) {
+      throw new AppError('Authentication required', 401);
+    }
+
+    // Only SUPER_ADMIN can freeze admins/staff
+    if (req.user.role !== 'SUPER_ADMIN') {
+      throw new AppError('Only Super Admin can freeze users', 403);
+    }
+
+    if (!reason || reason.trim().length === 0) {
+      throw new AppError('Reason is required when freezing an account', 400);
+    }
+
+    // Build where clause - can freeze any ADMIN or STAFF
+    const whereClause: any = {
+      id,
+      role: { in: ['ADMIN', 'STAFF'] },
+    };
+
+    // Check if staff member exists
+    const staffMember = await prisma.users.findFirst({
+      where: whereClause,
+      include: {
+        tenants: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+          },
+        },
+      },
+    });
+
+    if (!staffMember) {
+      throw new AppError('Staff member not found', 404);
+    }
+
+    // Prevent freezing yourself
+    if (req.user.userId === id) {
+      throw new AppError('You cannot freeze yourself', 400);
+    }
+
+    // Check if already frozen
+    if (!staffMember.isActive) {
+      throw new AppError('User is already frozen', 400);
+    }
+
+    // Freeze the user
+    await prisma.users.update({
+      where: { id },
+      data: {
+        isActive: false,
+        updatedAt: new Date(),
+      },
+    });
+
+    // Log to audit_logs
+    try {
+      await prisma.audit_logs.create({
+        data: {
+          id: `audit_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          tenantId: staffMember.tenantId || '',
+          userId: req.user.userId,
+          action: 'FREEZE_USER',
+          entity: 'users',
+          entityId: id,
+          changes: {
+            isActive: { from: true, to: false },
+            reason: reason.trim(),
+          },
+          ipAddress: req.ip,
+          userAgent: req.headers['user-agent'] || null,
+        },
+      });
+    } catch (auditError) {
+      // Log error but don't fail the request
+      console.error('Failed to create audit log:', auditError);
+    }
+
+    const response: ApiResponse = {
+      success: true,
+      data: {
+        id: staffMember.id,
+        email: staffMember.email,
+        isActive: false,
+      },
+      message: `${staffMember.role === 'ADMIN' ? 'Admin' : 'Staff'} account frozen successfully`,
+    };
+
+    res.json(response);
+  }
+);
+
+// ============================================
+// UNFREEZE STAFF MEMBER (SUPER_ADMIN only)
+// ============================================
+
+export const unfreezeStaff = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { id } = req.params;
+
+    if (!req.user) {
+      throw new AppError('Authentication required', 401);
+    }
+
+    // Only SUPER_ADMIN can unfreeze admins/staff
+    if (req.user.role !== 'SUPER_ADMIN') {
+      throw new AppError('Only Super Admin can unfreeze users', 403);
+    }
+
+    // Build where clause - can unfreeze any ADMIN or STAFF
+    const whereClause: any = {
+      id,
+      role: { in: ['ADMIN', 'STAFF'] },
+    };
+
+    // Check if staff member exists
+    const staffMember = await prisma.users.findFirst({
+      where: whereClause,
+      include: {
+        tenants: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+          },
+        },
+      },
+    });
+
+    if (!staffMember) {
+      throw new AppError('Staff member not found', 404);
+    }
+
+    // Check if already active
+    if (staffMember.isActive) {
+      throw new AppError('User is already active', 400);
+    }
+
+    // Unfreeze the user
+    await prisma.users.update({
+      where: { id },
+      data: {
+        isActive: true,
+        updatedAt: new Date(),
+      },
+    });
+
+    // Log to audit_logs
+    try {
+      await prisma.audit_logs.create({
+        data: {
+          id: `audit_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          tenantId: staffMember.tenantId || '',
+          userId: req.user.userId,
+          action: 'UNFREEZE_USER',
+          entity: 'users',
+          entityId: id,
+          changes: {
+            isActive: { from: false, to: true },
+          },
+          ipAddress: req.ip,
+          userAgent: req.headers['user-agent'] || null,
+        },
+      });
+    } catch (auditError) {
+      // Log error but don't fail the request
+      console.error('Failed to create audit log:', auditError);
+    }
+
+    const response: ApiResponse = {
+      success: true,
+      data: {
+        id: staffMember.id,
+        email: staffMember.email,
+        isActive: true,
+      },
+      message: `${staffMember.role === 'ADMIN' ? 'Admin' : 'Staff'} account unfrozen successfully`,
+    };
+
+    res.json(response);
+  }
+);
+
+// ============================================
 // DELETE STAFF MEMBER
 // ============================================
 
