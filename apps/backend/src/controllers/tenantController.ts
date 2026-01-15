@@ -360,7 +360,7 @@ export const updateTenant = asyncHandler(
           `Failed to update pharmacistPhoto: ${error.message}`,
           500
         );
-      }
+    }
     }
     
     // Fetch updated tenant

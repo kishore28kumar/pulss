@@ -29,8 +29,8 @@ export const createAdRequest = asyncHandler(async (req: Request, res: Response) 
             throw new AppError('Maximum 10 hero images allowed', 400);
         }
     } else if (finalRequestType === 'AD_PLACEMENT') {
-        if (!images || !Array.isArray(images) || images.length === 0) {
-            throw new AppError('At least one image is required', 400);
+    if (!images || !Array.isArray(images) || images.length === 0) {
+        throw new AppError('At least one image is required', 400);
         }
     }
 

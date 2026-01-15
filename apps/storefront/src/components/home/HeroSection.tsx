@@ -78,10 +78,10 @@ export default function HeroSection({ isAuthenticated, customerName }: HeroSecti
 
             {/* Subheadline with Benefits */}
             <p className="text-lg sm:text-xl lg:text-2xl text-gray-600 leading-relaxed max-w-2xl mx-auto lg:mx-0">
-              Discover premium products from trusted local retailers.
-              <span className="text-gray-900 font-semibold"> Free shipping</span> on orders over ₹200,
-              <span className="text-gray-900 font-semibold"> secure checkout</span>, and
-              <span className="text-gray-900 font-semibold"> 30-day returns</span> guaranteed.
+                  Discover premium products from trusted local retailers.
+                  <span className="text-gray-900 font-semibold"> Free shipping</span> on orders over ₹200,
+                  <span className="text-gray-900 font-semibold"> secure checkout</span>, and
+                  <span className="text-gray-900 font-semibold"> 30-day returns</span> guaranteed.
             </p>
 
             {/* CTA Buttons */}

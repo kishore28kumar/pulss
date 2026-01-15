@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-// Social media icons removed - not currently used
 
 export default function Footer() {
   const params = useParams();
