@@ -113,6 +113,7 @@ export const createTenant = asyncHandler(
         state: data.state,
         country: data.country || 'India',
         returnPolicy: data.returnPolicy || null,
+        heroImages: data.heroImages && Array.isArray(data.heroImages) ? data.heroImages : [],
         status: 'ACTIVE',
         subscriptionPlan: 'FREE',
         updatedAt: new Date(),
@@ -563,6 +564,7 @@ export const getTenantInfo = asyncHandler(
       pharmacistPhoto: (tenant as any).pharmacistPhoto || null,
       scheduleDrugEligible: (tenant as any).scheduleDrugEligible ?? false,
       returnPolicy: (tenant as any).returnPolicy || null,
+      heroImages: (tenant as any).heroImages || [],
       features: tenant.features,
       metadata: tenant.metadata,
     };

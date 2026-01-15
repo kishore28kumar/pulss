@@ -81,6 +81,7 @@ export interface CreateTenantDTO {
   state?: string;
   country?: string;
   returnPolicy?: string;
+  heroImages?: string[];
   // Admin user
   adminEmail: string;
   adminPassword: string;
@@ -103,6 +104,7 @@ export interface UpdateTenantDTO {
   scheduleDrugEligible?: boolean;
   returnPolicy?: string;
   pharmacistPhoto?: string;
+  heroImages?: string[];
 }
 
 // ============================================

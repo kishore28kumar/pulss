@@ -2,13 +2,13 @@
 
 import { useRouter } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Loader2, UserPlus, Eye, EyeOff, RefreshCw, Store, Copy, ShieldCheck, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Loader2, UserPlus, Eye, EyeOff, RefreshCw, Store, Copy, ShieldCheck, RotateCcw, Image as ImageIcon, Upload, X, GripVertical } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import api from '@/lib/api';
 import { toast } from 'sonner';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getUserRole } from '@/lib/permissions';
 
 const inviteSchema = z.object({
@@ -37,6 +37,7 @@ const inviteSchema = z.object({
   pharmacistRegNumber: z.string().min(1, 'Pharmacist Registration number is required').optional(),
   scheduleDrugEligible: z.boolean().default(false).optional(),
   returnPolicy: z.string().optional(),
+  heroImages: z.array(z.string().url('Must be a valid URL')).max(10, 'Maximum 10 hero images allowed').optional(),
 });
 
 type InviteFormData = z.infer<typeof inviteSchema>;
@@ -116,6 +117,9 @@ export default function NewStaffPage() {
   const [userRole, setUserRole] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [storefrontUrl, setStorefrontUrl] = useState<string>('');
+  const [heroImages, setHeroImages] = useState<string[]>([]);
+  const [uploadingHeroImage, setUploadingHeroImage] = useState(false);
+  const heroImageFileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -150,6 +154,7 @@ export default function NewStaffPage() {
       pharmacistRegNumber: '',
       scheduleDrugEligible: false,
       returnPolicy: DEFAULT_RETURN_POLICY,
+      heroImages: [],
     },
   });
 
@@ -174,7 +179,9 @@ export default function NewStaffPage() {
       pharmacistRegNumber: '',
       scheduleDrugEligible: false,
       returnPolicy: DEFAULT_RETURN_POLICY,
+      heroImages: [],
     });
+    setHeroImages([]);
   }, [reset]);
 
   // Watch storeRoute to update storefront URL preview
@@ -198,6 +205,91 @@ export default function NewStaffPage() {
     const password = generatePassword();
     setValue('password', password);
     toast.success('Password generated');
+  };
+
+  // Hero Image Upload Handler
+  const handleHeroImageUpload = async (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload an image file (JPG or PNG)');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size must be less than 5MB');
+      return;
+    }
+
+    if (heroImages.length >= 10) {
+      toast.error('Maximum 10 hero images allowed');
+      return;
+    }
+
+    setUploadingHeroImage(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await api.post('/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      const uploadedUrl = response.data.data.url;
+      const updatedImages = [...heroImages, uploadedUrl];
+      setHeroImages(updatedImages);
+      setValue('heroImages', updatedImages);
+      toast.success('Hero image uploaded successfully');
+
+      if (heroImageFileInputRef.current) {
+        heroImageFileInputRef.current.value = '';
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to upload hero image');
+    } finally {
+      setUploadingHeroImage(false);
+    }
+  };
+
+  const handleHeroImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleHeroImageUpload(file);
+    }
+  };
+
+  const handleAddHeroImageUrl = () => {
+    const url = prompt('Enter image URL:');
+    if (url) {
+      try {
+        new URL(url); // Validate URL
+        if (heroImages.length >= 10) {
+          toast.error('Maximum 10 hero images allowed');
+          return;
+        }
+        const updatedImages = [...heroImages, url];
+        setHeroImages(updatedImages);
+        setValue('heroImages', updatedImages);
+        toast.success('Hero image URL added');
+      } catch {
+        toast.error('Invalid URL');
+      }
+    }
+  };
+
+  const handleRemoveHeroImage = (index: number) => {
+    const updatedImages = heroImages.filter((_, i) => i !== index);
+    setHeroImages(updatedImages);
+    setValue('heroImages', updatedImages);
+    toast.success('Hero image removed');
+  };
+
+  const handleReorderHeroImages = (fromIndex: number, toIndex: number) => {
+    const updatedImages = [...heroImages];
+    const [removed] = updatedImages.splice(fromIndex, 1);
+    updatedImages.splice(toIndex, 0, removed);
+    setHeroImages(updatedImages);
+    setValue('heroImages', updatedImages);
   };
 
   const queryClient = useQueryClient();
@@ -239,6 +331,7 @@ export default function NewStaffPage() {
         payload.pharmacistRegNumber = data.pharmacistRegNumber;
         payload.scheduleDrugEligible = data.scheduleDrugEligible ?? false;
         payload.returnPolicy = data.returnPolicy || DEFAULT_RETURN_POLICY;
+        payload.heroImages = heroImages.length > 0 ? heroImages : [];
       }
 
       return await api.post('/staff/invite', payload);
@@ -707,6 +800,119 @@ export default function NewStaffPage() {
                     <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.returnPolicy.message}</p>
                   )}
                 </div>
+              </div>
+
+              {/* Hero Images */}
+              <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
+                  <ImageIcon className="w-5 h-5 mr-2" />
+                  Homepage Hero Images
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                  Upload up to 10 hero images to display on the storefront homepage. If no images are uploaded, default images will be shown.
+                </p>
+
+                {/* Upload Options */}
+                <div className="flex flex-col sm:flex-row gap-3 mb-4">
+                  <input
+                    ref={heroImageFileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/jpg,image/png"
+                    onChange={handleHeroImageFileChange}
+                    className="hidden"
+                    disabled={uploadingHeroImage || heroImages.length >= 10}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => heroImageFileInputRef.current?.click()}
+                    disabled={uploadingHeroImage || heroImages.length >= 10}
+                    className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {uploadingHeroImage ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Uploading...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-4 h-4 mr-2" />
+                        Upload Image
+                      </>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleAddHeroImageUrl}
+                    disabled={heroImages.length >= 10}
+                    className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <ImageIcon className="w-4 h-4 mr-2" />
+                    Add Image URL
+                  </button>
+                </div>
+
+                {/* Hero Images Grid */}
+                {heroImages.length > 0 && (
+                  <div className="space-y-3">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Drag images to reorder. Images will be displayed in this order on the homepage.
+                    </p>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                      {heroImages.map((imageUrl, index) => (
+                        <div
+                          key={index}
+                          className="relative group border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-gray-50 dark:bg-gray-800"
+                        >
+                          <div className="aspect-square relative">
+                            <img
+                              src={imageUrl}
+                              alt={`Hero ${index + 1}`}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23e5e7eb" width="200" height="200"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%239ca3af"%3EInvalid Image%3C/text%3E%3C/svg%3E';
+                              }}
+                            />
+                            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-opacity flex items-center justify-center">
+                              <div className="opacity-0 group-hover:opacity-100 flex gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveHeroImage(index)}
+                                  className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+                                  title="Remove image"
+                                >
+                                  <X className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </div>
+                            <div className="absolute top-2 left-2 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded">
+                              {index + 1}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      {heroImages.length} / 10 images uploaded
+                    </p>
+                  </div>
+                )}
+
+                {heroImages.length === 0 && (
+                  <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center">
+                    <ImageIcon className="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-3" />
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                      No hero images uploaded
+                    </p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500">
+                      Default images will be displayed on the homepage if no images are uploaded.
+                    </p>
+                  </div>
+                )}
+
+                {errors.heroImages && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.heroImages.message}</p>
+                )}
               </div>
             </>
           )}

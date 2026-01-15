@@ -28,6 +28,7 @@ interface Tenant {
   pharmacistName?: string;
   pharmacistRegNumber?: string;
   pharmacistPhoto?: string;
+  heroImages?: string[];
 }
 
 interface TenantContextType {
