@@ -623,6 +623,104 @@ export const unfreezeStaff = asyncHandler(
 );
 
 // ============================================
+// RESET ADMIN PASSWORD (SUPER_ADMIN only)
+// ============================================
+
+export const resetAdminPassword = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { newPassword } = req.body;
+
+    if (!req.user || req.user.role !== 'SUPER_ADMIN') {
+      throw new AppError('Unauthorized. Only Super Admin can reset passwords.', 403);
+    }
+
+    if (!newPassword || newPassword.length < 8) {
+      throw new AppError('Password must be at least 8 characters long', 400);
+    }
+
+    // Build where clause - can reset password for any ADMIN or STAFF
+    const whereClause: any = {
+      id,
+      role: { in: ['ADMIN', 'STAFF'] },
+    };
+
+    const userToReset = await prisma.users.findFirst({ 
+      where: whereClause,
+      include: {
+        tenants: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    if (!userToReset) {
+      throw new AppError('User not found', 404);
+    }
+
+    // Only allow resetting passwords for ADMIN or STAFF (not SUPER_ADMIN or CUSTOMER)
+    if (userToReset.role === 'SUPER_ADMIN') {
+      throw new AppError('Cannot reset password for Super Admin account.', 400);
+    }
+
+    if (userToReset.role === 'CUSTOMER') {
+      throw new AppError('Cannot reset password for customer accounts.', 400);
+    }
+
+    // Hash the new password
+    const hashedPassword = await hashPassword(newPassword);
+
+    // Update the password
+    const updatedUser = await prisma.users.update({
+      where: { id },
+      data: { 
+        password: hashedPassword,
+        updatedAt: new Date() 
+      },
+    });
+
+    // Log the action
+    try {
+      await prisma.audit_logs.create({
+        data: {
+          id: `audit_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          tenantId: userToReset.tenantId || '',
+          userId: req.user.userId,
+          action: 'RESET_PASSWORD',
+          entity: 'users',
+          entityId: id,
+          changes: { 
+            userEmail: userToReset.email,
+            userName: `${userToReset.firstName} ${userToReset.lastName}`,
+          },
+          ipAddress: req.ip,
+          userAgent: req.headers['user-agent'] || null,
+        },
+      });
+    } catch (auditError) {
+      // Log error but don't fail the request
+      console.error('Failed to create audit log:', auditError);
+    }
+
+    const response: ApiResponse = {
+      success: true,
+      message: 'Password reset successfully',
+      data: {
+        id: updatedUser.id,
+        email: updatedUser.email,
+        firstName: updatedUser.firstName,
+        lastName: updatedUser.lastName,
+      },
+    };
+
+    res.json(response);
+  }
+);
+
+// ============================================
 // DELETE STAFF MEMBER
 // ============================================
 

@@ -6,6 +6,7 @@ import {
   deleteStaff,
   freezeStaff,
   unfreezeStaff,
+  resetAdminPassword,
 } from '../controllers/staffController';
 import { authenticateUser, requireAdminOrStaff, requireSuperAdmin } from '../middleware/authMiddleware';
 import { requireTenant, ensureTenantAccess } from '../middleware/tenantMiddleware';
@@ -28,6 +29,9 @@ router.delete('/:id', requirePermission(Permission.STAFF_DELETE), deleteStaff);
 // Freeze/Unfreeze routes (SUPER_ADMIN only)
 router.patch('/:id/freeze', requireSuperAdmin, freezeStaff);
 router.patch('/:id/unfreeze', requireSuperAdmin, unfreezeStaff);
+
+// Reset password route (SUPER_ADMIN only)
+router.post('/:id/reset-password', requireSuperAdmin, resetAdminPassword);
 
 export default router;
 

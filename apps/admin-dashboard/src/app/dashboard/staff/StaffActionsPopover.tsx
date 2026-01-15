@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useEffect } from 'react';
-import { Settings, Edit, Building2, Snowflake, Unlock, Download, Trash2 } from 'lucide-react';
+import { Settings, Edit, Building2, Snowflake, Unlock, Download, Trash2, KeyRound } from 'lucide-react';
 import PermissionGuard from '@/components/permissions/PermissionGuard';
 import { Permission } from '@/lib/permissions';
 
@@ -28,6 +28,7 @@ interface StaffActionsPopoverProps {
   onFreeze: () => void;
   onUnfreeze: () => void;
   onDownloadCustomers: () => void;
+  onResetPassword: () => void;
   onDelete: () => void;
   isUnfreezePending?: boolean;
   isDeletePending?: boolean;
@@ -44,6 +45,7 @@ export default function StaffActionsPopover({
   onFreeze,
   onUnfreeze,
   onDownloadCustomers,
+  onResetPassword,
   onDelete,
   isUnfreezePending = false,
   isDeletePending = false,
@@ -148,6 +150,17 @@ export default function StaffActionsPopover({
             >
               <Download className="w-4 h-4 text-purple-600 dark:text-purple-400" />
               <span>Download Customers</span>
+            </button>
+          )}
+
+          {/* Reset Password - SUPER_ADMIN only */}
+          {isSuperAdmin && member.role === 'ADMIN' && (
+            <button
+              onClick={() => handleAction(onResetPassword)}
+              className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+            >
+              <KeyRound className="w-4 h-4 text-orange-600 dark:text-orange-400" />
+              <span>Reset Password</span>
             </button>
           )}
 

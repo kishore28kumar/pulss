@@ -12,6 +12,7 @@ import { getUserRole } from '@/lib/permissions';
 import { authService } from '@/lib/auth';
 import EditStaffModal from './EditStaffModal';
 import EditTenantModal from './EditTenantModal';
+import ResetPasswordModal from './ResetPasswordModal';
 import StaffActionsPopover from './StaffActionsPopover';
 import { useRouter } from 'next/navigation';
 import { getStorefrontUrl } from '@/lib/config/urls';
@@ -48,6 +49,7 @@ export default function StaffPage() {
   const [editingTenant, setEditingTenant] = useState<{ id: string; name: string; staffMember: StaffMember } | null>(null);
   const [freezingStaff, setFreezingStaff] = useState<StaffMember | null>(null);
   const [unfreezingStaff, setUnfreezingStaff] = useState<StaffMember | null>(null);
+  const [resettingPassword, setResettingPassword] = useState<StaffMember | null>(null);
   const [freezeReason, setFreezeReason] = useState('');
   const [mounted, setMounted] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
@@ -554,6 +556,10 @@ export default function StaffPage() {
                                 handleDownloadCustomers(member.tenants.id, member.tenants.name);
                               }
                             }}
+                            onResetPassword={() => {
+                              setResettingPassword(member);
+                              setOpenPopoverId(null);
+                            }}
                             onDelete={() => handleDelete(member)}
                             isUnfreezePending={unfreezeMutation.isPending}
                             isDeletePending={deleteMutation.isPending}
@@ -747,6 +753,18 @@ export default function StaffPage() {
           onClose={() => setEditingTenant(null)}
           onSuccess={() => {
             setEditingTenant(null);
+            queryClient.invalidateQueries({ queryKey: ['staff'] });
+          }}
+        />
+      )}
+
+      {/* Reset Password Modal */}
+      {resettingPassword && (
+        <ResetPasswordModal
+          staffMember={resettingPassword}
+          onClose={() => setResettingPassword(null)}
+          onSuccess={() => {
+            setResettingPassword(null);
             queryClient.invalidateQueries({ queryKey: ['staff'] });
           }}
         />
