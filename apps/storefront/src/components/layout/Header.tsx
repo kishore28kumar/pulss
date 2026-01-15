@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ShoppingCart, User, Search, Menu, Heart, Store, LogOut, ShoppingBag } from 'lucide-react';
+import { ShoppingCart, User, Search, Menu, Heart, Store, LogOut, ShoppingBag, ShieldCheck, FileText, UserCheck } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useParams } from 'next/navigation';
@@ -19,7 +19,7 @@ export default function Header() {
   const { tenant } = useTenant();
   const { customer, isAuthenticated, isLoading: authLoading, logout } = useAuth();
   const { wishlistCount, isLoaded: wishlistLoaded } = useWishlist();
-  
+
   // Helper to get tenant-aware path
   const getPath = (path: string) => storeName ? `/${storeName}${path}` : path;
 
@@ -34,7 +34,7 @@ export default function Header() {
       try {
         const response = await api.get('/cart');
         return response.data.data;
-      } catch (error) {
+      } catch {
         return { itemCount: 0 };
       }
     },
@@ -45,10 +45,50 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
       <div className="mx-auto">
-        {/* Top Bar */}
-        {/* <div className="py-2 px-4 bg-blue-600 text-white text-sm text-center">
-          🎉 Free shipping on orders over ₹200!
-        </div> */}
+        {/* Regulatory Information Top Bar */}
+        {mounted && (tenant?.gstNumber || tenant?.drugLicNumber || tenant?.pharmacistName || tenant?.pharmacistRegNumber) && (
+          <div
+            className="py-2 px-4 text-white transition-colors duration-300"
+            style={{ backgroundColor: tenant?.primaryColor || '#2563eb' }}
+          >
+            <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-3 text-[10px] sm:text-[11px] font-semibold tracking-wider">
+              {/* Left Side: Business Licenses */}
+              <div className="flex items-center divide-x divide-white/30">
+                {tenant?.gstNumber && (
+                  <div className="flex items-center space-x-1.5 opacity-95 hover:opacity-100 transition-opacity pr-6">
+                    <FileText className="w-3.5 h-3.5 text-blue-100" />
+                    <span className="text-blue-100 font-medium">GST NO:</span>
+                    <span className="font-bold tracking-normal uppercase">{tenant.gstNumber}</span>
+                  </div>
+                )}
+                {tenant?.drugLicNumber && (
+                  <div className="flex items-center space-x-1.5 opacity-95 hover:opacity-100 transition-opacity pl-6">
+                    <ShieldCheck className="w-3.5 h-3.5 text-blue-100" />
+                    <span className="text-blue-100 font-medium">DRUG LICENCE NO:</span>
+                    <span className="font-bold tracking-normal uppercase">{tenant.drugLicNumber}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Right Side: Professional Details */}
+              <div className="flex items-center divide-x divide-white/30">
+                {tenant?.pharmacistName && (
+                  <div className="flex items-center space-x-1.5 opacity-95 hover:opacity-100 transition-opacity pr-6">
+                    <UserCheck className="w-3.5 h-3.5 text-blue-100" />
+                    <span className="text-blue-100 font-medium tracking-tight">PHARMACIST:</span>
+                    <span className="font-extrabold tracking-normal uppercase">{tenant.pharmacistName}</span>
+                  </div>
+                )}
+                {tenant?.pharmacistRegNumber && (
+                  <div className="flex items-center space-x-1.5 opacity-95 hover:opacity-100 transition-opacity pl-6">
+                    <span className="text-blue-100 font-medium tracking-tight">REG NO:</span>
+                    <span className="font-bold tracking-normal uppercase">{tenant.pharmacistRegNumber}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Main Header */}
         <div className="py-4 px-4">
@@ -58,9 +98,9 @@ export default function Header() {
               {tenant?.logoUrl ? (
                 <img src={tenant.logoUrl} alt={tenant.name} className="w-10 h-10 rounded-lg object-cover" />
               ) : (
-              <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                <Store className="w-6 h-6 text-white" />
-              </div>
+                <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                  <Store className="w-6 h-6 text-white" />
+                </div>
               )}
               <div>
                 <h1 className="text-xl font-bold text-gray-900">{tenant?.name || 'Pulss Store'}</h1>
@@ -131,35 +171,35 @@ export default function Header() {
 
               {!authLoading && mounted && (
                 <>
-              {isAuthenticated ? (
-                <div className="hidden md:flex items-center space-x-2">
-                  <Link
-                    href={getPath('/account')}
-                    className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition group relative"
-                    title="My Account"
-                  >
-                    <User className="w-6 h-6" />
-                    <span className="text-sm font-medium">{customer?.firstName}</span>
-                    <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
-                      My Account
-                    </span>
-                  </Link>
-                  <button
-                    onClick={logout}
-                    className="text-gray-500 hover:text-red-600 transition"
-                    title="Logout"
-                  >
-                    <LogOut className="w-5 h-5" />
-                  </button>
-                </div>
-              ) : (
-                <Link
-                  href={getPath('/login')}
-                  className="hidden md:flex items-center space-x-1 text-gray-700 hover:text-blue-600 transition"
-                >
-                  <User className="w-6 h-6" />
-                  <span className="text-sm font-medium">Login</span>
-                </Link>
+                  {isAuthenticated ? (
+                    <div className="hidden md:flex items-center space-x-2">
+                      <Link
+                        href={getPath('/account')}
+                        className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition group relative"
+                        title="My Account"
+                      >
+                        <User className="w-6 h-6" />
+                        <span className="text-sm font-medium">{customer?.firstName}</span>
+                        <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+                          My Account
+                        </span>
+                      </Link>
+                      <button
+                        onClick={logout}
+                        className="text-gray-500 hover:text-red-600 transition"
+                        title="Logout"
+                      >
+                        <LogOut className="w-5 h-5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <Link
+                      href={getPath('/login')}
+                      className="hidden md:flex items-center space-x-1 text-gray-700 hover:text-blue-600 transition"
+                    >
+                      <User className="w-6 h-6" />
+                      <span className="text-sm font-medium">Login</span>
+                    </Link>
                   )}
                 </>
               )}
@@ -215,22 +255,22 @@ export default function Header() {
               </Link>
               {!authLoading && mounted && (
                 <>
-              {isAuthenticated ? (
-                <>
-                  <Link href={getPath('/account')} className="block py-2 text-gray-700 hover:text-blue-600">
-                    Account
-                  </Link>
-                  <button
-                    onClick={logout}
-                    className="block w-full text-left py-2 text-red-600 hover:text-red-700"
-                  >
-                    Logout
-                  </button>
-                </>
-              ) : (
-                <Link href={getPath('/login')} className="block py-2 text-gray-700 hover:text-blue-600">
-                  Login
-                </Link>
+                  {isAuthenticated ? (
+                    <>
+                      <Link href={getPath('/account')} className="block py-2 text-gray-700 hover:text-blue-600">
+                        Account
+                      </Link>
+                      <button
+                        onClick={logout}
+                        className="block w-full text-left py-2 text-red-600 hover:text-red-700"
+                      >
+                        Logout
+                      </button>
+                    </>
+                  ) : (
+                    <Link href={getPath('/login')} className="block py-2 text-gray-700 hover:text-blue-600">
+                      Login
+                    </Link>
                   )}
                 </>
               )}

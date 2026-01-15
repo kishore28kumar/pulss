@@ -47,6 +47,7 @@ export default function MailPage() {
     if (user && ['SUPER_ADMIN', 'ADMIN'].includes(user.role || '')) {
       loadRecipients();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, user?.role]);
 
   // Scroll to bottom when messages change

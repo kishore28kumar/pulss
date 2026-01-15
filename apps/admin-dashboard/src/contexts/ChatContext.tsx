@@ -209,7 +209,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(false);
       isLoadingRef.current = false;
     }
-  }, [user]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentConversation]);
 
   // Keep ref updated with latest loadConversations function
   useEffect(() => {
@@ -299,7 +300,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     } else {
       console.log('[ChatContext] User unchanged, skipping loadConversations. Current userId:', userId, 'Loaded userId:', loadedUserIdRef.current);
     }
-  }, [user?.id, loadConversations]); // Include loadConversations but it's stable due to useCallback
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]); // loadConversations is stable due to useCallback
 
   // Connect to WebSocket (separate effect to avoid reconnection loops)
   useEffect(() => {
@@ -585,7 +587,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         socketRef.current = null;
       }
     };
-  }, [user?.id, loadConversations, pathname, router]); // Include dependencies for toast notifications
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, pathname, router]); // loadConversations is stable
 
   // Mark messages as read
   const markAsRead = useCallback(

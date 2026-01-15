@@ -9,10 +9,8 @@ import {
   // Send,
   MessageCircle,
   Headphones,
-  Building,
-  CheckCircle,
-  AlertCircle,
-  Loader2
+  Loader2,
+  ShieldCheck
 } from 'lucide-react';
 // import { toast } from 'sonner';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
@@ -168,6 +166,70 @@ function ContactPageContent() {
         </div>
       </section>
 
+      {/* Pharmacist Details Section */}
+      {(tenant?.pharmacistName || tenant?.pharmacistRegNumber || tenant?.pharmacistPhoto) && (
+        <section className="py-16 bg-white">
+          <div className="container mx-auto px-4">
+            <div className="max-w-4xl mx-auto">
+              <div className="text-center mb-8">
+                <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                  Our Licensed Pharmacist
+                </h2>
+                <p className="text-gray-600">
+                  Meet our qualified pharmacist ready to assist you with your healthcare needs.
+                </p>
+              </div>
+
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl shadow-lg border border-blue-100 p-8">
+                <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
+                  {/* Pharmacist Photo */}
+                  <div className="flex-shrink-0">
+                    {tenant?.pharmacistPhoto ? (
+                      <img
+                        src={tenant.pharmacistPhoto}
+                        alt={tenant.pharmacistName || 'Pharmacist'}
+                        className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-xl"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128"%3E%3Crect fill="%23e5e7eb" width="128" height="128" rx="64"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%239ca3af" font-size="48" font-weight="600"%3E👨‍⚕️%3C/text%3E%3C/svg%3E';
+                        }}
+                      />
+                    ) : (
+                      <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-200 to-indigo-200 border-4 border-white flex items-center justify-center shadow-xl">
+                        <span className="text-5xl">👨‍⚕️</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Pharmacist Info */}
+                  <div className="flex-1 text-center md:text-left">
+                    {tenant?.pharmacistName && (
+                      <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                        {tenant.pharmacistName}
+                      </h3>
+                    )}
+
+                    {tenant?.pharmacistRegNumber && (
+                      <div className="mb-4">
+                        <p className="text-gray-700">
+                          <span className="font-semibold">Registration Number:</span>{' '}
+                          <span className="text-gray-900">{tenant.pharmacistRegNumber}</span>
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="inline-flex items-center px-4 py-2 rounded-full bg-blue-600 text-white shadow-md">
+                      <ShieldCheck className="w-5 h-5 mr-2" />
+                      <span className="text-sm font-semibold">Licensed & Certified Pharmacist</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Contact Info Cards */}
       <section className="py-16 bg-gray-50">
         <div className="container mx-auto px-4">
@@ -193,218 +255,6 @@ function ContactPageContent() {
           </div>
         </div>
       </section>
-
-      {/* Contact Form + Map Section */}
-      <section className="py-16 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto">
-            {/* Contact Form - Commented out as requested
-            <div>
-              <div className="mb-8">
-                <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                  Send us a Message
-                </h2>
-                <p className="text-gray-600">
-                  Fill out the form below and we'll get back to you within 24 hours.
-                </p>
-              </div>
-
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div>
-                  <label htmlFor="name" className="block text-sm font-semibold text-gray-700 mb-2">
-                    Full Name
-                  </label>
-                  <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    placeholder="e.g., John Smith"
-                    required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
-                    Email Address
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    placeholder="e.g., john.smith@example.com"
-                    required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="subject" className="block text-sm font-semibold text-gray-700 mb-2">
-                    Subject
-                  </label>
-                  <select
-                    id="subject"
-                    name="subject"
-                    value={formData.subject}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                  >
-                    <option value="">Select a subject</option>
-                    <option value="general">General Inquiry</option>
-                    <option value="support">Customer Support</option>
-                    <option value="order">Order Issue</option>
-                    <option value="partnership">Partnership Opportunity</option>
-                    <option value="feedback">Feedback</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label htmlFor="message" className="block text-sm font-semibold text-gray-700 mb-2">
-                    Message
-                  </label>
-                  <textarea
-                    id="message"
-                    name="message"
-                    value={formData.message}
-                    onChange={handleChange}
-                    rows={6}
-                    placeholder="Tell us how we can help you..."
-                    required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition resize-none"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg font-semibold hover:from-blue-700 hover:to-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                      <span>Sending...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Send className="w-5 h-5" />
-                      <span>Send Message</span>
-                    </>
-                  )}
-                </button>
-              </form>
-            </div>
-            */}
-
-            {/* Map / Additional Info */}
-            <div>
-              <div className="mb-8 text-center">
-                <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                  Visit Our Office
-                </h2>
-                <p className="text-gray-600">
-                  Stop by our office during business hours or schedule an appointment.
-                </p>
-              </div>
-
-              {/* Map Placeholder */}
-              <div className="bg-gradient-to-br from-blue-100 to-indigo-100 rounded-xl h-64 mb-6 flex items-center justify-center relative overflow-hidden max-w-2xl mx-auto">
-                <div className="absolute inset-0 opacity-20">
-                  <div className="absolute inset-0" style={{
-                    backgroundImage: 'radial-gradient(circle at 2px 2px, #3b82f6 1px, transparent 0)',
-                    backgroundSize: '30px 30px'
-                  }}></div>
-                </div>
-                <div className="text-center z-10">
-                  <MapPin className="w-16 h-16 text-blue-600 mx-auto mb-4" />
-                  <p className="text-gray-700 font-semibold">{tenant?.address || 'Online Only'}</p>
-                  <p className="text-gray-600">{tenant?.city ? `${tenant.city}${tenant.state ? `, ${tenant.state}` : ''}` : ''}</p>
-                </div>
-              </div>
-
-              {/* Quick Contact Cards */}
-              <div className="space-y-4 max-w-2xl mx-auto">
-                <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                  <div className="flex items-start space-x-3">
-                    <CheckCircle className="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <h4 className="font-semibold text-gray-900 mb-1">Quick Response</h4>
-                      <p className="text-sm text-gray-600">
-                        We typically respond to inquiries within 2-4 hours during business hours.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-                  <div className="flex items-start space-x-3">
-                    <Building className="w-6 h-6 text-green-600 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <h4 className="font-semibold text-gray-900 mb-1">Enterprise Solutions</h4>
-                      <p className="text-sm text-gray-600">
-                        Need custom solutions? Contact our enterprise team for tailored packages.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
-                  <div className="flex items-start space-x-3">
-                    <AlertCircle className="w-6 h-6 text-purple-600 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <h4 className="font-semibold text-gray-900 mb-1">Emergency Support</h4>
-                      <p className="text-sm text-gray-600">
-                        For urgent issues, call our {tenant?.phone ? <span>hotline: <a href={`tel:${tenant.phone}`} className="font-bold hover:underline">{tenant.phone}</a></span> : '24/7 support line.'}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Team Section - Commented out as requested
-      <section className="py-16 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Meet Our Team
-            </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Our dedicated team is here to ensure you have the best experience possible.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
-            {team.map((member, index) => (
-              <div key={index} className="bg-white rounded-xl p-6 shadow-md hover:shadow-xl transition-all duration-300 text-center group">
-                <div className="text-6xl mb-4 group-hover:scale-110 transition-transform duration-300">
-                  {member.image}
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">
-                  {member.name}
-                </h3>
-                <p className="text-sm text-blue-600 font-semibold mb-3">
-                  {member.role}
-                </p>
-                <a
-                  href={`mailto:${member.email}`}
-                  className="text-sm text-gray-600 hover:text-blue-600 transition break-all"
-                >
-                  {member.email}
-                </a>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-      */}
 
       {/* FAQ Section */}
       <section className="py-16 bg-white">

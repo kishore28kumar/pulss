@@ -160,7 +160,12 @@ export const inviteStaff = asyncHandler(
       throw new AppError('Authentication required', 401);
     }
 
-    const { email, firstName, lastName, phone, role, password, storeName, storeRoute, address, city, state, country, pincode } = req.body;
+    const {
+      email, firstName, lastName, phone, role, password,
+      storeName, storeRoute, address, city, state, country, pincode,
+      gstNumber, drugLicNumber, pharmacistName, pharmacistRegNumber,
+      scheduleDrugEligible, returnPolicy, heroImages
+    } = req.body;
 
     if (!email || !firstName || !lastName) {
       throw new AppError('Email, first name, and last name are required', 400);
@@ -169,50 +174,56 @@ export const inviteStaff = asyncHandler(
     // Determine allowed role based on current user's role
     let allowedRole: string;
     let targetTenantId: string | undefined;
-    
+
     if (req.user.role === 'SUPER_ADMIN') {
       // Super Admin can create Admin users
       allowedRole = 'ADMIN';
       if (role && role !== 'ADMIN') {
         throw new AppError('Super Admin can only create Admin users', 400);
       }
-      
+
       // If storeName and storeRoute are provided, create a new tenant
       if (storeName && storeRoute) {
         // Validate store route length
         if (storeRoute.length > 15) {
           throw new AppError('Store route must be at most 15 characters', 400);
         }
-        
+
         if (storeRoute.length < 2) {
           throw new AppError('Store route must be at least 2 characters', 400);
         }
-        
+
         // Validate store route format (lowercase, alphanumeric, hyphens only)
         if (!/^[a-z0-9-]+$/.test(storeRoute)) {
           throw new AppError('Store route must contain only lowercase letters, numbers, and hyphens', 400);
         }
-        
+
         // Validate address fields
         if (!address || !city || !state || !pincode) {
           throw new AppError('Address, city, state, and pincode are required when creating a tenant', 400);
         }
-        
+
+        // Validate regulatory fields
+        if (!gstNumber || !drugLicNumber || !pharmacistName || !pharmacistRegNumber) {
+          throw new AppError('GST Number, Drug License Number, Pharmacist Name, and Registration Number are required', 400);
+        }
+
         // Validate pincode format (6 digits)
         if (!/^\d{6}$/.test(pincode)) {
           throw new AppError('Pincode must be exactly 6 digits', 400);
         }
-        
+
         // Check if tenant slug already exists
         const existingTenant = await prisma.tenants.findUnique({
           where: { slug: storeRoute },
         });
-        
+
         if (existingTenant) {
           throw new AppError('Store route already exists. Please choose a different one.', 400);
         }
-        
+
         // Create new tenant
+        // Using type assertion for scheduleDrugEligible and returnPolicy until Prisma client regenerates
         const tenant = await prisma.tenants.create({
           data: {
             id: `tenant_${Date.now()}`,
@@ -225,10 +236,17 @@ export const inviteStaff = asyncHandler(
             state: state,
             country: country || 'India',
             pincode: pincode,
+            gstNumber: gstNumber,
+            drugLicNumber: drugLicNumber,
+            pharmacistName: pharmacistName,
+            pharmacistRegNumber: pharmacistRegNumber,
+            scheduleDrugEligible: scheduleDrugEligible ?? false,
+            returnPolicy: returnPolicy || null,
+            heroImages: heroImages && Array.isArray(heroImages) ? heroImages : [],
             updatedAt: new Date(),
-          },
+          } as any,
         });
-        
+
         targetTenantId = tenant.id;
       } else {
         // Use current tenant if no store info provided (fallback)
@@ -340,8 +358,8 @@ export const updateStaff = asyncHandler(
 
     // SUPER_ADMIN can update any Admin, others can only update from their tenant
     if (req.user.role !== 'SUPER_ADMIN') {
-    if (!req.tenantId) {
-      throw new AppError('Tenant not found', 400);
+      if (!req.tenantId) {
+        throw new AppError('Tenant not found', 400);
       }
       whereClause.tenantId = req.tenantId;
     }
@@ -414,6 +432,297 @@ export const updateStaff = asyncHandler(
 );
 
 // ============================================
+// FREEZE STAFF MEMBER (SUPER_ADMIN only)
+// ============================================
+
+export const freezeStaff = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { reason } = req.body;
+
+    if (!req.user) {
+      throw new AppError('Authentication required', 401);
+    }
+
+    // Only SUPER_ADMIN can freeze admins/staff
+    if (req.user.role !== 'SUPER_ADMIN') {
+      throw new AppError('Only Super Admin can freeze users', 403);
+    }
+
+    if (!reason || reason.trim().length === 0) {
+      throw new AppError('Reason is required when freezing an account', 400);
+    }
+
+    // Build where clause - can freeze any ADMIN or STAFF
+    const whereClause: any = {
+      id,
+      role: { in: ['ADMIN', 'STAFF'] },
+    };
+
+    // Check if staff member exists
+    const staffMember = await prisma.users.findFirst({
+      where: whereClause,
+      include: {
+        tenants: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+          },
+        },
+      },
+    });
+
+    if (!staffMember) {
+      throw new AppError('Staff member not found', 404);
+    }
+
+    // Prevent freezing yourself
+    if (req.user.userId === id) {
+      throw new AppError('You cannot freeze yourself', 400);
+    }
+
+    // Check if already frozen
+    if (!staffMember.isActive) {
+      throw new AppError('User is already frozen', 400);
+    }
+
+    // Freeze the user
+    await prisma.users.update({
+      where: { id },
+      data: {
+        isActive: false,
+        updatedAt: new Date(),
+      },
+    });
+
+    // Log to audit_logs
+    try {
+      await prisma.audit_logs.create({
+        data: {
+          id: `audit_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          tenantId: staffMember.tenantId || '',
+          userId: req.user.userId,
+          action: 'FREEZE_USER',
+          entity: 'users',
+          entityId: id,
+          changes: {
+            isActive: { from: true, to: false },
+            reason: reason.trim(),
+          },
+          ipAddress: req.ip,
+          userAgent: req.headers['user-agent'] || null,
+        },
+      });
+    } catch (auditError) {
+      // Log error but don't fail the request
+      console.error('Failed to create audit log:', auditError);
+    }
+
+    const response: ApiResponse = {
+      success: true,
+      data: {
+        id: staffMember.id,
+        email: staffMember.email,
+        isActive: false,
+      },
+      message: `${staffMember.role === 'ADMIN' ? 'Admin' : 'Staff'} account frozen successfully`,
+    };
+
+    res.json(response);
+  }
+);
+
+// ============================================
+// UNFREEZE STAFF MEMBER (SUPER_ADMIN only)
+// ============================================
+
+export const unfreezeStaff = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { id } = req.params;
+
+    if (!req.user) {
+      throw new AppError('Authentication required', 401);
+    }
+
+    // Only SUPER_ADMIN can unfreeze admins/staff
+    if (req.user.role !== 'SUPER_ADMIN') {
+      throw new AppError('Only Super Admin can unfreeze users', 403);
+    }
+
+    // Build where clause - can unfreeze any ADMIN or STAFF
+    const whereClause: any = {
+      id,
+      role: { in: ['ADMIN', 'STAFF'] },
+    };
+
+    // Check if staff member exists
+    const staffMember = await prisma.users.findFirst({
+      where: whereClause,
+      include: {
+        tenants: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+          },
+        },
+      },
+    });
+
+    if (!staffMember) {
+      throw new AppError('Staff member not found', 404);
+    }
+
+    // Check if already active
+    if (staffMember.isActive) {
+      throw new AppError('User is already active', 400);
+    }
+
+    // Unfreeze the user
+    await prisma.users.update({
+      where: { id },
+      data: {
+        isActive: true,
+        updatedAt: new Date(),
+      },
+    });
+
+    // Log to audit_logs
+    try {
+      await prisma.audit_logs.create({
+        data: {
+          id: `audit_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          tenantId: staffMember.tenantId || '',
+          userId: req.user.userId,
+          action: 'UNFREEZE_USER',
+          entity: 'users',
+          entityId: id,
+          changes: {
+            isActive: { from: false, to: true },
+          },
+          ipAddress: req.ip,
+          userAgent: req.headers['user-agent'] || null,
+        },
+      });
+    } catch (auditError) {
+      // Log error but don't fail the request
+      console.error('Failed to create audit log:', auditError);
+    }
+
+    const response: ApiResponse = {
+      success: true,
+      data: {
+        id: staffMember.id,
+        email: staffMember.email,
+        isActive: true,
+      },
+      message: `${staffMember.role === 'ADMIN' ? 'Admin' : 'Staff'} account unfrozen successfully`,
+    };
+
+    res.json(response);
+  }
+);
+
+// ============================================
+// RESET ADMIN PASSWORD (SUPER_ADMIN only)
+// ============================================
+
+export const resetAdminPassword = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { newPassword } = req.body;
+
+    if (!req.user || req.user.role !== 'SUPER_ADMIN') {
+      throw new AppError('Unauthorized. Only Super Admin can reset passwords.', 403);
+    }
+
+    if (!newPassword || newPassword.length < 8) {
+      throw new AppError('Password must be at least 8 characters long', 400);
+    }
+
+    // Build where clause - can reset password for any ADMIN or STAFF
+    const whereClause: any = {
+      id,
+      role: { in: ['ADMIN', 'STAFF'] },
+    };
+
+    const userToReset = await prisma.users.findFirst({ 
+      where: whereClause,
+      include: {
+        tenants: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    if (!userToReset) {
+      throw new AppError('User not found', 404);
+    }
+
+    // Only allow resetting passwords for ADMIN or STAFF (not SUPER_ADMIN or CUSTOMER)
+    if (userToReset.role === 'SUPER_ADMIN') {
+      throw new AppError('Cannot reset password for Super Admin account.', 400);
+    }
+
+    if (userToReset.role === 'CUSTOMER') {
+      throw new AppError('Cannot reset password for customer accounts.', 400);
+    }
+
+    // Hash the new password
+    const hashedPassword = await hashPassword(newPassword);
+
+    // Update the password
+    const updatedUser = await prisma.users.update({
+      where: { id },
+      data: { 
+        password: hashedPassword,
+        updatedAt: new Date() 
+      },
+    });
+
+    // Log the action
+    try {
+      await prisma.audit_logs.create({
+        data: {
+          id: `audit_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          tenantId: userToReset.tenantId || '',
+          userId: req.user.userId,
+          action: 'RESET_PASSWORD',
+          entity: 'users',
+          entityId: id,
+          changes: { 
+            userEmail: userToReset.email,
+            userName: `${userToReset.firstName} ${userToReset.lastName}`,
+          },
+          ipAddress: req.ip,
+          userAgent: req.headers['user-agent'] || null,
+        },
+      });
+    } catch (auditError) {
+      // Log error but don't fail the request
+      console.error('Failed to create audit log:', auditError);
+    }
+
+    const response: ApiResponse = {
+      success: true,
+      message: 'Password reset successfully',
+      data: {
+        id: updatedUser.id,
+        email: updatedUser.email,
+        firstName: updatedUser.firstName,
+        lastName: updatedUser.lastName,
+      },
+    };
+
+    res.json(response);
+  }
+);
+
+// ============================================
 // DELETE STAFF MEMBER
 // ============================================
 
@@ -433,8 +742,8 @@ export const deleteStaff = asyncHandler(
 
     // SUPER_ADMIN can delete any Admin, others can only delete from their tenant
     if (req.user.role !== 'SUPER_ADMIN') {
-    if (!req.tenantId) {
-      throw new AppError('Tenant not found', 400);
+      if (!req.tenantId) {
+        throw new AppError('Tenant not found', 400);
       }
       whereClause.tenantId = req.tenantId;
     }

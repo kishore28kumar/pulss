@@ -22,12 +22,15 @@ import {
 import api from '@/lib/api';
 import { useCart } from '@/hooks/useCart';
 import { useWishlist } from '@/hooks/useWishlist';
+import { useTenant } from '@/contexts/TenantContext';
 import ProductCard from '@/components/products/ProductCard';
+import ScheduleDrugWarning from '@/components/store/ScheduleDrugWarning';
 
 function ProductDetailContent() {
   const params = useParams();
   const slug = params.slug as string;
   const storeName = params['store-name'] as string;
+  const { tenant } = useTenant();
   
   // Helper to get tenant-aware path
   const getPath = (path: string) => `/${storeName}${path}`;
@@ -154,6 +157,12 @@ function ProductDetailContent() {
 
         {/* Product Section */}
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-12">
+          {/* Show warning if product is Schedule H/H1/X and tenant is not eligible */}
+          {product.drugSchedule && ['H', 'H1', 'X'].includes(product.drugSchedule) && tenant?.scheduleDrugEligible === false && (
+            <div className="p-6 border-b border-gray-200">
+              <ScheduleDrugWarning variant="product" />
+            </div>
+          )}
           <div className="grid md:grid-cols-2 gap-8 p-6 lg:p-10">
             {/* Image Gallery */}
             <div>

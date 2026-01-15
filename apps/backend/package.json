@@ -9,6 +9,7 @@
     "db:setup": "cd ../../packages/database && npx prisma db push --accept-data-loss && npx prisma db seed || echo 'Database setup complete'",
     "db:migrate": "sh scripts/migrate.sh || echo 'Migration check complete'",
     "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix",
     "clean": "rm -rf dist"
   },
   "dependencies": {

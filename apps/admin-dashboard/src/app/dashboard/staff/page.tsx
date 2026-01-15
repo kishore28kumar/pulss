@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Search, Edit, Trash2, UserPlus, Mail, Phone, CheckCircle, XCircle, ExternalLink, Store, Download, X, LayoutDashboard } from 'lucide-react';
+import { Search, UserPlus, Mail, Phone, CheckCircle, XCircle, ExternalLink, Store, X, LayoutDashboard, Unlock } from 'lucide-react';
 import api from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -11,6 +11,9 @@ import { Permission } from '@/lib/permissions';
 import { getUserRole } from '@/lib/permissions';
 import { authService } from '@/lib/auth';
 import EditStaffModal from './EditStaffModal';
+import EditTenantModal from './EditTenantModal';
+import ResetPasswordModal from './ResetPasswordModal';
+import StaffActionsPopover from './StaffActionsPopover';
 import { useRouter } from 'next/navigation';
 import { getStorefrontUrl } from '@/lib/config/urls';
 
@@ -43,9 +46,15 @@ export default function StaffPage() {
   const [selectedCity, setSelectedCity] = useState('');
   const [page, setPage] = useState(1);
   const [editingStaff, setEditingStaff] = useState<StaffMember | null>(null);
+  const [editingTenant, setEditingTenant] = useState<{ id: string; name: string; staffMember: StaffMember } | null>(null);
+  const [freezingStaff, setFreezingStaff] = useState<StaffMember | null>(null);
+  const [unfreezingStaff, setUnfreezingStaff] = useState<StaffMember | null>(null);
+  const [resettingPassword, setResettingPassword] = useState<StaffMember | null>(null);
+  const [freezeReason, setFreezeReason] = useState('');
   const [mounted, setMounted] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [tenantSlug, setTenantSlug] = useState<string | null>(null);
+  const [openPopoverId, setOpenPopoverId] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -118,10 +127,39 @@ export default function StaffPage() {
     },
   });
 
+  const freezeMutation = useMutation({
+    mutationFn: async ({ id, reason }: { id: string; reason: string }) => {
+      await api.patch(`/staff/${id}/freeze`, { reason });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['staff'] });
+      toast.success('Account frozen successfully');
+      setFreezingStaff(null);
+      setFreezeReason('');
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.error || 'Failed to freeze account');
+    },
+  });
+
+  const unfreezeMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await api.patch(`/staff/${id}/unfreeze`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['staff'] });
+      toast.success('Account unfrozen successfully');
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.error || 'Failed to unfreeze account');
+    },
+  });
+
   const staff = data?.data || [];
   const meta = data?.meta;
 
   const handleDelete = (member: StaffMember) => {
+    setOpenPopoverId(null); // Close popover when opening delete confirmation
     if (confirm(`Are you sure you want to remove ${member.firstName} ${member.lastName}?`)) {
       deleteMutation.mutate(member.id);
     }
@@ -129,6 +167,33 @@ export default function StaffPage() {
 
   const handleEdit = (member: StaffMember) => {
     setEditingStaff(member);
+    setOpenPopoverId(null); // Close popover when opening edit modal
+  };
+
+  const handleFreeze = (member: StaffMember) => {
+    setFreezingStaff(member);
+    setFreezeReason('');
+    setOpenPopoverId(null); // Close popover when opening freeze modal
+  };
+
+  const handleConfirmFreeze = () => {
+    if (!freezingStaff) return;
+    if (!freezeReason.trim()) {
+      toast.error('Please provide a reason for freezing the account');
+      return;
+    }
+    freezeMutation.mutate({ id: freezingStaff.id, reason: freezeReason.trim() });
+  };
+
+  const handleUnfreeze = (member: StaffMember) => {
+    setUnfreezingStaff(member);
+    setOpenPopoverId(null); // Close popover when opening unfreeze modal
+  };
+
+  const handleConfirmUnfreeze = () => {
+    if (!unfreezingStaff) return;
+    unfreezeMutation.mutate(unfreezingStaff.id);
+    setUnfreezingStaff(null);
   };
 
   const handleDownloadCustomers = async (tenantId: string, tenantName: string) => {
@@ -400,9 +465,9 @@ export default function StaffPage() {
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                           member.isActive
                             ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
-                            : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
+                            : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
                         }`}>
-                          {member.isActive ? 'Active' : 'Inactive'}
+                          {member.isActive ? 'Active' : 'Frozen'}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
@@ -410,7 +475,6 @@ export default function StaffPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex items-center justify-end space-x-2">
-                          {/* View Storefront Link - Show for all staff members */}
                           {/* Dashboard Link - SUPER_ADMIN only */}
                           {mounted && userRole === 'SUPER_ADMIN' && (
                             <button
@@ -423,6 +487,7 @@ export default function StaffPage() {
                               <ExternalLink className="w-3 h-3 ml-1" />
                             </button>
                           )}
+                          {/* Store Link */}
                           {(() => {
                             // For SUPER_ADMIN viewing admins, use the admin's tenant
                             // For others, use the logged-in user's tenant
@@ -453,35 +518,51 @@ export default function StaffPage() {
                               </a>
                             ) : null;
                           })()}
-                          {/* Download Customers - SUPER_ADMIN only */}
-                          {mounted && userRole === 'SUPER_ADMIN' && member.tenants?.id && (
-                            <button
-                              onClick={() => handleDownloadCustomers(member.tenants!.id, member.tenants!.name)}
-                              className="p-2 text-gray-400 hover:text-purple-600 transition"
-                              title={`Download Customer Data for ${member.tenants!.name}`}
-                            >
-                              <Download className="w-4 h-4" />
-                            </button>
-                          )}
-                          <PermissionGuard permission={Permission.STAFF_UPDATE}>
-                            <button
-                              onClick={() => handleEdit(member)}
-                              className="p-2 text-gray-400 hover:text-blue-600 transition"
-                              title={mounted && userRole === 'SUPER_ADMIN' ? 'Edit Admin' : 'Edit Staff Member'}
-                            >
-                              <Edit className="w-4 h-4" />
-                            </button>
-                          </PermissionGuard>
-                          <PermissionGuard permission={Permission.STAFF_DELETE}>
-                            <button
-                              onClick={() => handleDelete(member)}
-                              className="p-2 text-gray-400 hover:text-red-600 transition"
-                              disabled={deleteMutation.isPending}
-                              title={mounted && userRole === 'SUPER_ADMIN' ? 'Delete Admin' : 'Delete Staff Member'}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </PermissionGuard>
+                          {/* Actions Popover */}
+                          <StaffActionsPopover
+                            member={member}
+                            userRole={userRole}
+                            mounted={mounted}
+                            isOpen={openPopoverId === member.id}
+                            onToggle={(memberId) => setOpenPopoverId(memberId)}
+                            onEditStaff={() => {
+                              // For SUPER_ADMIN with tenant, use Edit Tenant instead
+                              if (mounted && userRole === 'SUPER_ADMIN' && member.tenants?.id) {
+                                setEditingTenant({ 
+                                  id: member.tenants.id, 
+                                  name: member.tenants.name,
+                                  staffMember: member
+                                });
+                                setOpenPopoverId(null);
+                              } else {
+                                handleEdit(member);
+                              }
+                            }}
+                            onEditTenant={() => {
+                              if (member.tenants?.id) {
+                                setEditingTenant({ 
+                                  id: member.tenants.id, 
+                                  name: member.tenants.name,
+                                  staffMember: member
+                                });
+                                setOpenPopoverId(null); // Close popover when opening tenant edit modal
+                              }
+                            }}
+                            onFreeze={() => handleFreeze(member)}
+                            onUnfreeze={() => handleUnfreeze(member)}
+                            onDownloadCustomers={() => {
+                              if (member.tenants?.id) {
+                                handleDownloadCustomers(member.tenants.id, member.tenants.name);
+                              }
+                            }}
+                            onResetPassword={() => {
+                              setResettingPassword(member);
+                              setOpenPopoverId(null);
+                            }}
+                            onDelete={() => handleDelete(member)}
+                            isUnfreezePending={unfreezeMutation.isPending}
+                            isDeletePending={deleteMutation.isPending}
+                          />
                         </div>
                       </td>
                     </tr>
@@ -551,6 +632,138 @@ export default function StaffPage() {
           onClose={() => setEditingStaff(null)}
           onSuccess={() => {
             setEditingStaff(null);
+            queryClient.invalidateQueries({ queryKey: ['staff'] });
+          }}
+        />
+      )}
+
+      {/* Freeze Modal */}
+      {freezingStaff && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                Freeze Account
+              </h2>
+              <button
+                onClick={() => {
+                  setFreezingStaff(null);
+                  setFreezeReason('');
+                }}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="mb-4">
+              <p className="text-gray-600 dark:text-gray-400 mb-2">
+                Are you sure you want to freeze{' '}
+                <span className="font-semibold">
+                  {freezingStaff.firstName} {freezingStaff.lastName}
+                </span>
+                ?
+              </p>
+              <p className="text-sm text-gray-500 dark:text-gray-500 mb-4">
+                This will prevent them from logging in and accessing their storefront.
+              </p>
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Reason <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                value={freezeReason}
+                onChange={(e) => setFreezeReason(e.target.value)}
+                placeholder="Enter reason for freezing this account..."
+                rows={4}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                required
+              />
+            </div>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => {
+                  setFreezingStaff(null);
+                  setFreezeReason('');
+                }}
+                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition text-gray-700 dark:text-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmFreeze}
+                disabled={freezeMutation.isPending || !freezeReason.trim()}
+                className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {freezeMutation.isPending ? 'Freezing...' : 'Freeze Account'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Unfreeze Modal */}
+      {unfreezingStaff && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full p-6">
+            <div className="flex items-center justify-center w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full mb-4 mx-auto">
+              <Unlock className="w-8 h-8 text-green-600 dark:text-green-400" />
+            </div>
+            <div className="text-center mb-6">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+                Unfreeze Account
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400">
+                Are you sure you want to unfreeze{' '}
+                <span className="font-semibold text-gray-900 dark:text-gray-100">
+                  {unfreezingStaff.firstName} {unfreezingStaff.lastName}
+                </span>
+                ?
+              </p>
+              <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
+                This will restore their access to the admin dashboard and storefront.
+              </p>
+            </div>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setUnfreezingStaff(null)}
+                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition text-gray-700 dark:text-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmUnfreeze}
+                disabled={unfreezeMutation.isPending}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {unfreezeMutation.isPending ? 'Unfreezing...' : 'Unfreeze Account'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Tenant Modal */}
+      {editingTenant && (
+        <EditTenantModal
+          tenantId={editingTenant.id}
+          tenantName={editingTenant.name}
+          staffMember={editingTenant.staffMember}
+          onClose={() => setEditingTenant(null)}
+          onSuccess={() => {
+            setEditingTenant(null);
+            queryClient.invalidateQueries({ queryKey: ['staff'] });
+          }}
+        />
+      )}
+
+      {/* Reset Password Modal */}
+      {resettingPassword && (
+        <ResetPasswordModal
+          staffMember={resettingPassword}
+          onClose={() => setResettingPassword(null)}
+          onSuccess={() => {
+            setResettingPassword(null);
             queryClient.invalidateQueries({ queryKey: ['staff'] });
           }}
         />

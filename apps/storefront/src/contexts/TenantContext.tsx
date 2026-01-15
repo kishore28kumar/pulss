@@ -9,6 +9,9 @@ interface Tenant {
   name: string;
   slug: string;
   status?: string;
+  adminFrozen?: boolean;
+  scheduleDrugEligible?: boolean;
+  returnPolicy?: string;
   logoUrl?: string;
   faviconUrl?: string;
   primaryColor?: string;
@@ -20,6 +23,12 @@ interface Tenant {
   state?: string;
   country?: string;
   pincode?: string;
+  gstNumber?: string;
+  drugLicNumber?: string;
+  pharmacistName?: string;
+  pharmacistRegNumber?: string;
+  pharmacistPhoto?: string;
+  heroImages?: string[];
 }
 
 interface TenantContextType {

@@ -41,6 +41,9 @@ export const getCart = asyncHandler(
       subtotal += total;
       itemCount += item.quantity;
 
+      // Access drugSchedule using type assertion until Prisma client regenerates
+      const drugSchedule = (item.products as any).drugSchedule || null;
+
       return {
         id: item.id,
         productId: item.products.id,
@@ -52,6 +55,7 @@ export const getCart = asyncHandler(
         total,
         stockQuantity: item.products.stock,
         isActive: item.products.isActive,
+        drugSchedule,
       };
     });
 

@@ -17,8 +17,10 @@ import Link from 'next/link';
 import api from '@/lib/api';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTenant } from '@/contexts/TenantContext';
 import { toast } from 'sonner';
 import { formatCurrency } from '@/lib/utils';
+import ScheduleDrugWarning from '@/components/store/ScheduleDrugWarning';
 
 interface CartItem {
   id: string;
@@ -53,6 +55,7 @@ function CheckoutPageContent() {
   const router = useRouter();
   const params = useParams();
   const storeName = params['store-name'] as string;
+  const { tenant } = useTenant();
   
   // Helper to get tenant-aware path
   const getPath = (path: string) => `/${storeName}${path}`;
@@ -261,6 +264,15 @@ function CheckoutPageContent() {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Checkout</h1>
           <p className="text-gray-600">Complete your order</p>
         </div>
+
+        {/* Show warning if cart contains Schedule H/H1/X products and tenant is not eligible */}
+        {cartData?.items?.some((item: CartItem) => {
+          return (item as any).drugSchedule && ['H', 'H1', 'X'].includes((item as any).drugSchedule);
+        }) && tenant?.scheduleDrugEligible === false && (
+          <div className="mb-6">
+            <ScheduleDrugWarning variant="inline" />
+          </div>
+        )}
 
         <form onSubmit={handleSubmit}>
           <div className="grid lg:grid-cols-3 gap-8">

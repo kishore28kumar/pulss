@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { Facebook, Twitter, Instagram /*, Mail */ } from 'lucide-react';
 
 export default function Footer() {
   const params = useParams();

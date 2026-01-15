@@ -4,8 +4,11 @@ import {
   inviteStaff,
   updateStaff,
   deleteStaff,
+  freezeStaff,
+  unfreezeStaff,
+  resetAdminPassword,
 } from '../controllers/staffController';
-import { authenticateUser, requireAdminOrStaff } from '../middleware/authMiddleware';
+import { authenticateUser, requireAdminOrStaff, requireSuperAdmin } from '../middleware/authMiddleware';
 import { requireTenant, ensureTenantAccess } from '../middleware/tenantMiddleware';
 import { requirePermission, Permission } from '../middleware/permissionMiddleware';
 
@@ -22,6 +25,13 @@ router.get('/', requirePermission(Permission.STAFF_VIEW), getStaff);
 router.post('/invite', requirePermission(Permission.STAFF_INVITE), inviteStaff);
 router.put('/:id', requirePermission(Permission.STAFF_UPDATE), updateStaff);
 router.delete('/:id', requirePermission(Permission.STAFF_DELETE), deleteStaff);
+
+// Freeze/Unfreeze routes (SUPER_ADMIN only)
+router.patch('/:id/freeze', requireSuperAdmin, freezeStaff);
+router.patch('/:id/unfreeze', requireSuperAdmin, unfreezeStaff);
+
+// Reset password route (SUPER_ADMIN only)
+router.post('/:id/reset-password', requireSuperAdmin, resetAdminPassword);
 
 export default router;
 

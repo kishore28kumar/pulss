@@ -223,43 +223,50 @@ export default function DashboardPage() {
     };
   }, [tenantsData]);
 
-  // Format stats
-  const stats = statsData
-    ? [
-      {
-        name: 'Total Revenue',
-        value: formatCurrency(statsData.totalRevenue),
-        change: `${statsData.revenueChange >= 0 ? '+' : ''}${statsData.revenueChange.toFixed(1)}%`,
-        trending: statsData.revenueChange >= 0 ? 'up' : 'down',
-        icon: IndianRupee,
-        color: 'bg-green-500',
-      },
-      {
-        name: 'Total Orders',
-        value: statsData.totalOrders.toLocaleString(),
-        change: `${statsData.ordersChange >= 0 ? '+' : ''}${statsData.ordersChange.toFixed(1)}%`,
-        trending: statsData.ordersChange >= 0 ? 'up' : 'down',
-        icon: ShoppingCart,
-        color: 'bg-blue-500',
-      },
-      {
-        name: 'Products',
-        value: statsData.totalProducts.toLocaleString(),
-        change: `${statsData.productsChange >= 0 ? '+' : ''}${statsData.productsChange.toFixed(1)}%`,
-        trending: statsData.productsChange >= 0 ? 'up' : 'down',
-        icon: Package,
-        color: 'bg-purple-500',
-      },
-      {
-        name: 'Customers',
-        value: statsData.totalCustomers.toLocaleString(),
-        change: `${statsData.customersChange >= 0 ? '+' : ''}${statsData.customersChange.toFixed(1)}%`,
-        trending: statsData.customersChange >= 0 ? 'up' : 'down',
-        icon: Users,
-        color: 'bg-orange-500',
-      },
-    ]
-    : [];
+  // Format and filter stats based on role
+  const filteredStats = useMemo(() => {
+    const stats = statsData
+      ? [
+          {
+            name: 'Total Revenue',
+            value: formatCurrency(statsData.totalRevenue),
+            change: `${statsData.revenueChange >= 0 ? '+' : ''}${statsData.revenueChange.toFixed(1)}%`,
+            trending: statsData.revenueChange >= 0 ? 'up' : 'down',
+            icon: IndianRupee,
+            color: 'bg-green-500',
+          },
+          {
+            name: 'Total Orders',
+            value: statsData.totalOrders.toLocaleString(),
+            change: `${statsData.ordersChange >= 0 ? '+' : ''}${statsData.ordersChange.toFixed(1)}%`,
+            trending: statsData.ordersChange >= 0 ? 'up' : 'down',
+            icon: ShoppingCart,
+            color: 'bg-blue-500',
+          },
+          {
+            name: 'Products',
+            value: statsData.totalProducts.toLocaleString(),
+            change: `${statsData.productsChange >= 0 ? '+' : ''}${statsData.productsChange.toFixed(1)}%`,
+            trending: statsData.productsChange >= 0 ? 'up' : 'down',
+            icon: Package,
+            color: 'bg-purple-500',
+          },
+          {
+            name: 'Customers',
+            value: statsData.totalCustomers.toLocaleString(),
+            change: `${statsData.customersChange >= 0 ? '+' : ''}${statsData.customersChange.toFixed(1)}%`,
+            trending: statsData.customersChange >= 0 ? 'up' : 'down',
+            icon: Users,
+            color: 'bg-orange-500',
+          },
+        ]
+      : [];
+
+    if (userRole === 'SUPER_ADMIN') {
+      return stats.filter(stat => stat.name !== 'Products');
+    }
+    return stats;
+  }, [statsData, userRole]);
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -298,7 +305,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className={`grid grid-cols-1 md:grid-cols-2 ${filteredStats.length === 3 ? 'lg:grid-cols-3' : 'lg:grid-cols-4'} gap-6`}>
         {statsLoading ? (
           // Loading skeleton
           Array.from({ length: 4 }).map((_, i) => (
@@ -315,7 +322,7 @@ export default function DashboardPage() {
             </div>
           ))
         ) : (
-          stats.map((stat) => (
+          filteredStats.map((stat) => (
             <div
               key={stat.name}
               className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition"

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Edit, Trash2, CheckCircle, XCircle, Loader2, Save } from 'lucide-react';
@@ -64,34 +64,8 @@ export default function BulkImportPreviewPage() {
     },
   });
 
-  useEffect(() => {
-    // Load CSV data from sessionStorage
-    const storedData = sessionStorage.getItem('bulkImportData');
-    if (!storedData) {
-      toast.error('No import data found. Please upload a CSV file first.');
-      router.push('/dashboard/products/bulk-import');
-      return;
-    }
-
-    try {
-      const csvData: ProductData[] = JSON.parse(storedData);
-      const validatedProducts = csvData.map((product, index) => {
-        const errors = validateProduct(product, index);
-        return {
-          ...product,
-          id: `temp_${index}`,
-          isValid: errors.length === 0,
-          errors,
-        };
-      });
-      setProducts(validatedProducts);
-    } catch (error) {
-      toast.error('Failed to load import data');
-      router.push('/dashboard/products/bulk-import');
-    }
-  }, [router]);
-
-  const validateProduct = (product: ProductData, index: number): string[] => {
+  // Validate product function
+  const validateProduct = useCallback((product: ProductData, index: number): string[] => {
     const errors: string[] = [];
     const rowNum = index + 1;
 
@@ -139,7 +113,7 @@ export default function BulkImportPreviewPage() {
     }
 
     return errors;
-  };
+  }, []);
 
   const isValidUrl = (url: string): boolean => {
     try {

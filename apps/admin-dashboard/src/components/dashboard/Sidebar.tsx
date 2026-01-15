@@ -42,7 +42,12 @@ const navigation = [
     icon: ShoppingCart,
     requireAdminOrStaff: true, // Only ADMIN and STAFF can see Orders
   },
-  { name: 'Products', href: '/dashboard/products', icon: Package },
+  {
+    name: 'Products',
+    href: '/dashboard/products',
+    icon: Package,
+    requireAdminOrStaff: true, // Only ADMIN and STAFF can see Products
+  },
   {
     name: 'Categories',
     href: '/dashboard/categories',

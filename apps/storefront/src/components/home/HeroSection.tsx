@@ -5,9 +5,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import api from '@/lib/api';
-import { useQuery } from '@tanstack/react-query';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { useTenant } from '@/contexts/TenantContext';
 
 interface HeroSectionProps {
   isAuthenticated?: boolean;
@@ -16,35 +15,22 @@ interface HeroSectionProps {
 
 export default function HeroSection({ isAuthenticated, customerName }: HeroSectionProps) {
   const params = useParams();
-  const router = useRouter();
   const storeName = params['store-name'] as string;
+  const { tenant } = useTenant();
   const [currentSlide, setCurrentSlide] = useState(0);
 
-  // Fetch active ads
-  const { data: adData } = useQuery({
-    queryKey: ['activeAds'],
-    queryFn: async () => {
-      try {
-        const response = await api.get('/ads/active');
-        return response.data.data;
-      } catch (err) {
-        console.error('Failed to fetch ads', err);
-        return null;
-      }
-    },
-    // Don't retry too much for public page
-    retry: 1
-  });
+  // Use tenant hero images, fallback to default images
+  const tenantHeroImages = tenant?.heroImages || [];
+  const hasHeroImages = tenantHeroImages.length > 0;
 
-  const images = adData?.images || [];
-  const links = adData?.links || [];
-  const hasAds = images.length > 0;
+  // Default images if no hero images uploaded
+  const defaultImages = [
+    "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&h=800&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1587854692152-cbe660dbde88?w=800&h=800&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=800&h=800&fit=crop&q=80",
+  ];
 
-  // Default image if no ads
-  const defaultImage = "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&h=800&fit=crop&q=80";
-
-  const displayImages = hasAds ? images : [defaultImage];
-  const displayLinks = hasAds ? links : [];
+  const displayImages = hasHeroImages ? tenantHeroImages : defaultImages;
 
   // Auto-slide logic
   useEffect(() => {
@@ -73,7 +59,7 @@ export default function HeroSection({ isAuthenticated, customerName }: HeroSecti
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full text-sm font-semibold shadow-lg shadow-blue-500/25 animate-pulse">
               <Sparkles className="w-4 h-4" />
               <span>
-                {hasAds ? (adData.title || "Special Offer") : "New Arrival - 20% Off First Order"}
+                {hasHeroImages ? "Welcome to Our Store" : "New Arrival - 20% Off First Order"}
               </span>
             </div>
 
@@ -92,14 +78,10 @@ export default function HeroSection({ isAuthenticated, customerName }: HeroSecti
 
             {/* Subheadline with Benefits */}
             <p className="text-lg sm:text-xl lg:text-2xl text-gray-600 leading-relaxed max-w-2xl mx-auto lg:mx-0">
-              {hasAds && adData.description ? adData.description : (
-                <>
                   Discover premium products from trusted local retailers.
                   <span className="text-gray-900 font-semibold"> Free shipping</span> on orders over ₹200,
                   <span className="text-gray-900 font-semibold"> secure checkout</span>, and
                   <span className="text-gray-900 font-semibold"> 30-day returns</span> guaranteed.
-                </>
-              )}
             </p>
 
             {/* CTA Buttons */}
@@ -149,30 +131,20 @@ export default function HeroSection({ isAuthenticated, customerName }: HeroSecti
               <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-2xl shadow-blue-500/20 group">
                 {/* Images */}
                 {displayImages.map((img: string, idx: number) => {
-                  const link = displayLinks?.[idx];
-                  const isLinked = !!link;
-
                   return (
                     <div
                       key={idx}
                       className={`absolute inset-0 bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-100 transition-opacity duration-1000 ease-in-out ${idx === currentSlide ? 'opacity-100 z-10' : 'opacity-0 z-0'
-                        } ${isLinked ? 'cursor-pointer' : 'cursor-default'}`}
-                      onClick={() => {
-                        if (isLinked) {
-                          // Redirection with product name search
-                          router.push(`/${storeName}/products?search=${encodeURIComponent(link)}`);
-                        }
-                      }}
+                        }`}
                     >
                       <Image
                         src={img}
-                        alt={`Showcase ${idx + 1}`}
+                        alt={`Hero Image ${idx + 1}`}
                         fill
                         className="object-cover transition-transform duration-700 ease-in-out group-hover:scale-110"
                         priority={idx === 0}
                         sizes="(max-width: 768px) 100vw, 50vw"
                       />
-
                     </div>
                   );
                 })}
@@ -196,8 +168,8 @@ export default function HeroSection({ isAuthenticated, customerName }: HeroSecti
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent pointer-events-none z-10"></div>
               </div>
 
-              {/* Floating Badge (Only show if default image or specifically requested to show always) */}
-              {!hasAds && (
+              {/* Floating Badge (Only show if default images) */}
+              {!hasHeroImages && (
                 <>
                   <div className="absolute -top-4 -right-4 bg-white rounded-full p-4 shadow-xl animate-bounce hidden sm:block z-30">
                     <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-emerald-600 rounded-full flex items-center justify-center">

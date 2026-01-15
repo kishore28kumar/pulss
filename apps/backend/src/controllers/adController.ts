@@ -5,15 +5,33 @@ import { AppError, asyncHandler } from '../middleware/errorHandler';
 
 // Create Ad Request
 export const createAdRequest = asyncHandler(async (req: Request, res: Response) => {
-    const { title, description, images, links, startDate, endDate } = req.body;
+    const { title, description, images, links, startDate, endDate, requestType } = req.body;
     const tenantId = req.tenantId;
 
     if (!tenantId) {
         throw new AppError('Tenant ID is required', 400);
     }
 
+    // Validate requestType
+    const validRequestTypes = ['AD_PLACEMENT', 'HERO_IMAGES_CHANGE', 'HERO_IMAGES_REMOVE', 'HERO_IMAGES_REORDER', 'HERO_IMAGES_ADD'];
+    const finalRequestType = requestType || 'AD_PLACEMENT';
+    
+    if (!validRequestTypes.includes(finalRequestType)) {
+        throw new AppError('Invalid request type', 400);
+    }
+
+    // For hero image requests, images are required (except for REMOVE)
+    if (finalRequestType.startsWith('HERO_IMAGES') && finalRequestType !== 'HERO_IMAGES_REMOVE') {
+        if (!images || !Array.isArray(images) || images.length === 0) {
+            throw new AppError('At least one image is required', 400);
+        }
+        if (images.length > 10) {
+            throw new AppError('Maximum 10 hero images allowed', 400);
+        }
+    } else if (finalRequestType === 'AD_PLACEMENT') {
     if (!images || !Array.isArray(images) || images.length === 0) {
         throw new AppError('At least one image is required', 400);
+        }
     }
 
     const adRequest = await prisma.ad_requests.create({
@@ -21,12 +39,13 @@ export const createAdRequest = asyncHandler(async (req: Request, res: Response) 
             tenantId,
             title,
             description,
-            images,
+            images: images || [],
             links: links || [],
+            requestType: finalRequestType as any,
             startDate: startDate ? new Date(startDate) : null,
             endDate: endDate ? new Date(endDate) : null,
             status: 'PENDING',
-        },
+        } as any,
     });
 
     res.status(201).json({
@@ -162,22 +181,94 @@ export const updateAdRequestStatus = asyncHandler(async (req: Request, res: Resp
     }
 
     const isActive = status === 'APPROVED';
+    const requestType = (adRequest as any).requestType || 'AD_PLACEMENT';
 
-    // If approving, we might want to deactivate previous ones if the requirement is "only one active ad request at a time"
-    // But maybe they want multiple? The requirement says "storefront's hero section... up to 4 images".
-    // A single request has images[].
-    // So typically we display the images from the *active* request.
-    // Let's ensure only one request is active at a time for simplicity and consistency.
-
-    if (isActive) {
-        await prisma.ad_requests.updateMany({
-            where: {
-                tenantId: adRequest.tenantId,
-                isActive: true,
-                id: { not: id }
-            },
-            data: { isActive: false }
+    // Handle hero image requests - apply changes to tenant when approved
+    if (status === 'APPROVED' && requestType.startsWith('HERO_IMAGES')) {
+        const tenant = await prisma.tenants.findUnique({
+            where: { id: adRequest.tenantId }
         });
+
+        if (!tenant) {
+            throw new AppError('Tenant not found', 404);
+        }
+
+        let updatedHeroImages: string[] = [];
+
+        switch (requestType) {
+            case 'HERO_IMAGES_CHANGE': {
+                // Replace all hero images with new ones
+                updatedHeroImages = adRequest.images || [];
+                break;
+            }
+            case 'HERO_IMAGES_ADD': {
+                // Add new images to existing ones
+                const currentHeroImages = (tenant as any).heroImages || [];
+                updatedHeroImages = [...currentHeroImages, ...(adRequest.images || [])].slice(0, 10);
+                break;
+            }
+            case 'HERO_IMAGES_REMOVE': {
+                // Remove specified images (images array contains URLs to remove)
+                const existingHeroImages = (tenant as any).heroImages || [];
+                updatedHeroImages = existingHeroImages.filter((url: string) => !adRequest.images.includes(url));
+                break;
+            }
+            case 'HERO_IMAGES_REORDER': {
+                // Reorder images (images array contains the new order)
+                updatedHeroImages = adRequest.images || [];
+                break;
+            }
+            default: {
+                updatedHeroImages = (tenant as any).heroImages || [];
+            }
+        }
+
+        // Update tenant hero images using raw SQL to avoid Prisma type issues
+        try {
+            await prisma.$executeRawUnsafe(
+                `UPDATE tenants SET "heroImages" = $1 WHERE id = $2`,
+                JSON.stringify(updatedHeroImages),
+                adRequest.tenantId
+            );
+        } catch (error: any) {
+            console.error('Error updating heroImages:', error);
+            // Try to create column if it doesn't exist
+            try {
+                await prisma.$executeRawUnsafe(`
+                    DO $$
+                    BEGIN
+                        IF NOT EXISTS (
+                            SELECT 1 FROM information_schema.columns 
+                            WHERE table_name = 'tenants' 
+                            AND column_name = 'heroImages'
+                        ) THEN
+                            ALTER TABLE tenants ADD COLUMN "heroImages" TEXT[] DEFAULT '{}';
+                        END IF;
+                    END $$;
+                `);
+                await prisma.$executeRawUnsafe(
+                    `UPDATE tenants SET "heroImages" = $1 WHERE id = $2`,
+                    JSON.stringify(updatedHeroImages),
+                    adRequest.tenantId
+                );
+            } catch (retryError: any) {
+                console.error('Error creating/updating heroImages column:', retryError);
+                throw new AppError('Failed to update hero images. Database migration might be needed.', 500);
+            }
+        }
+    }
+
+    // If approving ad placement, deactivate previous active ad requests
+    if (isActive && requestType === 'AD_PLACEMENT') {
+        // Use raw SQL to filter by requestType since Prisma client may not have it yet
+        await prisma.$executeRawUnsafe(`
+            UPDATE ad_requests 
+            SET "isActive" = false 
+            WHERE "tenantId" = $1 
+            AND "isActive" = true 
+            AND id != $2
+            AND ("requestType" = 'AD_PLACEMENT' OR "requestType" IS NULL)
+        `, adRequest.tenantId, id);
     }
 
     const updatedRequest = await prisma.ad_requests.update({
@@ -187,7 +278,7 @@ export const updateAdRequestStatus = asyncHandler(async (req: Request, res: Resp
             adminNote,
             isActive,
             actionDate: new Date(),
-        },
+        } as any,
     });
 
     res.json({

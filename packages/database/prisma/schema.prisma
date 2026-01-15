@@ -293,6 +293,7 @@ model products {
   images               String[]
   thumbnail            String?
   requiresPrescription Boolean            @default(false)
+  drugSchedule         String?            // 'H', 'H1', 'X', or null for non-schedule drugs
   genericName          String?
   manufacturer         String?
   expiryDate           DateTime?
@@ -367,6 +368,13 @@ model tenants {
   pincode            String?
   gstNumber          String?
   panNumber          String?
+  drugLicNumber      String?
+  pharmacistName     String?
+  pharmacistRegNumber String?
+  pharmacistPhoto    String?
+  scheduleDrugEligible Boolean        @default(false)
+  returnPolicy        String?         @db.Text
+  heroImages         String[]         @default([])
   logoUrl            String?
   faviconUrl         String?
   primaryColor       String?          @default("#3B82F6")
@@ -580,6 +588,7 @@ model ad_requests {
   description String?
   images      String[]    // Array of image URLs
   links       String[]    // Array of links corresponding to images
+  requestType AdRequestType @default(AD_PLACEMENT) // AD_PLACEMENT, HERO_IMAGES_CHANGE, HERO_IMAGES_REMOVE, HERO_IMAGES_REORDER, HERO_IMAGES_ADD
   status      AdStatus    @default(PENDING) // PENDING, APPROVED, REJECTED, REVOKED
   requestDate DateTime    @default(now())
   actionDate  DateTime?   // Date when Super Admin took action
@@ -593,6 +602,7 @@ model ad_requests {
 
   @@index([tenantId])
   @@index([status])
+  @@index([requestType])
 }
 
 enum AdStatus {
@@ -600,4 +610,12 @@ enum AdStatus {
   APPROVED
   REJECTED
   REVOKED
+}
+
+enum AdRequestType {
+  AD_PLACEMENT
+  HERO_IMAGES_CHANGE
+  HERO_IMAGES_REMOVE
+  HERO_IMAGES_REORDER
+  HERO_IMAGES_ADD
 }

@@ -100,6 +100,7 @@ export const createTenant = asyncHandler(
     const hashedPassword = await hashPassword(data.adminPassword);
 
     // Create tenant with admin user
+    // Using type assertion for returnPolicy until Prisma client regenerates
     const tenant = await prisma.tenants.create({
       data: {
         id: randomUUID(),
@@ -111,6 +112,8 @@ export const createTenant = asyncHandler(
         city: data.city,
         state: data.state,
         country: data.country || 'India',
+        returnPolicy: data.returnPolicy || null,
+        heroImages: data.heroImages && Array.isArray(data.heroImages) ? data.heroImages : [],
         status: 'ACTIVE',
         subscriptionPlan: 'FREE',
         updatedAt: new Date(),
@@ -127,7 +130,7 @@ export const createTenant = asyncHandler(
             updatedAt: new Date(),
           },
         },
-      },
+      } as any,
       include: {
         users: true,
       },
@@ -152,8 +155,28 @@ export const updateTenant = asyncHandler(
     const { id } = req.params;
     const data: UpdateTenantDTO = req.body;
 
+    // Use select to exclude scheduleDrugEligible until migration is run
+    // This prevents Prisma from trying to select a column that doesn't exist yet
     const tenant = await prisma.tenants.findUnique({
       where: { id },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        email: true,
+        phone: true,
+        address: true,
+        city: true,
+        state: true,
+        country: true,
+        pincode: true,
+        logoUrl: true,
+        primaryColor: true,
+        secondaryColor: true,
+        status: true,
+        // Explicitly exclude scheduleDrugEligible to avoid database errors
+        // until migration is run
+      },
     });
 
     if (!tenant) {
@@ -169,35 +192,174 @@ export const updateTenant = asyncHandler(
     const updateData: any = {};
     if (req.user?.role === 'ADMIN') {
       // ADMIN can only update these fields
-      updateData.name = data.name;
-      updateData.email = data.email;
-      updateData.phone = data.phone;
-      updateData.address = data.address;
-      updateData.city = data.city;
-      updateData.state = data.state;
-      updateData.country = data.country;
-      updateData.pincode = data.zipCode;
-      updateData.logoUrl = data.logo;
-      updateData.primaryColor = data.primaryColor;
-      updateData.secondaryColor = data.secondaryColor;
+      if (data.name !== undefined) updateData.name = data.name;
+      if (data.email !== undefined) updateData.email = data.email;
+      if (data.phone !== undefined) updateData.phone = data.phone;
+      if (data.address !== undefined) updateData.address = data.address;
+      if (data.city !== undefined) updateData.city = data.city;
+      if (data.state !== undefined) updateData.state = data.state;
+      if (data.country !== undefined) updateData.country = data.country;
+      if (data.zipCode !== undefined) updateData.pincode = data.zipCode;
+      if (data.logo !== undefined) updateData.logoUrl = data.logo;
+      if (data.primaryColor !== undefined) updateData.primaryColor = data.primaryColor;
+      if (data.secondaryColor !== undefined) updateData.secondaryColor = data.secondaryColor;
+      // ADMIN can update pharmacist details
+      if (data.pharmacistPhoto !== undefined) updateData.pharmacistPhoto = data.pharmacistPhoto;
     } else {
-      // SUPER_ADMIN can update all fields
-      updateData.name = data.name;
-      updateData.email = data.email;
-      updateData.phone = data.phone;
-      updateData.address = data.address;
-      updateData.city = data.city;
-      updateData.state = data.state;
-      updateData.country = data.country;
-      updateData.pincode = data.zipCode;
-      updateData.logoUrl = data.logo;
-      updateData.primaryColor = data.primaryColor;
-      updateData.secondaryColor = data.secondaryColor;
+      // SUPER_ADMIN can update all fields including scheduleDrugEligible
+      if (data.name !== undefined) updateData.name = data.name;
+      if (data.email !== undefined) updateData.email = data.email;
+      if (data.phone !== undefined) updateData.phone = data.phone;
+      if (data.address !== undefined) updateData.address = data.address;
+      if (data.city !== undefined) updateData.city = data.city;
+      if (data.state !== undefined) updateData.state = data.state;
+      if (data.country !== undefined) updateData.country = data.country;
+      if (data.zipCode !== undefined) updateData.pincode = data.zipCode;
+      if (data.logo !== undefined) updateData.logoUrl = data.logo;
+      if (data.primaryColor !== undefined) updateData.primaryColor = data.primaryColor;
+      if (data.secondaryColor !== undefined) updateData.secondaryColor = data.secondaryColor;
+      // Only SUPER_ADMIN can update scheduleDrugEligible and returnPolicy
+      if (data.scheduleDrugEligible !== undefined) {
+        updateData.scheduleDrugEligible = data.scheduleDrugEligible;
+      }
+      if (data.returnPolicy !== undefined) {
+        updateData.returnPolicy = data.returnPolicy;
+      }
+      // SUPER_ADMIN can also update pharmacistPhoto
+      if (data.pharmacistPhoto !== undefined) updateData.pharmacistPhoto = data.pharmacistPhoto;
     }
 
-    const updatedTenant = await prisma.tenants.update({
+    // Handle scheduleDrugEligible, returnPolicy, and pharmacistPhoto separately using raw SQL to avoid Prisma type issues
+    const scheduleDrugValue = updateData.scheduleDrugEligible;
+    const returnPolicyValue = updateData.returnPolicy;
+    const pharmacistPhotoValue = updateData.pharmacistPhoto;
+    delete updateData.scheduleDrugEligible; // Remove from updateData to avoid Prisma errors
+    delete updateData.returnPolicy; // Remove from updateData to avoid Prisma errors
+    delete updateData.pharmacistPhoto; // Remove from updateData to avoid Prisma errors
+    
+    // Update other fields first if any
+    if (Object.keys(updateData).length > 0) {
+      await prisma.tenants.update({
+        where: { id },
+        data: updateData,
+      });
+    }
+    
+    // Update scheduleDrugEligible using raw SQL if provided
+    if (scheduleDrugValue !== undefined) {
+      try {
+        // First, ensure the column exists (idempotent)
+        await prisma.$executeRawUnsafe(`
+          DO $$
+          BEGIN
+            IF NOT EXISTS (
+              SELECT 1 FROM information_schema.columns 
+              WHERE table_name = 'tenants' 
+              AND column_name = 'scheduleDrugEligible'
+            ) THEN
+              ALTER TABLE tenants ADD COLUMN "scheduleDrugEligible" BOOLEAN DEFAULT false;
+            END IF;
+          END $$;
+        `);
+        
+        // Now update the value
+        await prisma.$executeRawUnsafe(
+          `UPDATE tenants SET "scheduleDrugEligible" = $1 WHERE id = $2`,
+          scheduleDrugValue,
+          id
+        );
+      } catch (error: any) {
+        console.error('Error updating scheduleDrugEligible:', error);
+        throw new AppError(
+          `Failed to update scheduleDrugEligible: ${error.message}`,
+          500
+        );
+      }
+    }
+
+    // Update returnPolicy using raw SQL if provided
+    if (returnPolicyValue !== undefined) {
+      try {
+        // First, ensure the column exists (idempotent)
+        await prisma.$executeRawUnsafe(`
+          DO $$
+          BEGIN
+            IF NOT EXISTS (
+              SELECT 1 FROM information_schema.columns 
+              WHERE table_name = 'tenants' 
+              AND column_name = 'returnPolicy'
+            ) THEN
+              ALTER TABLE tenants ADD COLUMN "returnPolicy" TEXT;
+            END IF;
+          END $$;
+        `);
+        
+        // Now update the value
+        await prisma.$executeRawUnsafe(
+          `UPDATE tenants SET "returnPolicy" = $1 WHERE id = $2`,
+          returnPolicyValue || null,
+          id
+        );
+      } catch (error: any) {
+        console.error('Error updating returnPolicy:', error);
+        throw new AppError(
+          `Failed to update returnPolicy: ${error.message}`,
+          500
+        );
+      }
+    }
+
+    // Update pharmacistPhoto using raw SQL if provided
+    if (pharmacistPhotoValue !== undefined) {
+      try {
+        // First, ensure the column exists (idempotent)
+        await prisma.$executeRawUnsafe(`
+          DO $$
+          BEGIN
+            IF NOT EXISTS (
+              SELECT 1 FROM information_schema.columns 
+              WHERE table_name = 'tenants' 
+              AND column_name = 'pharmacistPhoto'
+            ) THEN
+              ALTER TABLE tenants ADD COLUMN "pharmacistPhoto" TEXT;
+            END IF;
+          END $$;
+        `);
+        
+        // Now update the value
+        await prisma.$executeRawUnsafe(
+          `UPDATE tenants SET "pharmacistPhoto" = $1 WHERE id = $2`,
+          pharmacistPhotoValue || null,
+          id
+        );
+      } catch (error: any) {
+        console.error('Error updating pharmacistPhoto:', error);
+        throw new AppError(
+          `Failed to update pharmacistPhoto: ${error.message}`,
+          500
+        );
+    }
+    }
+    
+    // Fetch updated tenant with all fields including those updated via raw SQL
+    const updatedTenant = await prisma.tenants.findUnique({
       where: { id },
-      data: updateData,
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        email: true,
+        phone: true,
+        address: true,
+        city: true,
+        state: true,
+        country: true,
+        pincode: true,
+        logoUrl: true,
+        primaryColor: true,
+        secondaryColor: true,
+        status: true,
+      },
     });
 
     const response: ApiResponse = {
@@ -345,36 +507,67 @@ export const getTenantInfo = asyncHandler(
       throw new AppError('Tenant not found', 400);
     }
 
+    // Fetch tenant - using findUnique without select to get all fields including scheduleDrugEligible
+    // This works even before Prisma client is regenerated
     const tenant = await prisma.tenants.findUnique({
       where: { id: req.tenantId },
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        status: true,
-        logoUrl: true,
-        faviconUrl: true,
-        primaryColor: true,
-        secondaryColor: true,
-        email: true,
-        phone: true,
-        address: true,
-        city: true,
-        state: true,
-        country: true,
-        pincode: true,
-        features: true,
-        metadata: true,
-      },
     });
 
     if (!tenant) {
       throw new AppError('Tenant not found', 404);
     }
 
+    // Manually construct response with only needed fields
+    // Using type assertion for scheduleDrugEligible and returnPolicy until Prisma client regenerates
+    const tenantData = {
+      id: tenant.id,
+      name: tenant.name,
+      slug: tenant.slug,
+      status: tenant.status,
+      logoUrl: tenant.logoUrl,
+      faviconUrl: tenant.faviconUrl,
+      primaryColor: tenant.primaryColor,
+      secondaryColor: tenant.secondaryColor,
+      email: tenant.email,
+      phone: tenant.phone,
+      address: tenant.address,
+      city: tenant.city,
+      state: tenant.state,
+      country: tenant.country,
+      pincode: tenant.pincode,
+      gstNumber: tenant.gstNumber,
+      drugLicNumber: tenant.drugLicNumber,
+      pharmacistName: tenant.pharmacistName,
+      pharmacistRegNumber: tenant.pharmacistRegNumber,
+      pharmacistPhoto: (tenant as any).pharmacistPhoto || null,
+      scheduleDrugEligible: (tenant as any).scheduleDrugEligible ?? false,
+      returnPolicy: (tenant as any).returnPolicy || null,
+      heroImages: (tenant as any).heroImages || [],
+      features: tenant.features,
+      metadata: tenant.metadata,
+    };
+
+    // Check if admin is frozen (if tenant has any active admin)
+    const activeAdmins = await prisma.users.findMany({
+      where: {
+        tenantId: req.tenantId,
+        role: 'ADMIN',
+        isActive: true,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    // If no active admins exist, the storefront should be blocked
+    const adminFrozen = activeAdmins.length === 0;
+
     const response: ApiResponse = {
       success: true,
-      data: tenant,
+      data: {
+        ...tenantData,
+        adminFrozen, // Add flag to indicate if admin is frozen
+      },
     };
 
     res.json(response);

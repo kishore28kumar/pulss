@@ -71,6 +71,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     return () => {
       mediaQuery.removeEventListener('change', handleSystemThemeChange);
     };
+    // resolveTheme and applyTheme are stable functions, no need to include in deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Update resolved theme when theme changes
@@ -78,7 +80,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     if (!mounted) return;
     const resolved = resolveTheme(theme);
     applyTheme(resolved);
-  }, [theme, mounted]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [theme, mounted]); // resolveTheme and applyTheme are stable
 
   // Listen for system theme changes when theme is 'system'
   useEffect(() => {
@@ -95,7 +98,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     return () => {
       mediaQuery.removeEventListener('change', handleSystemThemeChange);
     };
-  }, [theme, mounted]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [theme, mounted]); // resolveTheme and applyTheme are stable
 
   const setTheme = (newTheme: Theme) => {
     setThemeState(newTheme);

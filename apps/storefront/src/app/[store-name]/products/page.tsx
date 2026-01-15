@@ -7,10 +7,13 @@ import { Filter } from 'lucide-react';
 import api from '@/lib/api';
 import ProductCard from '@/components/products/ProductCard';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import { useTenant } from '@/contexts/TenantContext';
+import ScheduleDrugWarning from '@/components/store/ScheduleDrugWarning';
 
 function ProductsPageContent() {
   const searchParams = useSearchParams();
   const initialSearch = searchParams.get('search') || '';
+  const { tenant, isLoading: isLoadingTenant } = useTenant();
 
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState({
@@ -42,6 +45,13 @@ function ProductsPageContent() {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      {/* Schedule Drug Warning Banner - Only on products listing page */}
+      {!isLoadingTenant && tenant && tenant.scheduleDrugEligible === false && (
+        <div className="mb-6">
+          <ScheduleDrugWarning variant="banner" />
+        </div>
+      )}
+
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">All Products</h1>
