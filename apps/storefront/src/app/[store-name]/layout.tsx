@@ -6,7 +6,6 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import FrozenStoreMessage from '@/components/store/FrozenStoreMessage';
 import FrozenAdminMessage from '@/components/store/FrozenAdminMessage';
-import ScheduleDrugWarning from '@/components/store/ScheduleDrugWarning';
 import ChatWidget from '@/components/chat/ChatWidget';
 
 function StoreLayoutContent({ children }: { children: React.ReactNode }) {
@@ -31,10 +30,6 @@ function StoreLayoutContent({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
-      {/* Show schedule drug warning banner if tenant is not eligible */}
-      {!isLoading && tenant && tenant.scheduleDrugEligible === false && (
-        <ScheduleDrugWarning variant="banner" />
-      )}
       <main className="flex-1">{children}</main>
       <Footer />
       <ChatWidget />

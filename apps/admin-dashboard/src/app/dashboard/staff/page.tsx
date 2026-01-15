@@ -45,7 +45,7 @@ export default function StaffPage() {
   const [selectedCity, setSelectedCity] = useState('');
   const [page, setPage] = useState(1);
   const [editingStaff, setEditingStaff] = useState<StaffMember | null>(null);
-  const [editingTenant, setEditingTenant] = useState<{ id: string; name: string } | null>(null);
+  const [editingTenant, setEditingTenant] = useState<{ id: string; name: string; staffMember: StaffMember } | null>(null);
   const [freezingStaff, setFreezingStaff] = useState<StaffMember | null>(null);
   const [unfreezingStaff, setUnfreezingStaff] = useState<StaffMember | null>(null);
   const [freezeReason, setFreezeReason] = useState('');
@@ -526,8 +526,25 @@ export default function StaffPage() {
                             onEditStaff={() => handleEdit(member)}
                             onEditTenant={() => {
                               if (member.tenants?.id) {
-                                setEditingTenant({ id: member.tenants.id, name: member.tenants.name });
+                                setEditingTenant({ 
+                                  id: member.tenants.id, 
+                                  name: member.tenants.name,
+                                  staffMember: member
+                                });
                                 setOpenPopoverId(null); // Close popover when opening tenant edit modal
+                              }
+                            }}
+                            onEditStaff={() => {
+                              // For SUPER_ADMIN with tenant, use Edit Tenant instead
+                              if (mounted && userRole === 'SUPER_ADMIN' && member.tenants?.id) {
+                                setEditingTenant({ 
+                                  id: member.tenants.id, 
+                                  name: member.tenants.name,
+                                  staffMember: member
+                                });
+                                setOpenPopoverId(null);
+                              } else {
+                                handleEdit(member);
                               }
                             }}
                             onFreeze={() => handleFreeze(member)}
@@ -726,6 +743,7 @@ export default function StaffPage() {
         <EditTenantModal
           tenantId={editingTenant.id}
           tenantName={editingTenant.name}
+          staffMember={editingTenant.staffMember}
           onClose={() => setEditingTenant(null)}
           onSuccess={() => {
             setEditingTenant(null);

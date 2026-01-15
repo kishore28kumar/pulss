@@ -95,19 +95,8 @@ export default function StaffActionsPopover({
           className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-50"
           onMouseLeave={() => onToggle(null)}
         >
-          {/* Edit Staff */}
-          <PermissionGuard permission={Permission.STAFF_UPDATE}>
-            <button
-              onClick={() => handleAction(onEditStaff)}
-              className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition"
-            >
-              <Edit className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-              <span>Edit Staff</span>
-            </button>
-          </PermissionGuard>
-
-          {/* Edit Tenant - SUPER_ADMIN only */}
-          {hasTenant && (
+          {/* Edit Tenant - SUPER_ADMIN only, or Edit Staff for non-SUPER_ADMIN */}
+          {isSuperAdmin && hasTenant ? (
             <button
               onClick={() => handleAction(onEditTenant)}
               className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition"
@@ -115,6 +104,16 @@ export default function StaffActionsPopover({
               <Building2 className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
               <span>Edit Tenant</span>
             </button>
+          ) : (
+            <PermissionGuard permission={Permission.STAFF_UPDATE}>
+              <button
+                onClick={() => handleAction(onEditStaff)}
+                className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+              >
+                <Edit className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                <span>Edit Staff</span>
+              </button>
+            </PermissionGuard>
           )}
 
           {/* Freeze/Unfreeze - SUPER_ADMIN only */}

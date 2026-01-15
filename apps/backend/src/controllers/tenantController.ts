@@ -152,8 +152,28 @@ export const updateTenant = asyncHandler(
     const { id } = req.params;
     const data: UpdateTenantDTO = req.body;
 
+    // Use select to exclude scheduleDrugEligible until migration is run
+    // This prevents Prisma from trying to select a column that doesn't exist yet
     const tenant = await prisma.tenants.findUnique({
       where: { id },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        email: true,
+        phone: true,
+        address: true,
+        city: true,
+        state: true,
+        country: true,
+        pincode: true,
+        logoUrl: true,
+        primaryColor: true,
+        secondaryColor: true,
+        status: true,
+        // Explicitly exclude scheduleDrugEligible to avoid database errors
+        // until migration is run
+      },
     });
 
     if (!tenant) {
@@ -169,39 +189,121 @@ export const updateTenant = asyncHandler(
     const updateData: any = {};
     if (req.user?.role === 'ADMIN') {
       // ADMIN can only update these fields
-      updateData.name = data.name;
-      updateData.email = data.email;
-      updateData.phone = data.phone;
-      updateData.address = data.address;
-      updateData.city = data.city;
-      updateData.state = data.state;
-      updateData.country = data.country;
-      updateData.pincode = data.zipCode;
-      updateData.logoUrl = data.logo;
-      updateData.primaryColor = data.primaryColor;
-      updateData.secondaryColor = data.secondaryColor;
+      if (data.name !== undefined) updateData.name = data.name;
+      if (data.email !== undefined) updateData.email = data.email;
+      if (data.phone !== undefined) updateData.phone = data.phone;
+      if (data.address !== undefined) updateData.address = data.address;
+      if (data.city !== undefined) updateData.city = data.city;
+      if (data.state !== undefined) updateData.state = data.state;
+      if (data.country !== undefined) updateData.country = data.country;
+      if (data.zipCode !== undefined) updateData.pincode = data.zipCode;
+      if (data.logo !== undefined) updateData.logoUrl = data.logo;
+      if (data.primaryColor !== undefined) updateData.primaryColor = data.primaryColor;
+      if (data.secondaryColor !== undefined) updateData.secondaryColor = data.secondaryColor;
     } else {
       // SUPER_ADMIN can update all fields including scheduleDrugEligible
-      updateData.name = data.name;
-      updateData.email = data.email;
-      updateData.phone = data.phone;
-      updateData.address = data.address;
-      updateData.city = data.city;
-      updateData.state = data.state;
-      updateData.country = data.country;
-      updateData.pincode = data.zipCode;
-      updateData.logoUrl = data.logo;
-      updateData.primaryColor = data.primaryColor;
-      updateData.secondaryColor = data.secondaryColor;
+      if (data.name !== undefined) updateData.name = data.name;
+      if (data.email !== undefined) updateData.email = data.email;
+      if (data.phone !== undefined) updateData.phone = data.phone;
+      if (data.address !== undefined) updateData.address = data.address;
+      if (data.city !== undefined) updateData.city = data.city;
+      if (data.state !== undefined) updateData.state = data.state;
+      if (data.country !== undefined) updateData.country = data.country;
+      if (data.zipCode !== undefined) updateData.pincode = data.zipCode;
+      if (data.logo !== undefined) updateData.logoUrl = data.logo;
+      if (data.primaryColor !== undefined) updateData.primaryColor = data.primaryColor;
+      if (data.secondaryColor !== undefined) updateData.secondaryColor = data.secondaryColor;
       // Only SUPER_ADMIN can update scheduleDrugEligible
       if (data.scheduleDrugEligible !== undefined) {
         updateData.scheduleDrugEligible = data.scheduleDrugEligible;
       }
     }
 
-    const updatedTenant = await prisma.tenants.update({
+    // Handle scheduleDrugEligible separately using raw SQL to avoid Prisma type issues
+    const scheduleDrugValue = updateData.scheduleDrugEligible;
+    delete updateData.scheduleDrugEligible; // Remove from updateData to avoid Prisma errors
+    
+    // Update other fields first if any
+    let updatedTenant;
+    if (Object.keys(updateData).length > 0) {
+      updatedTenant = await prisma.tenants.update({
+        where: { id },
+        data: updateData,
+      });
+    } else {
+      // If only scheduleDrugEligible is being updated, fetch tenant first
+      updatedTenant = await prisma.tenants.findUnique({
+        where: { id },
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          email: true,
+          phone: true,
+          address: true,
+          city: true,
+          state: true,
+          country: true,
+          pincode: true,
+          logoUrl: true,
+          primaryColor: true,
+          secondaryColor: true,
+          status: true,
+        },
+      });
+    }
+    
+    // Update scheduleDrugEligible using raw SQL if provided
+    if (scheduleDrugValue !== undefined) {
+      try {
+        // First, ensure the column exists (idempotent)
+        await prisma.$executeRawUnsafe(`
+          DO $$
+          BEGIN
+            IF NOT EXISTS (
+              SELECT 1 FROM information_schema.columns 
+              WHERE table_name = 'tenants' 
+              AND column_name = 'scheduleDrugEligible'
+            ) THEN
+              ALTER TABLE tenants ADD COLUMN "scheduleDrugEligible" BOOLEAN DEFAULT false;
+            END IF;
+          END $$;
+        `);
+        
+        // Now update the value
+        await prisma.$executeRawUnsafe(
+          `UPDATE tenants SET "scheduleDrugEligible" = $1 WHERE id = $2`,
+          scheduleDrugValue,
+          id
+        );
+      } catch (error: any) {
+        console.error('Error updating scheduleDrugEligible:', error);
+        throw new AppError(
+          `Failed to update scheduleDrugEligible: ${error.message}`,
+          500
+        );
+      }
+    }
+    
+    // Fetch updated tenant
+    updatedTenant = await prisma.tenants.findUnique({
       where: { id },
-      data: updateData,
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        email: true,
+        phone: true,
+        address: true,
+        city: true,
+        state: true,
+        country: true,
+        pincode: true,
+        logoUrl: true,
+        primaryColor: true,
+        secondaryColor: true,
+        status: true,
+      },
     });
 
     const response: ApiResponse = {
