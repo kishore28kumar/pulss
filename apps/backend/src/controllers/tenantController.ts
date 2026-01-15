@@ -238,32 +238,10 @@ export const updateTenant = asyncHandler(
     delete updateData.pharmacistPhoto; // Remove from updateData to avoid Prisma errors
     
     // Update other fields first if any
-    let updatedTenant;
     if (Object.keys(updateData).length > 0) {
-      updatedTenant = await prisma.tenants.update({
+      await prisma.tenants.update({
         where: { id },
         data: updateData,
-      });
-    } else {
-      // If only scheduleDrugEligible is being updated, fetch tenant first
-      updatedTenant = await prisma.tenants.findUnique({
-        where: { id },
-        select: {
-          id: true,
-          name: true,
-          slug: true,
-          email: true,
-          phone: true,
-          address: true,
-          city: true,
-          state: true,
-          country: true,
-          pincode: true,
-          logoUrl: true,
-          primaryColor: true,
-          secondaryColor: true,
-          status: true,
-        },
       });
     }
     
@@ -363,8 +341,8 @@ export const updateTenant = asyncHandler(
     }
     }
     
-    // Fetch updated tenant
-    updatedTenant = await prisma.tenants.findUnique({
+    // Fetch updated tenant with all fields including those updated via raw SQL
+    const updatedTenant = await prisma.tenants.findUnique({
       where: { id },
       select: {
         id: true,
