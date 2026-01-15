@@ -1,12 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Save, Building2, Mail, Phone, MapPin, Tag, CreditCard, Calendar, FileText, ShieldCheck, Image as ImageIcon, Upload, X } from 'lucide-react';
 import { getUserRole } from '@/lib/permissions';
-import { useState, useRef } from 'react';
 import api from '@/lib/api';
 import { toast } from 'sonner';
 
