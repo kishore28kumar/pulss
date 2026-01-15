@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Loader2, UserPlus, Eye, EyeOff, RefreshCw, Store, Copy, ShieldCheck, RotateCcw, Image as ImageIcon, Upload, X, GripVertical } from 'lucide-react';
+import { ArrowLeft, Loader2, UserPlus, Eye, EyeOff, RefreshCw, Store, Copy, ShieldCheck, RotateCcw, Image as ImageIcon, Upload, X } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -282,14 +282,6 @@ export default function NewStaffPage() {
     setHeroImages(updatedImages);
     setValue('heroImages', updatedImages);
     toast.success('Hero image removed');
-  };
-
-  const handleReorderHeroImages = (fromIndex: number, toIndex: number) => {
-    const updatedImages = [...heroImages];
-    const [removed] = updatedImages.splice(fromIndex, 1);
-    updatedImages.splice(toIndex, 0, removed);
-    setHeroImages(updatedImages);
-    setValue('heroImages', updatedImages);
   };
 
   const queryClient = useQueryClient();

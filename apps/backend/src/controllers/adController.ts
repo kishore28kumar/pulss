@@ -196,26 +196,31 @@ export const updateAdRequestStatus = asyncHandler(async (req: Request, res: Resp
         let updatedHeroImages: string[] = [];
 
         switch (requestType) {
-            case 'HERO_IMAGES_CHANGE':
+            case 'HERO_IMAGES_CHANGE': {
                 // Replace all hero images with new ones
                 updatedHeroImages = adRequest.images || [];
                 break;
-            case 'HERO_IMAGES_ADD':
+            }
+            case 'HERO_IMAGES_ADD': {
                 // Add new images to existing ones
                 const currentHeroImages = (tenant as any).heroImages || [];
                 updatedHeroImages = [...currentHeroImages, ...(adRequest.images || [])].slice(0, 10);
                 break;
-            case 'HERO_IMAGES_REMOVE':
+            }
+            case 'HERO_IMAGES_REMOVE': {
                 // Remove specified images (images array contains URLs to remove)
                 const existingHeroImages = (tenant as any).heroImages || [];
                 updatedHeroImages = existingHeroImages.filter((url: string) => !adRequest.images.includes(url));
                 break;
-            case 'HERO_IMAGES_REORDER':
+            }
+            case 'HERO_IMAGES_REORDER': {
                 // Reorder images (images array contains the new order)
                 updatedHeroImages = adRequest.images || [];
                 break;
-            default:
+            }
+            default: {
                 updatedHeroImages = (tenant as any).heroImages || [];
+            }
         }
 
         // Update tenant hero images using raw SQL to avoid Prisma type issues

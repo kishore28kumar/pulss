@@ -41,6 +41,7 @@ function LoginPageContent() {
     if (token) {
       handleTokenLogin(token);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
   const handleTokenLogin = async (token: string) => {

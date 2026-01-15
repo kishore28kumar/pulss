@@ -112,7 +112,7 @@ export function BroadcastProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error('Failed to mark broadcast as read:', error);
     }
-  }, []);
+  }, []); // markAsRead doesn't use user.id or user?.role, so dependencies are intentionally empty
 
   // Mark all broadcasts as read
   const markAllAsRead = useCallback(async () => {
@@ -145,7 +145,8 @@ export function BroadcastProvider({ children }: { children: React.ReactNode }) {
       loadedUserIdRef.current = userId;
       loadBroadcasts();
     }
-  }, [user?.id, loadBroadcasts]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, user?.role]);
 
   // Connect to WebSocket for real-time updates
   useEffect(() => {
@@ -248,7 +249,8 @@ export function BroadcastProvider({ children }: { children: React.ReactNode }) {
         socketRef.current = null;
       }
     };
-  }, [user?.id, user?.role, pathname, router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, user?.role, pathname, router]); // user object itself not needed, only specific properties
 
   return (
     <BroadcastContext.Provider

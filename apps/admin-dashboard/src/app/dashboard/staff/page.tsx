@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Search, Edit, Trash2, UserPlus, Mail, Phone, CheckCircle, XCircle, ExternalLink, Store, Download, X, LayoutDashboard, Snowflake, Unlock, Building2 } from 'lucide-react';
+import { Search, UserPlus, Mail, Phone, CheckCircle, XCircle, ExternalLink, Store, X, LayoutDashboard, Unlock } from 'lucide-react';
 import api from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -525,17 +525,6 @@ export default function StaffPage() {
                             mounted={mounted}
                             isOpen={openPopoverId === member.id}
                             onToggle={(memberId) => setOpenPopoverId(memberId)}
-                            onEditStaff={() => handleEdit(member)}
-                            onEditTenant={() => {
-                              if (member.tenants?.id) {
-                                setEditingTenant({ 
-                                  id: member.tenants.id, 
-                                  name: member.tenants.name,
-                                  staffMember: member
-                                });
-                                setOpenPopoverId(null); // Close popover when opening tenant edit modal
-                              }
-                            }}
                             onEditStaff={() => {
                               // For SUPER_ADMIN with tenant, use Edit Tenant instead
                               if (mounted && userRole === 'SUPER_ADMIN' && member.tenants?.id) {
@@ -547,6 +536,16 @@ export default function StaffPage() {
                                 setOpenPopoverId(null);
                               } else {
                                 handleEdit(member);
+                              }
+                            }}
+                            onEditTenant={() => {
+                              if (member.tenants?.id) {
+                                setEditingTenant({ 
+                                  id: member.tenants.id, 
+                                  name: member.tenants.name,
+                                  staffMember: member
+                                });
+                                setOpenPopoverId(null); // Close popover when opening tenant edit modal
                               }
                             }}
                             onFreeze={() => handleFreeze(member)}

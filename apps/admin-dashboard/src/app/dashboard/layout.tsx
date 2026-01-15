@@ -7,7 +7,7 @@ import Sidebar from '@/components/dashboard/Sidebar';
 import Header from '@/components/dashboard/Header';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
-import { AlertTriangle, X } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 
 export default function DashboardLayout({
   children,
@@ -19,7 +19,7 @@ export default function DashboardLayout({
   const [showFrozenModal, setShowFrozenModal] = useState(false);
 
   // Check if current user is frozen
-  const { data: currentUser, error: currentUserError } = useQuery({
+  const { error: currentUserError } = useQuery({
     queryKey: ['current-user'],
     queryFn: async () => {
       const response = await api.get('/auth/me');

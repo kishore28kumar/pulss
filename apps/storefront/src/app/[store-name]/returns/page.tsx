@@ -2,7 +2,7 @@
 
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { RotateCcw, Clock, Package, CheckCircle, AlertCircle } from 'lucide-react';
+import { RotateCcw, Clock, Package, CheckCircle } from 'lucide-react';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { useTenant } from '@/contexts/TenantContext';
 

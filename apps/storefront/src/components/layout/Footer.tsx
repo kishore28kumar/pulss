@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { Facebook, Twitter, Instagram /*, Mail */ } from 'lucide-react';
+// Social media icons removed - not currently used
 
 export default function Footer() {
   const params = useParams();

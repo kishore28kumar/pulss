@@ -186,7 +186,8 @@ export function MailProvider({ children }: { children: React.ReactNode }) {
       loadedUserIdRef.current = userId;
       loadConversations();
     }
-  }, [user?.id, loadConversations]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]); // loadConversations is stable
 
   // Connect to WebSocket for real-time updates
   useEffect(() => {
@@ -306,7 +307,8 @@ export function MailProvider({ children }: { children: React.ReactNode }) {
         socketRef.current = null;
       }
     };
-  }, [user?.id, user?.role, pathname, router, currentPartner, loadConversations]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, user?.role, pathname, router, currentPartner]); // loadConversations is stable
 
   return (
     <MailContext.Provider

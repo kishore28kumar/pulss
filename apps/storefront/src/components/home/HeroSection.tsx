@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { useTenant } from '@/contexts/TenantContext';
 
 interface HeroSectionProps {
@@ -15,7 +15,6 @@ interface HeroSectionProps {
 
 export default function HeroSection({ isAuthenticated, customerName }: HeroSectionProps) {
   const params = useParams();
-  const router = useRouter();
   const storeName = params['store-name'] as string;
   const { tenant } = useTenant();
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -32,7 +31,6 @@ export default function HeroSection({ isAuthenticated, customerName }: HeroSecti
   ];
 
   const displayImages = hasHeroImages ? tenantHeroImages : defaultImages;
-  const displayLinks: string[] = []; // Hero images don't have links
 
   // Auto-slide logic
   useEffect(() => {
@@ -133,9 +131,6 @@ export default function HeroSection({ isAuthenticated, customerName }: HeroSecti
               <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-2xl shadow-blue-500/20 group">
                 {/* Images */}
                 {displayImages.map((img: string, idx: number) => {
-                  const link = displayLinks?.[idx];
-                  const isLinked = !!link;
-
                   return (
                     <div
                       key={idx}

@@ -6,7 +6,7 @@ interface FrozenAdminMessageProps {
   storeName?: string;
 }
 
-export default function FrozenAdminMessage({ storeName }: FrozenAdminMessageProps) {
+export default function FrozenAdminMessage({ storeName: _storeName }: FrozenAdminMessageProps) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 px-4">
       <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">

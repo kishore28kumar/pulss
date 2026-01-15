@@ -82,7 +82,7 @@ function BulkUploadPreviewPageContent() {
       } else {
         router.push('/dashboard/products/new');
       }
-    } catch (error) {
+    } catch {
       router.push('/dashboard/products/new');
     }
   }, [searchParams, router]);

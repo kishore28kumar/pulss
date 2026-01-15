@@ -34,7 +34,7 @@ export default function Header() {
       try {
         const response = await api.get('/cart');
         return response.data.data;
-      } catch (error) {
+      } catch {
         return { itemCount: 0 };
       }
     },
