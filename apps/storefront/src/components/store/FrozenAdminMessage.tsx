@@ -25,11 +25,11 @@ export default function FrozenAdminMessage({ storeName }: FrozenAdminMessageProp
           </p>
         </div>
         
-        <p className="text-gray-600 mb-6">
+        {/* <p className="text-gray-600 mb-6">
           {storeName 
             ? `${storeName} is temporarily unavailable. The store administrator's account has been frozen.`
             : 'This store is temporarily unavailable. The store administrator\'s account has been frozen.'}
-        </p>
+        </p> */}
         
         <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-500">
           <p>Please check back later or contact the store administrator for assistance.</p>
