@@ -1,28 +1,16 @@
 import Link from 'next/link';
-import { Facebook, Twitter, Instagram, Mail } from 'lucide-react';
 
 export default function Footer() {
   return (
     <footer className="bg-gray-900 text-gray-300">
       <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* About */}
           <div>
             <h3 className="text-white font-bold text-lg mb-4">Pulss Store</h3>
             <p className="text-sm text-gray-400 mb-4">
               Your trusted source for quality products. We deliver excellence with every order.
             </p>
-            <div className="flex space-x-4">
-              <a href="#" className="text-gray-400 hover:text-white transition">
-                <Facebook className="w-5 h-5" />
-              </a>
-              <a href="#" className="text-gray-400 hover:text-white transition">
-                <Twitter className="w-5 h-5" />
-              </a>
-              <a href="#" className="text-gray-400 hover:text-white transition">
-                <Instagram className="w-5 h-5" />
-              </a>
-            </div>
           </div>
 
           {/* Quick Links */}
@@ -47,23 +35,6 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Newsletter */}
-          <div>
-            <h3 className="text-white font-semibold mb-4">Newsletter</h3>
-            <p className="text-sm text-gray-400 mb-4">
-              Subscribe to get special offers and updates.
-            </p>
-            <div className="flex">
-              <input
-                type="email"
-                placeholder="Your email"
-                className="flex-1 px-4 py-2 rounded-l-lg bg-gray-800 border border-gray-700 focus:outline-none focus:border-blue-600"
-              />
-              <button className="px-4 py-2 bg-blue-600 text-white rounded-r-lg hover:bg-blue-700 transition">
-                <Mail className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
         </div>
 
         {/* Bottom Bar */}

@@ -34,7 +34,7 @@ function WishlistPageContent() {
       setTimeout(() => {
         removeFromWishlist(productId);
       }, 500);
-    } catch (error) {
+    } catch {
       // Error handled by useCart hook
     } finally {
       setTimeout(() => {
