@@ -38,6 +38,10 @@ const inviteSchema = z.object({
   scheduleDrugEligible: z.boolean().default(false).optional(),
   returnPolicy: z.string().optional(),
   heroImages: z.array(z.string().url('Must be a valid URL')).max(10, 'Maximum 10 hero images allowed').optional(),
+  isPrimaryContactWhatsApp: z.boolean().default(false).optional(),
+  primaryContactWhatsApp: z.string().regex(/^\d{10}$/, 'WhatsApp number must be exactly 10 digits').optional().or(z.literal('')),
+  shopFrontPhoto: z.string().url('Must be a valid URL').optional().or(z.literal('')),
+  ownerPhoto: z.string().url('Must be a valid URL').optional().or(z.literal('')),
 });
 
 type InviteFormData = z.infer<typeof inviteSchema>;
@@ -120,6 +124,12 @@ export default function NewStaffPage() {
   const [heroImages, setHeroImages] = useState<string[]>([]);
   const [uploadingHeroImage, setUploadingHeroImage] = useState(false);
   const heroImageFileInputRef = useRef<HTMLInputElement>(null);
+  const [shopFrontPhoto, setShopFrontPhoto] = useState<string>('');
+  const [ownerPhoto, setOwnerPhoto] = useState<string>('');
+  const [uploadingShopFrontPhoto, setUploadingShopFrontPhoto] = useState(false);
+  const [uploadingOwnerPhoto, setUploadingOwnerPhoto] = useState(false);
+  const shopFrontPhotoInputRef = useRef<HTMLInputElement>(null);
+  const ownerPhotoInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -155,6 +165,10 @@ export default function NewStaffPage() {
       scheduleDrugEligible: false,
       returnPolicy: DEFAULT_RETURN_POLICY,
       heroImages: [],
+      isPrimaryContactWhatsApp: false,
+      primaryContactWhatsApp: '',
+      shopFrontPhoto: '',
+      ownerPhoto: '',
     },
   });
 
@@ -180,8 +194,14 @@ export default function NewStaffPage() {
       scheduleDrugEligible: false,
       returnPolicy: DEFAULT_RETURN_POLICY,
       heroImages: [],
+      isPrimaryContactWhatsApp: false,
+      primaryContactWhatsApp: '',
+      shopFrontPhoto: '',
+      ownerPhoto: '',
     });
     setHeroImages([]);
+    setShopFrontPhoto('');
+    setOwnerPhoto('');
   }, [reset]);
 
   // Watch storeRoute to update storefront URL preview
@@ -324,6 +344,10 @@ export default function NewStaffPage() {
         payload.scheduleDrugEligible = data.scheduleDrugEligible ?? false;
         payload.returnPolicy = data.returnPolicy || DEFAULT_RETURN_POLICY;
         payload.heroImages = heroImages.length > 0 ? heroImages : [];
+        payload.isPrimaryContactWhatsApp = data.isPrimaryContactWhatsApp ?? false;
+        payload.primaryContactWhatsApp = data.isPrimaryContactWhatsApp ? data.phone : (data.primaryContactWhatsApp || undefined);
+        payload.shopFrontPhoto = shopFrontPhoto || undefined;
+        payload.ownerPhoto = ownerPhoto || undefined;
       }
 
       return await api.post('/staff/invite', payload);
@@ -440,21 +464,82 @@ export default function NewStaffPage() {
           </div>
 
           {/* Phone */}
-          <div>
-            <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Phone Number (Optional)
-            </label>
-            <input
-              id="phone"
-              type="tel"
-              {...register('phone')}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-              placeholder="+1234567890"
-            />
-            {errors.phone && (
-              <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.phone.message}</p>
-            )}
-          </div>
+          {isCreatingAdmin && (
+            <div>
+              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Primary Contact Number *
+              </label>
+              <input
+                id="phone"
+                type="tel"
+                {...register('phone', { required: isCreatingAdmin })}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                placeholder="1234567890"
+                maxLength={10}
+              />
+              {errors.phone && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.phone.message}</p>
+              )}
+              
+              {/* WhatsApp Checkbox */}
+              <div className="mt-3 flex items-center">
+                <input
+                  id="isPrimaryContactWhatsApp"
+                  type="checkbox"
+                  {...register('isPrimaryContactWhatsApp')}
+                  className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 bg-white dark:bg-gray-700"
+                />
+                <label htmlFor="isPrimaryContactWhatsApp" className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Is this a WhatsApp number?
+                </label>
+              </div>
+              
+              {/* WhatsApp Number Input (shown if checkbox unchecked) */}
+              {!watch('isPrimaryContactWhatsApp') && (
+                <div className="mt-3">
+                  <label htmlFor="primaryContactWhatsApp" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    WhatsApp Number *
+                  </label>
+                  <input
+                    id="primaryContactWhatsApp"
+                    type="tel"
+                    {...register('primaryContactWhatsApp', { 
+                      required: isCreatingAdmin && !watch('isPrimaryContactWhatsApp'),
+                      pattern: {
+                        value: /^\d{10}$/,
+                        message: 'WhatsApp number must be exactly 10 digits'
+                      }
+                    })}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                    placeholder="1234567890"
+                    maxLength={10}
+                  />
+                  {errors.primaryContactWhatsApp && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.primaryContactWhatsApp.message}</p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+          
+          {/* Phone (for non-admin creation) */}
+          {!isCreatingAdmin && (
+            <div>
+              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Phone Number (Optional)
+              </label>
+              <input
+                id="phone"
+                type="tel"
+                {...register('phone')}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                placeholder="+1234567890"
+              />
+              {errors.phone && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.phone.message}</p>
+              )}
+            </div>
+          )}
 
           {/* Store Name & Store Route - Only for SUPER_ADMIN creating Admin */}
           {isCreatingAdmin && (
@@ -905,6 +990,195 @@ export default function NewStaffPage() {
                 {errors.heroImages && (
                   <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.heroImages.message}</p>
                 )}
+              </div>
+
+              {/* Shop Front Photo & Owner Photo */}
+              <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
+                  <ImageIcon className="w-5 h-5 mr-2" />
+                  Shop Photos
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                  Upload shop front photo and owner photo. These will be displayed on the storefront contact page.
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  {/* Shop Front Photo */}
+                  <div>
+                    <label htmlFor="shopFrontPhoto" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Shop Front Photo
+                    </label>
+                    <div className="space-y-2">
+                      {/* URL Input */}
+                      <input
+                        id="shopFrontPhoto"
+                        type="url"
+                        {...register('shopFrontPhoto')}
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 text-sm"
+                        placeholder="https://example.com/shop-front.jpg"
+                        onChange={(e) => setShopFrontPhoto(e.target.value)}
+                      />
+                      {/* File Upload */}
+                      <div className="p-4 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-center">
+                        <input
+                          type="file"
+                          ref={shopFrontPhotoInputRef}
+                          className="hidden"
+                          accept="image/jpeg,image/jpg,image/png"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              if (file.size > 5 * 1024 * 1024) {
+                                toast.error('Image size must be less than 5MB');
+                                return;
+                              }
+                              setUploadingShopFrontPhoto(true);
+                              try {
+                                const formData = new FormData();
+                                formData.append('file', file);
+                                const response = await api.post('/upload', formData, {
+                                  headers: { 'Content-Type': 'multipart/form-data' },
+                                });
+                                const uploadedUrl = response.data.data.url;
+                                setShopFrontPhoto(uploadedUrl);
+                                setValue('shopFrontPhoto', uploadedUrl);
+                                toast.success('Shop front photo uploaded successfully');
+                                if (shopFrontPhotoInputRef.current) shopFrontPhotoInputRef.current.value = '';
+                              } catch (error: any) {
+                                toast.error(error.response?.data?.error || 'Failed to upload image');
+                              } finally {
+                                setUploadingShopFrontPhoto(false);
+                              }
+                            }
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => shopFrontPhotoInputRef.current?.click()}
+                          disabled={uploadingShopFrontPhoto}
+                          className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                        >
+                          {uploadingShopFrontPhoto ? (
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          ) : (
+                            <Upload className="w-4 h-4 mr-2" />
+                          )}
+                          {uploadingShopFrontPhoto ? 'Uploading...' : 'Upload Image'}
+                        </button>
+                        <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                          Max 5MB. JPG, PNG.
+                        </p>
+                      </div>
+                      {/* Preview */}
+                      {shopFrontPhoto && (
+                        <div className="relative aspect-video rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+                          <img src={shopFrontPhoto} alt="Shop Front" className="w-full h-full object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShopFrontPhoto('');
+                              setValue('shopFrontPhoto', '');
+                            }}
+                            className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                    {errors.shopFrontPhoto && (
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.shopFrontPhoto.message}</p>
+                    )}
+                  </div>
+
+                  {/* Owner Photo */}
+                  <div>
+                    <label htmlFor="ownerPhoto" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Owner Photo
+                    </label>
+                    <div className="space-y-2">
+                      {/* URL Input */}
+                      <input
+                        id="ownerPhoto"
+                        type="url"
+                        {...register('ownerPhoto')}
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 text-sm"
+                        placeholder="https://example.com/owner.jpg"
+                        onChange={(e) => setOwnerPhoto(e.target.value)}
+                      />
+                      {/* File Upload */}
+                      <div className="p-4 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-center">
+                        <input
+                          type="file"
+                          ref={ownerPhotoInputRef}
+                          className="hidden"
+                          accept="image/jpeg,image/jpg,image/png"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              if (file.size > 5 * 1024 * 1024) {
+                                toast.error('Image size must be less than 5MB');
+                                return;
+                              }
+                              setUploadingOwnerPhoto(true);
+                              try {
+                                const formData = new FormData();
+                                formData.append('file', file);
+                                const response = await api.post('/upload', formData, {
+                                  headers: { 'Content-Type': 'multipart/form-data' },
+                                });
+                                const uploadedUrl = response.data.data.url;
+                                setOwnerPhoto(uploadedUrl);
+                                setValue('ownerPhoto', uploadedUrl);
+                                toast.success('Owner photo uploaded successfully');
+                                if (ownerPhotoInputRef.current) ownerPhotoInputRef.current.value = '';
+                              } catch (error: any) {
+                                toast.error(error.response?.data?.error || 'Failed to upload image');
+                              } finally {
+                                setUploadingOwnerPhoto(false);
+                              }
+                            }
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => ownerPhotoInputRef.current?.click()}
+                          disabled={uploadingOwnerPhoto}
+                          className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                        >
+                          {uploadingOwnerPhoto ? (
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          ) : (
+                            <Upload className="w-4 h-4 mr-2" />
+                          )}
+                          {uploadingOwnerPhoto ? 'Uploading...' : 'Upload Image'}
+                        </button>
+                        <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                          Max 5MB. JPG, PNG.
+                        </p>
+                      </div>
+                      {/* Preview */}
+                      {ownerPhoto && (
+                        <div className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+                          <img src={ownerPhoto} alt="Owner" className="w-full h-full object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setOwnerPhoto('');
+                              setValue('ownerPhoto', '');
+                            }}
+                            className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                    {errors.ownerPhoto && (
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.ownerPhoto.message}</p>
+                    )}
+                  </div>
+                </div>
               </div>
             </>
           )}

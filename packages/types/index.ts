@@ -82,6 +82,10 @@ export interface CreateTenantDTO {
   country?: string;
   returnPolicy?: string;
   heroImages?: string[];
+  primaryContactWhatsApp?: string;
+  isPrimaryContactWhatsApp?: boolean;
+  shopFrontPhoto?: string;
+  ownerPhoto?: string;
   // Admin user
   adminEmail: string;
   adminPassword: string;
@@ -105,6 +109,10 @@ export interface UpdateTenantDTO {
   returnPolicy?: string;
   pharmacistPhoto?: string;
   heroImages?: string[];
+  primaryContactWhatsApp?: string;
+  isPrimaryContactWhatsApp?: boolean;
+  shopFrontPhoto?: string;
+  ownerPhoto?: string;
 }
 
 // ============================================

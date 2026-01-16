@@ -1,13 +1,13 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { X, Loader2, Building2 } from 'lucide-react';
+import { X, Loader2, Building2, Image as ImageIcon, Upload } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import api from '@/lib/api';
 import { toast } from 'sonner';
-import { useEffect } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 interface Tenant {
   id: string;
@@ -22,6 +22,10 @@ interface Tenant {
   pincode?: string;
   scheduleDrugEligible?: boolean;
   returnPolicy?: string;
+  primaryContactWhatsApp?: string;
+  isPrimaryContactWhatsApp?: boolean;
+  shopFrontPhoto?: string;
+  ownerPhoto?: string;
 }
 
 interface StaffMember {
@@ -47,12 +51,22 @@ const editSchema = z.object({
   isActive: z.boolean(),
   scheduleDrugEligible: z.boolean(),
   returnPolicy: z.string().optional(),
+  isPrimaryContactWhatsApp: z.boolean(),
+  primaryContactWhatsApp: z.string().regex(/^\d{10}$/, 'WhatsApp number must be exactly 10 digits').optional().or(z.literal('')),
+  shopFrontPhoto: z.string().url('Must be a valid URL').optional().or(z.literal('')),
+  ownerPhoto: z.string().url('Must be a valid URL').optional().or(z.literal('')),
 });
 
 type EditFormData = z.infer<typeof editSchema>;
 
 export default function EditTenantModal({ tenantId, tenantName, staffMember, onClose, onSuccess }: EditTenantModalProps) {
   const queryClient = useQueryClient();
+  const [shopFrontPhoto, setShopFrontPhoto] = useState<string>('');
+  const [ownerPhoto, setOwnerPhoto] = useState<string>('');
+  const [uploadingShopFrontPhoto, setUploadingShopFrontPhoto] = useState(false);
+  const [uploadingOwnerPhoto, setUploadingOwnerPhoto] = useState(false);
+  const shopFrontPhotoInputRef = useRef<HTMLInputElement>(null);
+  const ownerPhotoInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch tenant details
   const { data: tenantData, isLoading: isLoadingTenant } = useQuery<Tenant>({
@@ -80,6 +94,10 @@ export default function EditTenantModal({ tenantId, tenantName, staffMember, onC
       isActive: staffMember.isActive ?? true,
       scheduleDrugEligible: false,
       returnPolicy: '',
+      isPrimaryContactWhatsApp: false,
+      primaryContactWhatsApp: '',
+      shopFrontPhoto: '',
+      ownerPhoto: '',
     },
   });
 
@@ -98,7 +116,13 @@ export default function EditTenantModal({ tenantId, tenantName, staffMember, onC
         isActive: staffMember.isActive ?? true,
         scheduleDrugEligible: tenantData.scheduleDrugEligible ?? false,
         returnPolicy: tenantData.returnPolicy || '',
+        isPrimaryContactWhatsApp: tenantData.isPrimaryContactWhatsApp ?? false,
+        primaryContactWhatsApp: tenantData.primaryContactWhatsApp || '',
+        shopFrontPhoto: tenantData.shopFrontPhoto || '',
+        ownerPhoto: tenantData.ownerPhoto || '',
       });
+      setShopFrontPhoto(tenantData.shopFrontPhoto || '');
+      setOwnerPhoto(tenantData.ownerPhoto || '');
     }
   }, [tenantData, staffMember, reset]);
 
@@ -116,6 +140,10 @@ export default function EditTenantModal({ tenantId, tenantName, staffMember, onC
       await api.put(`/tenants/${tenantId}`, {
         scheduleDrugEligible: data.scheduleDrugEligible,
         returnPolicy: data.returnPolicy,
+        isPrimaryContactWhatsApp: data.isPrimaryContactWhatsApp,
+        primaryContactWhatsApp: data.isPrimaryContactWhatsApp ? data.phone : (data.primaryContactWhatsApp || undefined),
+        shopFrontPhoto: shopFrontPhoto || undefined,
+        ownerPhoto: ownerPhoto || undefined,
       });
     },
     onSuccess: () => {
@@ -306,6 +334,234 @@ export default function EditTenantModal({ tenantId, tenantName, staffMember, onC
               {errors.returnPolicy && (
                 <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.returnPolicy.message}</p>
               )}
+            </div>
+          </div>
+
+          {/* Contact & Media */}
+          <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">Contact & Media</h3>
+            
+            {/* Primary Contact WhatsApp */}
+            <div className="mb-4">
+              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Primary Contact Number
+              </label>
+              <input
+                id="phone"
+                type="tel"
+                {...register('phone')}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                placeholder="1234567890"
+                maxLength={10}
+              />
+              {errors.phone && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.phone.message}</p>
+              )}
+              
+              {/* WhatsApp Checkbox */}
+              <div className="mt-3 flex items-center">
+                <input
+                  id="isPrimaryContactWhatsApp"
+                  type="checkbox"
+                  {...register('isPrimaryContactWhatsApp')}
+                  className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 bg-white dark:bg-gray-700"
+                />
+                <label htmlFor="isPrimaryContactWhatsApp" className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Is this a WhatsApp number?
+                </label>
+              </div>
+              
+              {/* WhatsApp Number Input (shown if checkbox unchecked) */}
+              {!watch('isPrimaryContactWhatsApp') && (
+                <div className="mt-3">
+                  <label htmlFor="primaryContactWhatsApp" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    WhatsApp Number
+                  </label>
+                  <input
+                    id="primaryContactWhatsApp"
+                    type="tel"
+                    {...register('primaryContactWhatsApp', {
+                      pattern: {
+                        value: /^\d{10}$/,
+                        message: 'WhatsApp number must be exactly 10 digits'
+                      }
+                    })}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                    placeholder="1234567890"
+                    maxLength={10}
+                  />
+                  {errors.primaryContactWhatsApp && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.primaryContactWhatsApp.message}</p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Shop Front Photo & Owner Photo */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Shop Front Photo */}
+              <div>
+                <label htmlFor="shopFrontPhoto" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Shop Front Photo
+                </label>
+                <div className="space-y-2">
+                  <input
+                    id="shopFrontPhoto"
+                    type="url"
+                    {...register('shopFrontPhoto')}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 text-sm"
+                    placeholder="https://example.com/shop-front.jpg"
+                    onChange={(e) => setShopFrontPhoto(e.target.value)}
+                  />
+                  <div className="p-3 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-center">
+                    <input
+                      type="file"
+                      ref={shopFrontPhotoInputRef}
+                      className="hidden"
+                      accept="image/jpeg,image/jpg,image/png"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          if (file.size > 5 * 1024 * 1024) {
+                            toast.error('Image size must be less than 5MB');
+                            return;
+                          }
+                          setUploadingShopFrontPhoto(true);
+                          try {
+                            const formData = new FormData();
+                            formData.append('file', file);
+                            const response = await api.post('/upload', formData, {
+                              headers: { 'Content-Type': 'multipart/form-data' },
+                            });
+                            const uploadedUrl = response.data.data.url;
+                            setShopFrontPhoto(uploadedUrl);
+                            setValue('shopFrontPhoto', uploadedUrl);
+                            toast.success('Shop front photo uploaded successfully');
+                            if (shopFrontPhotoInputRef.current) shopFrontPhotoInputRef.current.value = '';
+                          } catch (error: any) {
+                            toast.error(error.response?.data?.error || 'Failed to upload image');
+                          } finally {
+                            setUploadingShopFrontPhoto(false);
+                          }
+                        }
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => shopFrontPhotoInputRef.current?.click()}
+                      disabled={uploadingShopFrontPhoto}
+                      className="inline-flex items-center px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {uploadingShopFrontPhoto ? (
+                        <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                      ) : (
+                        <Upload className="w-3 h-3 mr-1" />
+                      )}
+                      {uploadingShopFrontPhoto ? 'Uploading...' : 'Upload'}
+                    </button>
+                  </div>
+                  {shopFrontPhoto && (
+                    <div className="relative aspect-video rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+                      <img src={shopFrontPhoto} alt="Shop Front" className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShopFrontPhoto('');
+                          setValue('shopFrontPhoto', '');
+                        }}
+                        className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+                {errors.shopFrontPhoto && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.shopFrontPhoto.message}</p>
+                )}
+              </div>
+
+              {/* Owner Photo */}
+              <div>
+                <label htmlFor="ownerPhoto" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Owner Photo
+                </label>
+                <div className="space-y-2">
+                  <input
+                    id="ownerPhoto"
+                    type="url"
+                    {...register('ownerPhoto')}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 text-sm"
+                    placeholder="https://example.com/owner.jpg"
+                    onChange={(e) => setOwnerPhoto(e.target.value)}
+                  />
+                  <div className="p-3 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-center">
+                    <input
+                      type="file"
+                      ref={ownerPhotoInputRef}
+                      className="hidden"
+                      accept="image/jpeg,image/jpg,image/png"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          if (file.size > 5 * 1024 * 1024) {
+                            toast.error('Image size must be less than 5MB');
+                            return;
+                          }
+                          setUploadingOwnerPhoto(true);
+                          try {
+                            const formData = new FormData();
+                            formData.append('file', file);
+                            const response = await api.post('/upload', formData, {
+                              headers: { 'Content-Type': 'multipart/form-data' },
+                            });
+                            const uploadedUrl = response.data.data.url;
+                            setOwnerPhoto(uploadedUrl);
+                            setValue('ownerPhoto', uploadedUrl);
+                            toast.success('Owner photo uploaded successfully');
+                            if (ownerPhotoInputRef.current) ownerPhotoInputRef.current.value = '';
+                          } catch (error: any) {
+                            toast.error(error.response?.data?.error || 'Failed to upload image');
+                          } finally {
+                            setUploadingOwnerPhoto(false);
+                          }
+                        }
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => ownerPhotoInputRef.current?.click()}
+                      disabled={uploadingOwnerPhoto}
+                      className="inline-flex items-center px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {uploadingOwnerPhoto ? (
+                        <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                      ) : (
+                        <Upload className="w-3 h-3 mr-1" />
+                      )}
+                      {uploadingOwnerPhoto ? 'Uploading...' : 'Upload'}
+                    </button>
+                  </div>
+                  {ownerPhoto && (
+                    <div className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+                      <img src={ownerPhoto} alt="Owner" className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setOwnerPhoto('');
+                          setValue('ownerPhoto', '');
+                        }}
+                        className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+                {errors.ownerPhoto && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.ownerPhoto.message}</p>
+                )}
+              </div>
             </div>
           </div>
 

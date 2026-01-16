@@ -377,6 +377,10 @@ model tenants {
   heroImages         String[]         @default([])
   logoUrl            String?
   faviconUrl         String?
+  primaryContactWhatsApp String?
+  isPrimaryContactWhatsApp Boolean    @default(false)
+  shopFrontPhoto     String?
+  ownerPhoto         String?
   primaryColor       String?          @default("#3B82F6")
   secondaryColor     String?          @default("#8B5CF6")
   features           Json?

@@ -164,7 +164,8 @@ export const inviteStaff = asyncHandler(
       email, firstName, lastName, phone, role, password,
       storeName, storeRoute, address, city, state, country, pincode,
       gstNumber, drugLicNumber, pharmacistName, pharmacistRegNumber,
-      scheduleDrugEligible, returnPolicy, heroImages
+      scheduleDrugEligible, returnPolicy, heroImages,
+      primaryContactWhatsApp, isPrimaryContactWhatsApp, shopFrontPhoto, ownerPhoto
     } = req.body;
 
     if (!email || !firstName || !lastName) {
@@ -243,6 +244,10 @@ export const inviteStaff = asyncHandler(
             scheduleDrugEligible: scheduleDrugEligible ?? false,
             returnPolicy: returnPolicy || null,
             heroImages: heroImages && Array.isArray(heroImages) ? heroImages : [],
+            primaryContactWhatsApp: primaryContactWhatsApp || null,
+            isPrimaryContactWhatsApp: isPrimaryContactWhatsApp ?? false,
+            shopFrontPhoto: shopFrontPhoto || null,
+            ownerPhoto: ownerPhoto || null,
             updatedAt: new Date(),
           } as any,
         });

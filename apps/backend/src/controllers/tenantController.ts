@@ -114,6 +114,10 @@ export const createTenant = asyncHandler(
         country: data.country || 'India',
         returnPolicy: data.returnPolicy || null,
         heroImages: data.heroImages && Array.isArray(data.heroImages) ? data.heroImages : [],
+        primaryContactWhatsApp: data.primaryContactWhatsApp || null,
+        isPrimaryContactWhatsApp: data.isPrimaryContactWhatsApp ?? false,
+        shopFrontPhoto: data.shopFrontPhoto || null,
+        ownerPhoto: data.ownerPhoto || null,
         status: 'ACTIVE',
         subscriptionPlan: 'FREE',
         updatedAt: new Date(),
@@ -203,8 +207,12 @@ export const updateTenant = asyncHandler(
       if (data.logo !== undefined) updateData.logoUrl = data.logo;
       if (data.primaryColor !== undefined) updateData.primaryColor = data.primaryColor;
       if (data.secondaryColor !== undefined) updateData.secondaryColor = data.secondaryColor;
-      // ADMIN can update pharmacist details
+      // ADMIN can update pharmacist details and contact/media fields
       if (data.pharmacistPhoto !== undefined) updateData.pharmacistPhoto = data.pharmacistPhoto;
+      if (data.primaryContactWhatsApp !== undefined) updateData.primaryContactWhatsApp = data.primaryContactWhatsApp;
+      if (data.isPrimaryContactWhatsApp !== undefined) updateData.isPrimaryContactWhatsApp = data.isPrimaryContactWhatsApp;
+      if (data.shopFrontPhoto !== undefined) updateData.shopFrontPhoto = data.shopFrontPhoto;
+      if (data.ownerPhoto !== undefined) updateData.ownerPhoto = data.ownerPhoto;
     } else {
       // SUPER_ADMIN can update all fields including scheduleDrugEligible
       if (data.name !== undefined) updateData.name = data.name;
@@ -225,17 +233,29 @@ export const updateTenant = asyncHandler(
       if (data.returnPolicy !== undefined) {
         updateData.returnPolicy = data.returnPolicy;
       }
-      // SUPER_ADMIN can also update pharmacistPhoto
+      // SUPER_ADMIN can also update pharmacistPhoto and contact/media fields
       if (data.pharmacistPhoto !== undefined) updateData.pharmacistPhoto = data.pharmacistPhoto;
+      if (data.primaryContactWhatsApp !== undefined) updateData.primaryContactWhatsApp = data.primaryContactWhatsApp;
+      if (data.isPrimaryContactWhatsApp !== undefined) updateData.isPrimaryContactWhatsApp = data.isPrimaryContactWhatsApp;
+      if (data.shopFrontPhoto !== undefined) updateData.shopFrontPhoto = data.shopFrontPhoto;
+      if (data.ownerPhoto !== undefined) updateData.ownerPhoto = data.ownerPhoto;
     }
 
-    // Handle scheduleDrugEligible, returnPolicy, and pharmacistPhoto separately using raw SQL to avoid Prisma type issues
+    // Handle scheduleDrugEligible, returnPolicy, pharmacistPhoto, and new contact/media fields separately using raw SQL to avoid Prisma type issues
     const scheduleDrugValue = updateData.scheduleDrugEligible;
     const returnPolicyValue = updateData.returnPolicy;
     const pharmacistPhotoValue = updateData.pharmacistPhoto;
+    const primaryContactWhatsAppValue = updateData.primaryContactWhatsApp;
+    const isPrimaryContactWhatsAppValue = updateData.isPrimaryContactWhatsApp;
+    const shopFrontPhotoValue = updateData.shopFrontPhoto;
+    const ownerPhotoValue = updateData.ownerPhoto;
     delete updateData.scheduleDrugEligible; // Remove from updateData to avoid Prisma errors
     delete updateData.returnPolicy; // Remove from updateData to avoid Prisma errors
     delete updateData.pharmacistPhoto; // Remove from updateData to avoid Prisma errors
+    delete updateData.primaryContactWhatsApp; // Remove from updateData to avoid Prisma errors
+    delete updateData.isPrimaryContactWhatsApp; // Remove from updateData to avoid Prisma errors
+    delete updateData.shopFrontPhoto; // Remove from updateData to avoid Prisma errors
+    delete updateData.ownerPhoto; // Remove from updateData to avoid Prisma errors
     
     // Update other fields first if any
     if (Object.keys(updateData).length > 0) {
@@ -338,7 +358,75 @@ export const updateTenant = asyncHandler(
           `Failed to update pharmacistPhoto: ${error.message}`,
           500
         );
+      }
     }
+
+    // Update primaryContactWhatsApp using raw SQL if provided
+    if (primaryContactWhatsAppValue !== undefined) {
+      try {
+        await prisma.$executeRawUnsafe(`
+          DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'tenants' AND column_name = 'primaryContactWhatsApp') THEN ALTER TABLE tenants ADD COLUMN "primaryContactWhatsApp" TEXT; END IF; END $$;
+        `);
+        await prisma.$executeRawUnsafe(
+          `UPDATE tenants SET "primaryContactWhatsApp" = $1 WHERE id = $2`,
+          primaryContactWhatsAppValue || null,
+          id
+        );
+      } catch (error: any) {
+        console.error('Error updating primaryContactWhatsApp:', error);
+        throw new AppError(`Failed to update primaryContactWhatsApp: ${error.message}`, 500);
+      }
+    }
+
+    // Update isPrimaryContactWhatsApp using raw SQL if provided
+    if (isPrimaryContactWhatsAppValue !== undefined) {
+      try {
+        await prisma.$executeRawUnsafe(`
+          DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'tenants' AND column_name = 'isPrimaryContactWhatsApp') THEN ALTER TABLE tenants ADD COLUMN "isPrimaryContactWhatsApp" BOOLEAN DEFAULT false; END IF; END $$;
+        `);
+        await prisma.$executeRawUnsafe(
+          `UPDATE tenants SET "isPrimaryContactWhatsApp" = $1 WHERE id = $2`,
+          isPrimaryContactWhatsAppValue,
+          id
+        );
+      } catch (error: any) {
+        console.error('Error updating isPrimaryContactWhatsApp:', error);
+        throw new AppError(`Failed to update isPrimaryContactWhatsApp: ${error.message}`, 500);
+      }
+    }
+
+    // Update shopFrontPhoto using raw SQL if provided
+    if (shopFrontPhotoValue !== undefined) {
+      try {
+        await prisma.$executeRawUnsafe(`
+          DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'tenants' AND column_name = 'shopFrontPhoto') THEN ALTER TABLE tenants ADD COLUMN "shopFrontPhoto" TEXT; END IF; END $$;
+        `);
+        await prisma.$executeRawUnsafe(
+          `UPDATE tenants SET "shopFrontPhoto" = $1 WHERE id = $2`,
+          shopFrontPhotoValue || null,
+          id
+        );
+      } catch (error: any) {
+        console.error('Error updating shopFrontPhoto:', error);
+        throw new AppError(`Failed to update shopFrontPhoto: ${error.message}`, 500);
+      }
+    }
+
+    // Update ownerPhoto using raw SQL if provided
+    if (ownerPhotoValue !== undefined) {
+      try {
+        await prisma.$executeRawUnsafe(`
+          DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'tenants' AND column_name = 'ownerPhoto') THEN ALTER TABLE tenants ADD COLUMN "ownerPhoto" TEXT; END IF; END $$;
+        `);
+        await prisma.$executeRawUnsafe(
+          `UPDATE tenants SET "ownerPhoto" = $1 WHERE id = $2`,
+          ownerPhotoValue || null,
+          id
+        );
+      } catch (error: any) {
+        console.error('Error updating ownerPhoto:', error);
+        throw new AppError(`Failed to update ownerPhoto: ${error.message}`, 500);
+      }
     }
     
     // Fetch updated tenant with all fields including those updated via raw SQL
@@ -543,6 +631,10 @@ export const getTenantInfo = asyncHandler(
       scheduleDrugEligible: (tenant as any).scheduleDrugEligible ?? false,
       returnPolicy: (tenant as any).returnPolicy || null,
       heroImages: (tenant as any).heroImages || [],
+      primaryContactWhatsApp: (tenant as any).primaryContactWhatsApp || null,
+      isPrimaryContactWhatsApp: (tenant as any).isPrimaryContactWhatsApp ?? false,
+      shopFrontPhoto: (tenant as any).shopFrontPhoto || null,
+      ownerPhoto: (tenant as any).ownerPhoto || null,
       features: tenant.features,
       metadata: tenant.metadata,
     };
