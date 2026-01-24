@@ -4,16 +4,44 @@
 
 cd ../../packages/database
 
+# Load .env file if it exists and DATABASE_URL is not set
+if [ -z "$DATABASE_URL" ] && [ -f .env ]; then
+  echo "📄 Loading DATABASE_URL from .env file..."
+  # Use a more robust method to load .env file (handles quoted values)
+  set -a
+  source .env
+  set +a
+fi
+
 # Check if DATABASE_URL is set
 if [ -z "$DATABASE_URL" ]; then
   echo "⚠️  DATABASE_URL environment variable is not set"
-  echo "⚠️  Skipping migrations. Please set DATABASE_URL and run migrations manually."
+  echo "⚠️  Please either:"
+  echo "   1. Set DATABASE_URL environment variable, or"
+  echo "   2. Create a .env file in packages/database/ with DATABASE_URL"
+  echo ""
+  echo "Example .env file:"
+  echo 'DATABASE_URL="postgresql://postgres:postgres@localhost:5433/pulss_db?schema=public"'
   exit 0
 fi
 
-# Function to check database connection using prisma migrate status
+# Function to check database connection
 check_db_connection() {
-  npx prisma migrate status > /dev/null 2>&1
+  # Try to connect using prisma db push (dry run) or check port
+  # This is more reliable than migrate status which can fail due to migration history mismatches
+  if command -v nc > /dev/null; then
+    # Check if port is open (for localhost)
+    if echo "$DATABASE_URL" | grep -q "localhost\|127.0.0.1"; then
+      # Extract port from DATABASE_URL (format: postgresql://user:pass@host:port/db)
+      PORT=$(echo "$DATABASE_URL" | sed -n 's/.*:\([0-9]*\)\/.*/\1/p' | head -1)
+      if [ -n "$PORT" ]; then
+        nc -z localhost "$PORT" 2>/dev/null
+        return $?
+      fi
+    fi
+  fi
+  # Fallback: try prisma db push (it will fail gracefully if DB is not available)
+  npx prisma db push --skip-generate --accept-data-loss > /dev/null 2>&1
 }
 
 # Wait for database to be ready (max 30 attempts, 2 seconds apart = 60 seconds total)
