@@ -48,43 +48,78 @@ export default function Header() {
         {/* Regulatory Information Top Bar */}
         {mounted && (tenant?.gstNumber || tenant?.drugLicNumber || tenant?.pharmacistName || tenant?.pharmacistRegNumber) && (
           <div
-            className="py-2 px-4 text-white transition-colors duration-300"
+            className="py-2 px-3 sm:px-4 text-white transition-colors duration-300"
             style={{ backgroundColor: tenant?.primaryColor || '#2563eb' }}
           >
-            <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-3 text-[10px] sm:text-[11px] font-semibold tracking-wider">
-              {/* Left Side: Business Licenses */}
-              <div className="flex items-center divide-x divide-white/30">
+            <div className="max-w-7xl mx-auto">
+              {/* Mobile Layout: Stacked Grid */}
+              <div className="grid grid-cols-2 gap-2 sm:hidden text-[9px] font-medium">
                 {tenant?.gstNumber && (
-                  <div className="flex items-center space-x-1.5 opacity-95 hover:opacity-100 transition-opacity pr-6">
-                    <FileText className="w-3.5 h-3.5 text-blue-100" />
-                    <span className="text-blue-100 font-medium">GST NO:</span>
-                    <span className="font-bold tracking-normal uppercase">{tenant.gstNumber}</span>
+                  <div className="flex items-center gap-1 truncate">
+                    <FileText className="w-3 h-3 text-blue-100 flex-shrink-0" />
+                    <span className="text-blue-100 truncate">GST:</span>
+                    <span className="font-bold uppercase truncate">{tenant.gstNumber}</span>
                   </div>
                 )}
                 {tenant?.drugLicNumber && (
-                  <div className="flex items-center space-x-1.5 opacity-95 hover:opacity-100 transition-opacity pl-6">
-                    <ShieldCheck className="w-3.5 h-3.5 text-blue-100" />
-                    <span className="text-blue-100 font-medium">DRUG LICENCE NO:</span>
-                    <span className="font-bold tracking-normal uppercase">{tenant.drugLicNumber}</span>
+                  <div className="flex items-center gap-1 truncate">
+                    <ShieldCheck className="w-3 h-3 text-blue-100 flex-shrink-0" />
+                    <span className="text-blue-100 truncate">LIC:</span>
+                    <span className="font-bold uppercase truncate">{tenant.drugLicNumber}</span>
+                  </div>
+                )}
+                {tenant?.pharmacistName && (
+                  <div className="flex items-center gap-1 truncate">
+                    <UserCheck className="w-3 h-3 text-blue-100 flex-shrink-0" />
+                    <span className="text-blue-100 truncate">PHARM:</span>
+                    <span className="font-bold uppercase truncate">{tenant.pharmacistName}</span>
+                  </div>
+                )}
+                {tenant?.pharmacistRegNumber && (
+                  <div className="flex items-center gap-1 truncate">
+                    <FileText className="w-3 h-3 text-blue-100 flex-shrink-0" />
+                    <span className="text-blue-100 truncate">REG:</span>
+                    <span className="font-bold uppercase truncate">{tenant.pharmacistRegNumber}</span>
                   </div>
                 )}
               </div>
 
-              {/* Right Side: Professional Details */}
-              <div className="flex items-center divide-x divide-white/30">
-                {tenant?.pharmacistName && (
-                  <div className="flex items-center space-x-1.5 opacity-95 hover:opacity-100 transition-opacity pr-6">
-                    <UserCheck className="w-3.5 h-3.5 text-blue-100" />
-                    <span className="text-blue-100 font-medium tracking-tight">PHARMACIST:</span>
-                    <span className="font-extrabold tracking-normal uppercase">{tenant.pharmacistName}</span>
-                  </div>
-                )}
-                {tenant?.pharmacistRegNumber && (
-                  <div className="flex items-center space-x-1.5 opacity-95 hover:opacity-100 transition-opacity pl-6">
-                    <span className="text-blue-100 font-medium tracking-tight">REG NO:</span>
-                    <span className="font-bold tracking-normal uppercase">{tenant.pharmacistRegNumber}</span>
-                  </div>
-                )}
+              {/* Desktop Layout: Horizontal */}
+              <div className="hidden sm:flex flex-row justify-between items-center gap-3 text-[11px] font-semibold tracking-wider">
+                {/* Left Side: Business Licenses */}
+                <div className="flex items-center divide-x divide-white/30">
+                  {tenant?.gstNumber && (
+                    <div className="flex items-center space-x-1.5 opacity-95 hover:opacity-100 transition-opacity pr-6">
+                      <FileText className="w-3.5 h-3.5 text-blue-100" />
+                      <span className="text-blue-100 font-medium">GST NO:</span>
+                      <span className="font-bold tracking-normal uppercase">{tenant.gstNumber}</span>
+                    </div>
+                  )}
+                  {tenant?.drugLicNumber && (
+                    <div className="flex items-center space-x-1.5 opacity-95 hover:opacity-100 transition-opacity pl-6">
+                      <ShieldCheck className="w-3.5 h-3.5 text-blue-100" />
+                      <span className="text-blue-100 font-medium">DRUG LICENCE NO:</span>
+                      <span className="font-bold tracking-normal uppercase">{tenant.drugLicNumber}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Right Side: Professional Details */}
+                <div className="flex items-center divide-x divide-white/30">
+                  {tenant?.pharmacistName && (
+                    <div className="flex items-center space-x-1.5 opacity-95 hover:opacity-100 transition-opacity pr-6">
+                      <UserCheck className="w-3.5 h-3.5 text-blue-100" />
+                      <span className="text-blue-100 font-medium tracking-tight">PHARMACIST:</span>
+                      <span className="font-extrabold tracking-normal uppercase">{tenant.pharmacistName}</span>
+                    </div>
+                  )}
+                  {tenant?.pharmacistRegNumber && (
+                    <div className="flex items-center space-x-1.5 opacity-95 hover:opacity-100 transition-opacity pl-6">
+                      <span className="text-blue-100 font-medium tracking-tight">REG NO:</span>
+                      <span className="font-bold tracking-normal uppercase">{tenant.pharmacistRegNumber}</span>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
