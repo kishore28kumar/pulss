@@ -461,18 +461,34 @@ export default function EditTenantModal({ tenantId, tenantName, staffMember, onC
                     </button>
                   </div>
                   {shopFrontPhoto && (
-                    <div className="relative aspect-video rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
-                      <img src={shopFrontPhoto} alt="Shop Front" className="w-full h-full object-cover" />
+                    <div className="relative aspect-video rounded-lg overflow-hidden border-2 border-blue-200 dark:border-blue-800 bg-gray-100 dark:bg-gray-800">
+                      <img 
+                        src={shopFrontPhoto} 
+                        alt="Shop Front Preview" 
+                        className="w-full h-full object-cover"
+                        onLoad={() => {
+                          // Image loaded successfully
+                        }}
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = 'https://via.placeholder.com/800x450?text=Image+Not+Found';
+                          target.onerror = null; // Prevent infinite loop
+                        }}
+                      />
                       <button
                         type="button"
                         onClick={() => {
                           setShopFrontPhoto('');
                           setValue('shopFrontPhoto', '');
                         }}
-                        className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition"
+                        className="absolute top-1 right-1 bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 transition z-10 shadow-lg"
+                        title="Remove image"
                       >
                         <X className="w-3 h-3" />
                       </button>
+                      <div className="absolute bottom-1 left-1 bg-black/50 text-white text-xs px-2 py-0.5 rounded">
+                        Preview
+                      </div>
                     </div>
                   )}
                 </div>
@@ -543,18 +559,34 @@ export default function EditTenantModal({ tenantId, tenantName, staffMember, onC
                     </button>
                   </div>
                   {ownerPhoto && (
-                    <div className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
-                      <img src={ownerPhoto} alt="Owner" className="w-full h-full object-cover" />
+                    <div className="relative aspect-square rounded-lg overflow-hidden border-2 border-blue-200 dark:border-blue-800 bg-gray-100 dark:bg-gray-800">
+                      <img 
+                        src={ownerPhoto} 
+                        alt="Owner Photo Preview" 
+                        className="w-full h-full object-cover"
+                        onLoad={() => {
+                          // Image loaded successfully
+                        }}
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = 'https://via.placeholder.com/400x400?text=Image+Not+Found';
+                          target.onerror = null; // Prevent infinite loop
+                        }}
+                      />
                       <button
                         type="button"
                         onClick={() => {
                           setOwnerPhoto('');
                           setValue('ownerPhoto', '');
                         }}
-                        className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition"
+                        className="absolute top-1 right-1 bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 transition z-10 shadow-lg"
+                        title="Remove image"
                       >
                         <X className="w-3 h-3" />
                       </button>
+                      <div className="absolute bottom-1 left-1 bg-black/50 text-white text-xs px-2 py-0.5 rounded">
+                        Preview
+                      </div>
                     </div>
                   )}
                 </div>

@@ -368,6 +368,7 @@ export const createOrder = asyncHandler(
         billingAddress: billingAddress,
         customerNotes: data.customerNote,
         prescriptionUrl: data.prescriptionUrl,
+        paymentScreenshot: data.paymentScreenshot || null,
         updatedAt: new Date(),
         order_items: {
           create: orderItems.map((item: any) => ({

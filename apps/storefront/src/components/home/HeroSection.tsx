@@ -21,6 +21,7 @@ export default function HeroSection({ isAuthenticated, customerName }: HeroSecti
 
   // Use tenant hero images, fallback to default images
   const tenantHeroImages = tenant?.heroImages || [];
+  const tenantHeroKeywords = tenant?.heroImageKeywords || [];
   const hasHeroImages = tenantHeroImages.length > 0;
 
   // Default images if no hero images uploaded
@@ -131,10 +132,18 @@ export default function HeroSection({ isAuthenticated, customerName }: HeroSecti
               <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-2xl shadow-blue-500/20 group">
                 {/* Images */}
                 {displayImages.map((img: string, idx: number) => {
+                  const keyword = hasHeroImages && tenantHeroKeywords[idx] ? tenantHeroKeywords[idx] : null;
+                  const href = keyword 
+                    ? `/${storeName}/products?search=${encodeURIComponent(keyword)}`
+                    : `/${storeName}/products`;
+                  
                   return (
-                    <div
+                    <Link
                       key={idx}
-                      className={`absolute inset-0 bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-100 transition-opacity duration-1000 ease-in-out ${idx === currentSlide ? 'opacity-100 z-10' : 'opacity-0 z-0'
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`absolute inset-0 bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-100 transition-opacity duration-1000 ease-in-out cursor-pointer ${idx === currentSlide ? 'opacity-100 z-10' : 'opacity-0 z-0'
                         }`}
                     >
                       <Image
@@ -145,7 +154,7 @@ export default function HeroSection({ isAuthenticated, customerName }: HeroSecti
                         priority={idx === 0}
                         sizes="(max-width: 768px) 100vw, 50vw"
                       />
-                    </div>
+                    </Link>
                   );
                 })}
 

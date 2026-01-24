@@ -82,10 +82,13 @@ export interface CreateTenantDTO {
   country?: string;
   returnPolicy?: string;
   heroImages?: string[];
+  heroImageKeywords?: string[];
   primaryContactWhatsApp?: string;
   isPrimaryContactWhatsApp?: boolean;
   shopFrontPhoto?: string;
   ownerPhoto?: string;
+  upiId?: string;
+  upiScannerPhoto?: string;
   // Admin user
   adminEmail: string;
   adminPassword: string;
@@ -109,10 +112,13 @@ export interface UpdateTenantDTO {
   returnPolicy?: string;
   pharmacistPhoto?: string;
   heroImages?: string[];
+  heroImageKeywords?: string[];
   primaryContactWhatsApp?: string;
   isPrimaryContactWhatsApp?: boolean;
   shopFrontPhoto?: string;
   ownerPhoto?: string;
+  upiId?: string;
+  upiScannerPhoto?: string;
 }
 
 // ============================================
@@ -239,6 +245,7 @@ export interface CreateOrderDTO {
   paymentMethod: string;
   customerNote?: string;
   prescriptionUrl?: string;
+  paymentScreenshot?: string;
 }
 
 export interface UpdateOrderStatusDTO {

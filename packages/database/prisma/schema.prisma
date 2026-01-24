@@ -241,6 +241,7 @@ model orders {
   shippingAddress Json?
   billingAddress  Json?
   prescriptionUrl String?
+  paymentScreenshot String?
   customerNotes   String?
   adminNotes      String?
   trackingNumber  String?
@@ -375,12 +376,15 @@ model tenants {
   scheduleDrugEligible Boolean        @default(false)
   returnPolicy        String?         @db.Text
   heroImages         String[]         @default([])
+  heroImageKeywords  String[]         @default([])
   logoUrl            String?
   faviconUrl         String?
   primaryContactWhatsApp String?
   isPrimaryContactWhatsApp Boolean    @default(false)
   shopFrontPhoto     String?
   ownerPhoto         String?
+  upiId              String?
+  upiScannerPhoto    String?
   primaryColor       String?          @default("#3B82F6")
   secondaryColor     String?          @default("#8B5CF6")
   features           Json?

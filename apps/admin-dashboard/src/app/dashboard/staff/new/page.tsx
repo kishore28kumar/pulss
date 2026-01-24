@@ -39,9 +39,27 @@ const inviteSchema = z.object({
   returnPolicy: z.string().optional(),
   heroImages: z.array(z.string().url('Must be a valid URL')).max(10, 'Maximum 10 hero images allowed').optional(),
   isPrimaryContactWhatsApp: z.boolean().default(false).optional(),
-  primaryContactWhatsApp: z.string().regex(/^\d{10}$/, 'WhatsApp number must be exactly 10 digits').optional().or(z.literal('')),
+  primaryContactWhatsApp: z.string().optional().or(z.literal('')),
   shopFrontPhoto: z.string().url('Must be a valid URL').optional().or(z.literal('')),
   ownerPhoto: z.string().url('Must be a valid URL').optional().or(z.literal('')),
+  upiId: z.string()
+    .min(1, 'UPI ID is required')
+    .regex(/^[a-zA-Z0-9._-]+@[a-zA-Z0-9]+$/, 'UPI ID must be an alphanumeric string with an "@" symbol (e.g., username@bankname)')
+    .optional()
+    .or(z.literal('')),
+  upiScannerPhoto: z.string().url('Must be a valid URL').optional().or(z.literal('')),
+}).superRefine((data, ctx) => {
+  // Only validate WhatsApp number if checkbox is unchecked and field has a value
+  if (!data.isPrimaryContactWhatsApp && data.primaryContactWhatsApp && data.primaryContactWhatsApp.trim() !== '') {
+    const trimmed = data.primaryContactWhatsApp.trim().replace(/\D/g, '');
+    if (trimmed.length !== 10) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['primaryContactWhatsApp'],
+        message: 'WhatsApp number must be exactly 10 digits',
+      });
+    }
+  }
 });
 
 type InviteFormData = z.infer<typeof inviteSchema>;
@@ -122,7 +140,11 @@ export default function NewStaffPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [storefrontUrl, setStorefrontUrl] = useState<string>('');
   const [heroImages, setHeroImages] = useState<string[]>([]);
+  const [heroImageKeywords, setHeroImageKeywords] = useState<string[]>([]);
   const [uploadingHeroImage, setUploadingHeroImage] = useState(false);
+  const [showHeroImageModal, setShowHeroImageModal] = useState(false);
+  const [heroImageUrlInput, setHeroImageUrlInput] = useState('');
+  const [heroImageKeywordInput, setHeroImageKeywordInput] = useState('');
   const heroImageFileInputRef = useRef<HTMLInputElement>(null);
   const [shopFrontPhoto, setShopFrontPhoto] = useState<string>('');
   const [ownerPhoto, setOwnerPhoto] = useState<string>('');
@@ -130,6 +152,10 @@ export default function NewStaffPage() {
   const [uploadingOwnerPhoto, setUploadingOwnerPhoto] = useState(false);
   const shopFrontPhotoInputRef = useRef<HTMLInputElement>(null);
   const ownerPhotoInputRef = useRef<HTMLInputElement>(null);
+  const [upiId, setUpiId] = useState<string>('');
+  const [upiScannerPhoto, setUpiScannerPhoto] = useState<string>('');
+  const [uploadingUpiScannerPhoto, setUploadingUpiScannerPhoto] = useState(false);
+  const upiScannerPhotoInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -169,6 +195,8 @@ export default function NewStaffPage() {
       primaryContactWhatsApp: '',
       shopFrontPhoto: '',
       ownerPhoto: '',
+      upiId: '',
+      upiScannerPhoto: '',
     },
   });
 
@@ -198,8 +226,12 @@ export default function NewStaffPage() {
       primaryContactWhatsApp: '',
       shopFrontPhoto: '',
       ownerPhoto: '',
+      upiId: '',
+      upiScannerPhoto: '',
     });
     setHeroImages([]);
+    setUpiId('');
+    setUpiScannerPhoto('');
     setShopFrontPhoto('');
     setOwnerPhoto('');
   }, [reset]);
@@ -257,7 +289,9 @@ export default function NewStaffPage() {
 
       const uploadedUrl = response.data.data.url;
       const updatedImages = [...heroImages, uploadedUrl];
+      const updatedKeywords = [...heroImageKeywords, '']; // Add empty keyword for uploaded image
       setHeroImages(updatedImages);
+      setHeroImageKeywords(updatedKeywords);
       setValue('heroImages', updatedImages);
       toast.success('Hero image uploaded successfully');
 
@@ -279,27 +313,51 @@ export default function NewStaffPage() {
   };
 
   const handleAddHeroImageUrl = () => {
-    const url = prompt('Enter image URL:');
-    if (url) {
-      try {
-        new URL(url); // Validate URL
-        if (heroImages.length >= 10) {
-          toast.error('Maximum 10 hero images allowed');
-          return;
-        }
-        const updatedImages = [...heroImages, url];
-        setHeroImages(updatedImages);
-        setValue('heroImages', updatedImages);
-        toast.success('Hero image URL added');
-      } catch {
-        toast.error('Invalid URL');
-      }
+    setHeroImageUrlInput('');
+    setHeroImageKeywordInput('');
+    setShowHeroImageModal(true);
+  };
+
+  const handleSubmitHeroImage = () => {
+    const url = heroImageUrlInput.trim();
+    const keyword = heroImageKeywordInput.trim();
+
+    if (!url) {
+      toast.error('Please enter an image URL');
+      return;
     }
+
+    try {
+      new URL(url); // Validate URL
+      if (heroImages.length >= 10) {
+        toast.error('Maximum 10 hero images allowed');
+        return;
+      }
+      const updatedImages = [...heroImages, url];
+      const updatedKeywords = [...heroImageKeywords, keyword || ''];
+      setHeroImages(updatedImages);
+      setHeroImageKeywords(updatedKeywords);
+      setValue('heroImages', updatedImages);
+      setShowHeroImageModal(false);
+      setHeroImageUrlInput('');
+      setHeroImageKeywordInput('');
+      toast.success('Hero image added successfully');
+    } catch {
+      toast.error('Invalid URL');
+    }
+  };
+
+  const handleCancelHeroImageModal = () => {
+    setShowHeroImageModal(false);
+    setHeroImageUrlInput('');
+    setHeroImageKeywordInput('');
   };
 
   const handleRemoveHeroImage = (index: number) => {
     const updatedImages = heroImages.filter((_, i) => i !== index);
+    const updatedKeywords = heroImageKeywords.filter((_, i) => i !== index);
     setHeroImages(updatedImages);
+    setHeroImageKeywords(updatedKeywords);
     setValue('heroImages', updatedImages);
     toast.success('Hero image removed');
   };
@@ -344,10 +402,13 @@ export default function NewStaffPage() {
         payload.scheduleDrugEligible = data.scheduleDrugEligible ?? false;
         payload.returnPolicy = data.returnPolicy || DEFAULT_RETURN_POLICY;
         payload.heroImages = heroImages.length > 0 ? heroImages : [];
+        payload.heroImageKeywords = heroImageKeywords.length > 0 ? heroImageKeywords : [];
         payload.isPrimaryContactWhatsApp = data.isPrimaryContactWhatsApp ?? false;
         payload.primaryContactWhatsApp = data.isPrimaryContactWhatsApp ? data.phone : (data.primaryContactWhatsApp || undefined);
         payload.shopFrontPhoto = shopFrontPhoto || undefined;
         payload.ownerPhoto = ownerPhoto || undefined;
+        payload.upiId = upiId || undefined;
+        payload.upiScannerPhoto = upiScannerPhoto || undefined;
       }
 
       return await api.post('/staff/invite', payload);
@@ -376,12 +437,125 @@ export default function NewStaffPage() {
       router.push('/dashboard/staff');
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.error || error.message || 'Failed to create user');
+      let errorMessage = 'Failed to create user';
+      const errorMessages: string[] = [];
+
+      if (error.response) {
+        // API returned an error response
+        const responseData = error.response.data;
+        
+        // Check for error message in different possible formats
+        if (responseData?.error) {
+          // Single error message
+          if (typeof responseData.error === 'string') {
+            errorMessages.push(responseData.error);
+          } else if (Array.isArray(responseData.error)) {
+            // Array of error messages
+            errorMessages.push(...responseData.error);
+          } else if (typeof responseData.error === 'object') {
+            // Object with field errors
+            Object.entries(responseData.error).forEach(([field, msg]: [string, any]) => {
+              const fieldName = field
+                .replace(/([A-Z])/g, ' $1')
+                .replace(/^./, str => str.toUpperCase())
+                .trim();
+              errorMessages.push(`${fieldName}: ${msg}`);
+            });
+          }
+        } else if (responseData?.message) {
+          errorMessages.push(responseData.message);
+        } else if (responseData?.errors) {
+          // Handle validation errors (array or object)
+          if (Array.isArray(responseData.errors)) {
+            errorMessages.push(...responseData.errors);
+          } else if (typeof responseData.errors === 'object') {
+            Object.entries(responseData.errors).forEach(([field, msg]: [string, any]) => {
+              const fieldName = field
+                .replace(/([A-Z])/g, ' $1')
+                .replace(/^./, str => str.toUpperCase())
+                .trim();
+              if (Array.isArray(msg)) {
+                msg.forEach((m: string) => errorMessages.push(`${fieldName}: ${m}`));
+              } else {
+                errorMessages.push(`${fieldName}: ${msg}`);
+              }
+            });
+          }
+        } else if (typeof responseData === 'string') {
+          errorMessages.push(responseData);
+        }
+      } else if (error.message) {
+        // Network error or other error
+        if (error.message.includes('Network Error') || error.message.includes('Failed to fetch')) {
+          errorMessages.push('Network error: Unable to connect to server. Please check your internet connection.');
+        } else {
+          errorMessages.push(error.message);
+        }
+      } else if (error.request) {
+        // Request was made but no response received
+        errorMessages.push('Network error: No response from server. Please check your connection.');
+      }
+
+      // Show error toast with all messages
+      if (errorMessages.length > 0) {
+        if (errorMessages.length === 1) {
+          toast.error(errorMessages[0]);
+        } else {
+          // Format multiple errors with bullet points
+          toast.error(
+            <div className="space-y-1">
+              <div className="font-semibold">The following errors occurred:</div>
+              <ul className="list-disc list-inside space-y-0.5 text-sm">
+                {errorMessages.map((msg, idx) => (
+                  <li key={idx}>{msg}</li>
+                ))}
+              </ul>
+            </div>,
+            {
+              duration: 5000,
+            }
+          );
+        }
+      } else {
+        toast.error(errorMessage);
+      }
     },
   });
 
   const onSubmit = (data: InviteFormData) => {
     mutation.mutate(data);
+  };
+
+  const onValidationError = (errors: any) => {
+    // Extract all validation errors
+    const errorMessages: string[] = [];
+    
+    Object.entries(errors).forEach(([field, error]: [string, any]) => {
+      if (error?.message) {
+        // Format field name (e.g., "firstName" -> "First Name")
+        const fieldName = field
+          .replace(/([A-Z])/g, ' $1')
+          .replace(/^./, str => str.toUpperCase())
+          .trim();
+        errorMessages.push(`${fieldName}: ${error.message}`);
+      }
+    });
+
+    if (errorMessages.length > 0) {
+      toast.error(
+        <div className="space-y-1">
+          <div className="font-semibold">Please fix the following errors:</div>
+          <ul className="list-disc list-inside space-y-0.5 text-sm">
+            {errorMessages.map((msg, idx) => (
+              <li key={idx}>{msg}</li>
+            ))}
+          </ul>
+        </div>,
+        {
+          duration: 5000,
+        }
+      );
+    }
   };
 
   const roleLabel = mounted && userRole === 'SUPER_ADMIN' ? 'Tenant' : 'Staff';
@@ -409,7 +583,7 @@ export default function NewStaffPage() {
 
       {/* Form */}
       <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={handleSubmit(onSubmit, onValidationError)} className="space-y-6">
           {/* Email */}
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -504,15 +678,32 @@ export default function NewStaffPage() {
                     id="primaryContactWhatsApp"
                     type="tel"
                     {...register('primaryContactWhatsApp', { 
-                      required: isCreatingAdmin && !watch('isPrimaryContactWhatsApp'),
-                      pattern: {
-                        value: /^\d{10}$/,
-                        message: 'WhatsApp number must be exactly 10 digits'
+                      required: isCreatingAdmin && !watch('isPrimaryContactWhatsApp') ? 'WhatsApp number is required' : false,
+                      validate: (value) => {
+                        // Only validate if checkbox is unchecked and field has value
+                        if (!watch('isPrimaryContactWhatsApp')) {
+                          if (!value || value.trim() === '') {
+                            // Required check will handle empty case
+                            return true;
+                          }
+                          const trimmed = value.trim().replace(/\D/g, '');
+                          if (trimmed.length !== 10) {
+                            return 'WhatsApp number must be exactly 10 digits';
+                          }
+                        }
+                        return true;
                       }
                     })}
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                     placeholder="1234567890"
                     maxLength={10}
+                    onChange={(e) => {
+                      // Remove any non-digit characters and limit to 10 digits
+                      const value = e.target.value.replace(/\D/g, '').slice(0, 10);
+                      e.target.value = value;
+                      // Trigger react-hook-form onChange
+                      register('primaryContactWhatsApp').onChange(e);
+                    }}
                   />
                   {errors.primaryContactWhatsApp && (
                     <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.primaryContactWhatsApp.message}</p>
@@ -965,6 +1156,11 @@ export default function NewStaffPage() {
                             <div className="absolute top-2 left-2 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded">
                               {index + 1}
                             </div>
+                            {heroImageKeywords[index] && (
+                              <div className="absolute bottom-2 left-2 right-2 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded truncate" title={heroImageKeywords[index]}>
+                                🔍 {heroImageKeywords[index]}
+                              </div>
+                            )}
                           </div>
                         </div>
                       ))}
@@ -1071,18 +1267,34 @@ export default function NewStaffPage() {
                       </div>
                       {/* Preview */}
                       {shopFrontPhoto && (
-                        <div className="relative aspect-video rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
-                          <img src={shopFrontPhoto} alt="Shop Front" className="w-full h-full object-cover" />
+                        <div className="relative aspect-video rounded-lg overflow-hidden border-2 border-blue-200 dark:border-blue-800 bg-gray-100 dark:bg-gray-800">
+                          <img 
+                            src={shopFrontPhoto} 
+                            alt="Shop Front Preview" 
+                            className="w-full h-full object-cover"
+                            onLoad={() => {
+                              // Image loaded successfully
+                            }}
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = 'https://via.placeholder.com/800x450?text=Image+Not+Found';
+                              target.onerror = null; // Prevent infinite loop
+                            }}
+                          />
                           <button
                             type="button"
                             onClick={() => {
                               setShopFrontPhoto('');
                               setValue('shopFrontPhoto', '');
                             }}
-                            className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition"
+                            className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 transition z-10 shadow-lg"
+                            title="Remove image"
                           >
                             <X className="w-4 h-4" />
                           </button>
+                          <div className="absolute bottom-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
+                            Preview
+                          </div>
                         </div>
                       )}
                     </div>
@@ -1159,18 +1371,34 @@ export default function NewStaffPage() {
                       </div>
                       {/* Preview */}
                       {ownerPhoto && (
-                        <div className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
-                          <img src={ownerPhoto} alt="Owner" className="w-full h-full object-cover" />
+                        <div className="relative aspect-square rounded-lg overflow-hidden border-2 border-blue-200 dark:border-blue-800 bg-gray-100 dark:bg-gray-800">
+                          <img 
+                            src={ownerPhoto} 
+                            alt="Owner Photo Preview" 
+                            className="w-full h-full object-cover"
+                            onLoad={() => {
+                              // Image loaded successfully
+                            }}
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = 'https://via.placeholder.com/400x400?text=Image+Not+Found';
+                              target.onerror = null; // Prevent infinite loop
+                            }}
+                          />
                           <button
                             type="button"
                             onClick={() => {
                               setOwnerPhoto('');
                               setValue('ownerPhoto', '');
                             }}
-                            className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition"
+                            className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 transition z-10 shadow-lg"
+                            title="Remove image"
                           >
                             <X className="w-4 h-4" />
                           </button>
+                          <div className="absolute bottom-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
+                            Preview
+                          </div>
                         </div>
                       )}
                     </div>
@@ -1180,6 +1408,127 @@ export default function NewStaffPage() {
                   </div>
                 </div>
               </div>
+
+              {/* UPI Payment Details */}
+              {userRole === 'SUPER_ADMIN' && (
+                <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
+                    <ShieldCheck className="w-5 h-5 mr-2" />
+                    UPI Payment Details
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                    Add UPI ID and scanner photo. These will be displayed to customers when they select online payment.
+                  </p>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    {/* UPI ID */}
+                    <div>
+                      <label htmlFor="upiId" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        UPI ID <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        id="upiId"
+                        type="text"
+                        {...register('upiId')}
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                        placeholder="username@bankname (e.g., john@paytm)"
+                        onChange={(e) => setUpiId(e.target.value)}
+                      />
+                      {errors.upiId && (
+                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.upiId.message}</p>
+                      )}
+                    </div>
+
+                    {/* UPI Scanner Photo */}
+                    <div>
+                      <label htmlFor="upiScannerPhoto" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        UPI Scanner Photo (QR Code)
+                      </label>
+                      <div className="space-y-2">
+                        {/* URL Input */}
+                        <input
+                          id="upiScannerPhoto"
+                          type="url"
+                          {...register('upiScannerPhoto')}
+                          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 text-sm"
+                          placeholder="https://example.com/upi-qr.jpg"
+                          onChange={(e) => setUpiScannerPhoto(e.target.value)}
+                        />
+                        {/* File Upload */}
+                        <div className="p-4 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-center">
+                          <input
+                            type="file"
+                            ref={upiScannerPhotoInputRef}
+                            className="hidden"
+                            accept="image/jpeg,image/jpg,image/png"
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                if (file.size > 5 * 1024 * 1024) {
+                                  toast.error('Image size must be less than 5MB');
+                                  return;
+                                }
+                                setUploadingUpiScannerPhoto(true);
+                                try {
+                                  const formData = new FormData();
+                                  formData.append('file', file);
+                                  const response = await api.post('/upload', formData, {
+                                    headers: { 'Content-Type': 'multipart/form-data' },
+                                  });
+                                  const uploadedUrl = response.data.data.url;
+                                  setUpiScannerPhoto(uploadedUrl);
+                                  setValue('upiScannerPhoto', uploadedUrl);
+                                  toast.success('UPI scanner photo uploaded successfully');
+                                  if (upiScannerPhotoInputRef.current) upiScannerPhotoInputRef.current.value = '';
+                                } catch (error: any) {
+                                  toast.error(error.response?.data?.error || 'Failed to upload image');
+                                } finally {
+                                  setUploadingUpiScannerPhoto(false);
+                                }
+                              }
+                            }}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => upiScannerPhotoInputRef.current?.click()}
+                            disabled={uploadingUpiScannerPhoto}
+                            className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                          >
+                            {uploadingUpiScannerPhoto ? (
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            ) : (
+                              <Upload className="w-4 h-4 mr-2" />
+                            )}
+                            {uploadingUpiScannerPhoto ? 'Uploading...' : 'Upload QR Code'}
+                          </button>
+                          <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                            Max 5MB. JPG, PNG.
+                          </p>
+                        </div>
+                        {/* Preview */}
+                        {upiScannerPhoto && (
+                          <div className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 max-w-xs">
+                            <img src={upiScannerPhoto} alt="UPI QR Code" className="w-full h-full object-cover" />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setUpiScannerPhoto('');
+                                setValue('upiScannerPhoto', '');
+                              }}
+                              className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                      {errors.upiScannerPhoto && (
+                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.upiScannerPhoto.message}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
             </>
           )}
 
@@ -1266,6 +1615,114 @@ export default function NewStaffPage() {
           </div>
         </form>
       </div>
+
+      {/* Hero Image Modal */}
+      {showHeroImageModal && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex min-h-screen items-center justify-center p-4">
+            {/* Backdrop */}
+            <div 
+              className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" 
+              onClick={handleCancelHeroImageModal}
+            />
+
+            {/* Modal */}
+            <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md m-4 transition-colors">
+              {/* Header */}
+              <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Add Hero Image</h2>
+                <button
+                  onClick={handleCancelHeroImageModal}
+                  className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="p-4 sm:p-6 space-y-4">
+                {/* Image URL */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Image URL <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="url"
+                    value={heroImageUrlInput}
+                    onChange={(e) => setHeroImageUrlInput(e.target.value)}
+                    placeholder="https://example.com/image.jpg"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleSubmitHeroImage();
+                      }
+                    }}
+                    autoFocus
+                  />
+                </div>
+
+                {/* Keyword */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Search Keyword <span className="text-gray-400 text-xs">(Optional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={heroImageKeywordInput}
+                    onChange={(e) => setHeroImageKeywordInput(e.target.value)}
+                    placeholder="e.g., vitamins, skincare, medicines"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleSubmitHeroImage();
+                      }
+                    }}
+                  />
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    When customers click this image, they'll be taken to products filtered by this keyword. Leave empty to go to shop page.
+                  </p>
+                </div>
+
+                {/* Preview */}
+                {heroImageUrlInput && (
+                  <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                    <div className="aspect-video bg-gray-100 dark:bg-gray-800 relative">
+                      <img
+                        src={heroImageUrlInput}
+                        alt="Preview"
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="225"%3E%3Crect fill="%23e5e7eb" width="400" height="225"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%239ca3af"%3EInvalid Image URL%3C/text%3E%3C/svg%3E';
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Footer */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 p-4 sm:p-6 border-t border-gray-200 dark:border-gray-700">
+                <button
+                  onClick={handleCancelHeroImageModal}
+                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSubmitHeroImage}
+                  disabled={!heroImageUrlInput.trim()}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Add Image
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
