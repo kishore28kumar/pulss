@@ -93,7 +93,7 @@ export function BroadcastProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(false);
       isLoadingRef.current = false;
     }
-  }, []);
+  }, [user?.id, user?.role]);
 
   // Mark broadcast as read
   const markAsRead = useCallback(async (broadcastId: string) => {

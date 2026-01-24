@@ -794,7 +794,7 @@ export default function BulkImportPreviewPage() {
                 Upload Errors Detected
               </h3>
               <p className="text-sm text-red-700 dark:text-red-300 mb-3">
-                {invalidCount} product(s) failed to upload. Please review the errors below, correct them, and click "Reupload Failed Products" to try again.
+                {invalidCount} product(s) failed to upload. Please review the errors below, correct them, and click &quot;Reupload Failed Products&quot; to try again.
               </p>
               <div className="space-y-2">
                 {products

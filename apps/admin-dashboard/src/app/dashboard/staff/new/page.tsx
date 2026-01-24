@@ -437,7 +437,7 @@ export default function NewStaffPage() {
       router.push('/dashboard/staff');
     },
     onError: (error: any) => {
-      let errorMessage = 'Failed to create user';
+      const errorMessage = 'Failed to create user';
       const errorMessages: string[] = [];
 
       if (error.response) {
@@ -1681,7 +1681,7 @@ export default function NewStaffPage() {
                     }}
                   />
                   <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                    When customers click this image, they'll be taken to products filtered by this keyword. Leave empty to go to shop page.
+                    When customers click this image, they&apos;ll be taken to products filtered by this keyword. Leave empty to go to shop page.
                   </p>
                 </div>
 
