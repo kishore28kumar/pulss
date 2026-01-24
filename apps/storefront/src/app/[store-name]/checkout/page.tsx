@@ -207,6 +207,19 @@ function CheckoutPageContent() {
       }
     }
 
+    // If online payment (UPI) is selected, redirect to UPI payment page
+    if (paymentMethod === 'ONL') {
+      // Save address to localStorage for UPI page
+      localStorage.setItem('customerAddress', JSON.stringify(shippingAddress));
+      if (!sameAsShipping) {
+        localStorage.setItem('billingAddress', JSON.stringify(billingAddress));
+      } else {
+        localStorage.removeItem('billingAddress');
+      }
+      router.push(getPath('/checkout/upi-payment'));
+      return;
+    }
+
     createOrderMutation.mutate();
   };
 
@@ -592,7 +605,8 @@ function CheckoutPageContent() {
                     />
                     <div className="ml-4 flex-1">
                       <div className="font-semibold text-gray-900">Online Payment</div>
-                      <div className="text-sm text-gray-600">UPI, Net Banking, or Wallet</div>
+                      <div className="text-sm text-gray-600">UPI</div>
+                      {/* <div className="text-sm text-gray-600">UPI, Net Banking, or Wallet</div> */}
                     </div>
                   </label>
                 </div>

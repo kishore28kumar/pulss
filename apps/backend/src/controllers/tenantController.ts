@@ -78,6 +78,14 @@ export const createTenant = asyncHandler(
   async (req: Request, res: Response) => {
     const data: CreateTenantDTO = req.body;
 
+    // Validate UPI ID format if provided
+    if (data.upiId && data.upiId.trim() !== '') {
+      const upiIdRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9]+$/;
+      if (!upiIdRegex.test(data.upiId)) {
+        throw new AppError('UPI ID must be an alphanumeric string with an "@" symbol (e.g., username@bankname)', 400);
+      }
+    }
+
     // Check if slug already exists
     const existingTenant = await prisma.tenants.findUnique({
       where: { slug: data.slug },
@@ -114,10 +122,13 @@ export const createTenant = asyncHandler(
         country: data.country || 'India',
         returnPolicy: data.returnPolicy || null,
         heroImages: data.heroImages && Array.isArray(data.heroImages) ? data.heroImages : [],
+        heroImageKeywords: data.heroImageKeywords && Array.isArray(data.heroImageKeywords) ? data.heroImageKeywords : [],
         primaryContactWhatsApp: data.primaryContactWhatsApp || null,
         isPrimaryContactWhatsApp: data.isPrimaryContactWhatsApp ?? false,
         shopFrontPhoto: data.shopFrontPhoto || null,
         ownerPhoto: data.ownerPhoto || null,
+        upiId: data.upiId || null,
+        upiScannerPhoto: data.upiScannerPhoto || null,
         status: 'ACTIVE',
         subscriptionPlan: 'FREE',
         updatedAt: new Date(),
@@ -158,6 +169,14 @@ export const updateTenant = asyncHandler(
   async (req: Request, res: Response) => {
     const { id } = req.params;
     const data: UpdateTenantDTO = req.body;
+
+    // Validate UPI ID format if provided
+    if (data.upiId && data.upiId.trim() !== '') {
+      const upiIdRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9]+$/;
+      if (!upiIdRegex.test(data.upiId)) {
+        throw new AppError('UPI ID must be an alphanumeric string with an "@" symbol (e.g., username@bankname)', 400);
+      }
+    }
 
     // Use select to exclude scheduleDrugEligible until migration is run
     // This prevents Prisma from trying to select a column that doesn't exist yet
@@ -213,6 +232,8 @@ export const updateTenant = asyncHandler(
       if (data.isPrimaryContactWhatsApp !== undefined) updateData.isPrimaryContactWhatsApp = data.isPrimaryContactWhatsApp;
       if (data.shopFrontPhoto !== undefined) updateData.shopFrontPhoto = data.shopFrontPhoto;
       if (data.ownerPhoto !== undefined) updateData.ownerPhoto = data.ownerPhoto;
+      if (data.heroImages !== undefined) updateData.heroImages = data.heroImages;
+      if (data.heroImageKeywords !== undefined) updateData.heroImageKeywords = data.heroImageKeywords;
     } else {
       // SUPER_ADMIN can update all fields including scheduleDrugEligible
       if (data.name !== undefined) updateData.name = data.name;
@@ -239,6 +260,8 @@ export const updateTenant = asyncHandler(
       if (data.isPrimaryContactWhatsApp !== undefined) updateData.isPrimaryContactWhatsApp = data.isPrimaryContactWhatsApp;
       if (data.shopFrontPhoto !== undefined) updateData.shopFrontPhoto = data.shopFrontPhoto;
       if (data.ownerPhoto !== undefined) updateData.ownerPhoto = data.ownerPhoto;
+      if (data.heroImages !== undefined) updateData.heroImages = data.heroImages;
+      if (data.heroImageKeywords !== undefined) updateData.heroImageKeywords = data.heroImageKeywords;
     }
 
     // Handle scheduleDrugEligible, returnPolicy, pharmacistPhoto, and new contact/media fields separately using raw SQL to avoid Prisma type issues
@@ -631,10 +654,13 @@ export const getTenantInfo = asyncHandler(
       scheduleDrugEligible: (tenant as any).scheduleDrugEligible ?? false,
       returnPolicy: (tenant as any).returnPolicy || null,
       heroImages: (tenant as any).heroImages || [],
+      heroImageKeywords: (tenant as any).heroImageKeywords || [],
       primaryContactWhatsApp: (tenant as any).primaryContactWhatsApp || null,
       isPrimaryContactWhatsApp: (tenant as any).isPrimaryContactWhatsApp ?? false,
       shopFrontPhoto: (tenant as any).shopFrontPhoto || null,
       ownerPhoto: (tenant as any).ownerPhoto || null,
+      upiId: (tenant as any).upiId || null,
+      upiScannerPhoto: (tenant as any).upiScannerPhoto || null,
       features: tenant.features,
       metadata: tenant.metadata,
     };

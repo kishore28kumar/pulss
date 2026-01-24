@@ -241,6 +241,7 @@ model orders {
   shippingAddress Json?
   billingAddress  Json?
   prescriptionUrl String?
+  paymentScreenshot String?
   customerNotes   String?
   adminNotes      String?
   trackingNumber  String?

@@ -29,10 +29,13 @@ interface Tenant {
   pharmacistRegNumber?: string;
   pharmacistPhoto?: string;
   heroImages?: string[];
+  heroImageKeywords?: string[];
   primaryContactWhatsApp?: string;
   isPrimaryContactWhatsApp?: boolean;
   shopFrontPhoto?: string;
   ownerPhoto?: string;
+  upiId?: string;
+  upiScannerPhoto?: string;
 }
 
 interface TenantContextType {

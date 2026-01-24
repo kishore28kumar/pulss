@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { X, Package, User, MapPin, CreditCard, FileText, Truck, Loader2 } from 'lucide-react';
+import { X, Package, User, MapPin, CreditCard, FileText, Truck, Loader2, Image as ImageIcon } from 'lucide-react';
 import api from '@/lib/api';
 import { formatCurrency, formatDateTime } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -24,6 +24,7 @@ interface Order {
   deliveredAt?: string;
   customerNotes?: string;
   adminNotes?: string;
+  paymentScreenshot?: string;
   shippingAddress?: any;
   billingAddress?: any;
   customers?: {
@@ -295,6 +296,38 @@ export default function OrderDetailsModal({ order, onClose, onUpdate }: OrderDet
                 </div>
               </div>
             </div>
+
+            {/* Payment Screenshot - Show for online payments */}
+            {order.paymentMethod === 'ONL' && order.paymentScreenshot && (
+              <div className="bg-green-50 dark:bg-green-900/10 rounded-lg p-4 transition-colors">
+                <div className="flex items-center space-x-2 mb-3">
+                  <ImageIcon className="w-5 h-5 text-green-600 dark:text-green-400" />
+                  <h3 className="font-semibold text-gray-900 dark:text-gray-100">Payment Screenshot</h3>
+                </div>
+                <div className="relative inline-block">
+                  <img
+                    src={order.paymentScreenshot}
+                    alt="Payment Screenshot"
+                    className="max-w-full h-auto rounded-lg border-2 border-gray-200 dark:border-gray-700 max-h-96 object-contain"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = 'https://via.placeholder.com/400?text=Image+Not+Found';
+                    }}
+                  />
+                  <a
+                    href={order.paymentScreenshot}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="absolute top-2 right-2 bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 transition opacity-0 hover:opacity-100"
+                    title="Open in new tab"
+                  >
+                    <ImageIcon className="w-4 h-4" />
+                  </a>
+                </div>
+                <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
+                  Customer uploaded payment screenshot for verification
+                </p>
+              </div>
+            )}
 
             {/* Customer Notes */}
             {order.customerNotes && (

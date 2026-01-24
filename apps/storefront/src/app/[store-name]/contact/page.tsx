@@ -1,12 +1,10 @@
 'use client';
 
-// import { useState } from 'react';
 import {
   Mail,
   Phone,
   MapPin,
   Clock,
-  // Send,
   MessageCircle,
   Headphones,
   Loader2,
@@ -14,7 +12,6 @@ import {
   MessageSquare
 } from 'lucide-react';
 import Image from 'next/image';
-// import { toast } from 'sonner';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { useTenant } from '@/contexts/TenantContext';
 

@@ -164,12 +164,21 @@ export const inviteStaff = asyncHandler(
       email, firstName, lastName, phone, role, password,
       storeName, storeRoute, address, city, state, country, pincode,
       gstNumber, drugLicNumber, pharmacistName, pharmacistRegNumber,
-      scheduleDrugEligible, returnPolicy, heroImages,
-      primaryContactWhatsApp, isPrimaryContactWhatsApp, shopFrontPhoto, ownerPhoto
+      scheduleDrugEligible, returnPolicy, heroImages, heroImageKeywords,
+      primaryContactWhatsApp, isPrimaryContactWhatsApp, shopFrontPhoto, ownerPhoto,
+      upiId, upiScannerPhoto
     } = req.body;
 
     if (!email || !firstName || !lastName) {
       throw new AppError('Email, first name, and last name are required', 400);
+    }
+
+    // Validate UPI ID format if provided
+    if (upiId && upiId.trim() !== '') {
+      const upiIdRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9]+$/;
+      if (!upiIdRegex.test(upiId)) {
+        throw new AppError('UPI ID must be an alphanumeric string with an "@" symbol (e.g., username@bankname)', 400);
+      }
     }
 
     // Determine allowed role based on current user's role
@@ -244,10 +253,13 @@ export const inviteStaff = asyncHandler(
             scheduleDrugEligible: scheduleDrugEligible ?? false,
             returnPolicy: returnPolicy || null,
             heroImages: heroImages && Array.isArray(heroImages) ? heroImages : [],
+            heroImageKeywords: heroImageKeywords && Array.isArray(heroImageKeywords) ? heroImageKeywords : [],
             primaryContactWhatsApp: primaryContactWhatsApp || null,
             isPrimaryContactWhatsApp: isPrimaryContactWhatsApp ?? false,
             shopFrontPhoto: shopFrontPhoto || null,
             ownerPhoto: ownerPhoto || null,
+            upiId: upiId || null,
+            upiScannerPhoto: upiScannerPhoto || null,
             updatedAt: new Date(),
           } as any,
         });
