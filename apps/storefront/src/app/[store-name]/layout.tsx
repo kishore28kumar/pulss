@@ -11,19 +11,22 @@ import ChatWidget from '@/components/chat/ChatWidget';
 function StoreLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isLoginPage = pathname?.endsWith('/login');
+  const isForgotPasswordPage = pathname?.endsWith('/forgot-password');
+  const isResetPasswordPage = pathname?.endsWith('/reset-password');
+  const isAuthPage = isLoginPage || isForgotPasswordPage || isResetPasswordPage;
   const { tenant, isLoading } = useTenant();
 
-  // Show frozen admin message if admin is frozen (except on login page)
-  if (!isLoginPage && !isLoading && tenant?.adminFrozen) {
+  // Show frozen admin message if admin is frozen (except on auth pages)
+  if (!isAuthPage && !isLoading && tenant?.adminFrozen) {
     return <FrozenAdminMessage storeName={tenant.name} />;
   }
 
-  // Show frozen message if tenant is frozen (except on login page)
-  if (!isLoginPage && !isLoading && tenant?.status === 'FROZEN') {
+  // Show frozen message if tenant is frozen (except on auth pages)
+  if (!isAuthPage && !isLoading && tenant?.status === 'FROZEN') {
     return <FrozenStoreMessage storeName={tenant.name} />;
   }
 
-  if (isLoginPage) {
+  if (isAuthPage) {
     return <>{children}</>;
   }
 
