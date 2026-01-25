@@ -41,6 +41,16 @@ const EXPORT_SECTIONS: ExportSection[] = [
     name: 'Store Performance',
     description: 'Total Revenue, Orders, Customers, and Products',
   },
+  {
+    id: 'allTenants',
+    name: 'All Tenants Details',
+    description: 'Complete tenant information with statistics (filtered by creation date)',
+  },
+  {
+    id: 'allCustomers',
+    name: 'All Customers Details',
+    description: 'Complete customer information across all tenants with order statistics (filtered by registration date)',
+  },
 ];
 
 function AnalyticsExportPageContent() {
