@@ -33,15 +33,11 @@ export default function LoginPage() {
     firstName: '',
     lastName: '',
     phone: '',
-    address: {
-      line1: '',
-      line2: '',
-      city: '',
-      state: '',
-      country: 'India',
-      pincode: '',
-    },
+    city: '',
   });
+
+  // Form validation errors state
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   // Show loading while tenant is loading
   if (tenantLoading) {
@@ -76,63 +72,74 @@ export default function LoginPage() {
     }
   };
 
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    
-    // Validate all fields
+  const handlePhoneChange = (value: string) => {
+    // Remove all non-digit characters
+    const digitsOnly = value.replace(/\D/g, '');
+    // Limit to 10 digits
+    const limitedDigits = digitsOnly.slice(0, 10);
+    setRegisterData({ ...registerData, phone: limitedDigits });
+    // Clear phone error when user types
+    if (formErrors.phone) {
+      setFormErrors({ ...formErrors, phone: '' });
+    }
+  };
+
+  // Comprehensive validation function
+  const validateForm = (): boolean => {
+    const errors: Record<string, string> = {};
+
+    // Validate first name
     if (!registerData.firstName.trim()) {
-      toast.error('First name is required');
-      return;
+      errors.firstName = 'First name is required';
     }
 
+    // Validate last name
     if (!registerData.lastName.trim()) {
-      toast.error('Last name is required');
-      return;
+      errors.lastName = 'Last name is required';
     }
 
+    // Validate email
     if (!registerData.email.trim()) {
-      toast.error('Email is required');
-      return;
+      errors.email = 'Email is required';
+    } else {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(registerData.email.trim())) {
+        errors.email = 'Please enter a valid email address';
+      }
     }
 
-    // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(registerData.email.trim())) {
-      toast.error('Please enter a valid email address');
-      return;
+    // Validate phone
+    if (!registerData.phone.trim()) {
+      errors.phone = 'Phone number is required';
+    } else {
+      const digitsOnly = registerData.phone.replace(/\D/g, '');
+      if (digitsOnly.length !== 10) {
+        errors.phone = 'Phone number must be exactly 10 digits';
+      }
     }
 
     // Validate password
     const passwordValidation = validatePassword(registerData.password);
     if (!passwordValidation.isValid) {
-      toast.error(passwordValidation.error || 'Invalid password');
-      return;
+      errors.password = passwordValidation.error || 'Invalid password';
     }
 
-    // Validate address fields
-    if (!registerData.address.line1.trim()) {
-      toast.error('Address line 1 is required');
-      return;
+    // Validate city
+    if (!registerData.city.trim()) {
+      errors.city = 'City is required';
     }
 
-    if (!registerData.address.city.trim()) {
-      toast.error('City is required');
-      return;
-    }
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
-    if (!registerData.address.state.trim()) {
-      toast.error('State is required');
-      return;
-    }
-
-    if (!registerData.address.pincode.trim()) {
-      toast.error('Pincode is required');
-      return;
-    }
-
-    if (!registerData.address.country.trim()) {
-      toast.error('Country is required');
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    
+    // Validate all fields before submission
+    if (!validateForm()) {
+      toast.error('Please fix all errors before submitting');
       return;
     }
 
@@ -144,15 +151,15 @@ export default function LoginPage() {
         password: registerData.password,
         firstName: registerData.firstName,
         lastName: registerData.lastName,
-        phone: registerData.phone || undefined,
+        phone: registerData.phone,
       });
       
-      // Store address in localStorage for use in checkout
+      // Store city in localStorage for use in checkout
       if (typeof window !== 'undefined') {
         localStorage.setItem('customerAddress', JSON.stringify({
           name: `${registerData.firstName} ${registerData.lastName}`,
-          phone: registerData.phone || '',
-          ...registerData.address,
+          phone: registerData.phone,
+          city: registerData.city,
         }));
       }
       
@@ -193,6 +200,7 @@ export default function LoginPage() {
               onClick={() => {
                 setIsLogin(true);
                 setError('');
+                setFormErrors({});
               }}
               className={`flex-1 py-2.5 sm:py-3 text-center text-sm sm:text-base font-medium transition-colors ${
                 isLogin
@@ -206,6 +214,7 @@ export default function LoginPage() {
               onClick={() => {
                 setIsLogin(false);
                 setError('');
+                setFormErrors({});
               }}
               className={`flex-1 py-2.5 sm:py-3 text-center text-sm sm:text-base font-medium transition-colors ${
                 !isLogin
@@ -289,6 +298,7 @@ export default function LoginPage() {
                   onClick={() => {
                     setIsLogin(false);
                     setError('');
+                    setFormErrors({});
                   }}
                   className="text-gray-600 hover:text-gray-900 font-medium"
                 >
@@ -302,7 +312,7 @@ export default function LoginPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    First Name
+                    First Name <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -310,31 +320,51 @@ export default function LoginPage() {
                       type="text"
                       required
                       value={registerData.firstName}
-                      onChange={(e) => setRegisterData({ ...registerData, firstName: e.target.value })}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      onChange={(e) => {
+                        setRegisterData({ ...registerData, firstName: e.target.value });
+                        if (formErrors.firstName) {
+                          setFormErrors({ ...formErrors, firstName: '' });
+                        }
+                      }}
+                      className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                        formErrors.firstName ? 'border-red-500' : 'border-gray-300'
+                      }`}
                       placeholder="John"
                     />
                   </div>
+                  {formErrors.firstName && (
+                    <p className="mt-1 text-xs text-red-600">{formErrors.firstName}</p>
+                  )}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Last Name
+                    Last Name <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     required
                     value={registerData.lastName}
-                    onChange={(e) => setRegisterData({ ...registerData, lastName: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    onChange={(e) => {
+                      setRegisterData({ ...registerData, lastName: e.target.value });
+                      if (formErrors.lastName) {
+                        setFormErrors({ ...formErrors, lastName: '' });
+                      }
+                    }}
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                      formErrors.lastName ? 'border-red-500' : 'border-gray-300'
+                    }`}
                     placeholder="Doe"
                   />
+                  {formErrors.lastName && (
+                    <p className="mt-1 text-xs text-red-600">{formErrors.lastName}</p>
+                  )}
                 </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email Address
+                  Email Address <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -342,32 +372,53 @@ export default function LoginPage() {
                     type="email"
                     required
                     value={registerData.email}
-                    onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    onChange={(e) => {
+                      setRegisterData({ ...registerData, email: e.target.value });
+                      if (formErrors.email) {
+                        setFormErrors({ ...formErrors, email: '' });
+                      }
+                    }}
+                    className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                      formErrors.email ? 'border-red-500' : 'border-gray-300'
+                    }`}
                     placeholder="you@example.com"
                   />
                 </div>
+                {formErrors.email && (
+                  <p className="mt-1 text-xs text-red-600">{formErrors.email}</p>
+                )}
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Phone (Optional)
+                  Phone <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                   <input
                     type="tel"
+                    required
+                    maxLength={10}
                     value={registerData.phone}
-                    onChange={(e) => setRegisterData({ ...registerData, phone: e.target.value })}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="+1 (555) 000-0000"
+                    onChange={(e) => handlePhoneChange(e.target.value)}
+                    className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                      formErrors.phone ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                    placeholder="1234567890"
                   />
                 </div>
+                {formErrors.phone ? (
+                  <p className="mt-1 text-xs text-red-600">{formErrors.phone}</p>
+                ) : registerData.phone ? (
+                  <p className="mt-1 text-xs text-gray-500">
+                    {registerData.phone.replace(/\D/g, '').length}/10 digits
+                  </p>
+                ) : null}
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Password
+                  Password <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -376,8 +427,15 @@ export default function LoginPage() {
                     required
                     minLength={8}
                     value={registerData.password}
-                    onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })}
-                    className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    onChange={(e) => {
+                      setRegisterData({ ...registerData, password: e.target.value });
+                      if (formErrors.password) {
+                        setFormErrors({ ...formErrors, password: '' });
+                      }
+                    }}
+                    className={`w-full pl-10 pr-12 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                      formErrors.password ? 'border-red-500' : 'border-gray-300'
+                    }`}
                     placeholder="••••••••"
                   />
                   <button
@@ -388,6 +446,9 @@ export default function LoginPage() {
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
+                {formErrors.password && (
+                  <p className="mt-1 text-xs text-red-600">{formErrors.password}</p>
+                )}
                 {registerData.password && (
                   <div className="mt-2 space-y-1">
                     {(() => {
@@ -426,118 +487,35 @@ export default function LoginPage() {
                 )}
               </div>
 
-              {/* Address Section */}
+              {/* City Field */}
               <div className="pt-4 border-t border-gray-200">
                 <div className="flex items-center gap-2 mb-4">
                   <MapPin className="w-5 h-5 text-gray-400" />
-                  <h3 className="text-sm font-semibold text-gray-900">Shipping Address</h3>
+                  <h3 className="text-sm font-semibold text-gray-900">Location</h3>
                 </div>
 
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Address Line 1
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={registerData.address.line1}
-                      onChange={(e) => setRegisterData({
-                        ...registerData,
-                        address: { ...registerData.address, line1: e.target.value }
-                      })}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Street address, house number"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Address Line 2 (Optional)
-                    </label>
-                    <input
-                      type="text"
-                      value={registerData.address.line2}
-                      onChange={(e) => setRegisterData({
-                        ...registerData,
-                        address: { ...registerData.address, line2: e.target.value }
-                      })}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Apartment, suite, etc."
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        City
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={registerData.address.city}
-                        onChange={(e) => setRegisterData({
-                          ...registerData,
-                          address: { ...registerData.address, city: e.target.value }
-                        })}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="City"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        State
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={registerData.address.state}
-                        onChange={(e) => setRegisterData({
-                          ...registerData,
-                          address: { ...registerData.address, state: e.target.value }
-                        })}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="State"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Pincode
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={registerData.address.pincode}
-                        onChange={(e) => setRegisterData({
-                          ...registerData,
-                          address: { ...registerData.address, pincode: e.target.value }
-                        })}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="123456"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Country
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={registerData.address.country}
-                        onChange={(e) => setRegisterData({
-                          ...registerData,
-                          address: { ...registerData.address, country: e.target.value }
-                        })}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="Country"
-                      />
-                    </div>
-                  </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    City <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={registerData.city}
+                    onChange={(e) => {
+                      setRegisterData({ ...registerData, city: e.target.value });
+                      if (formErrors.city) {
+                        setFormErrors({ ...formErrors, city: '' });
+                      }
+                    }}
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                      formErrors.city ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                    placeholder="City"
+                  />
+                  {formErrors.city && (
+                    <p className="mt-1 text-xs text-red-600">{formErrors.city}</p>
+                  )}
                 </div>
               </div>
 
@@ -556,6 +534,7 @@ export default function LoginPage() {
                   onClick={() => {
                     setIsLogin(true);
                     setError('');
+                    setFormErrors({});
                   }}
                   className="text-sm text-gray-600 hover:text-gray-900 font-medium"
                 >

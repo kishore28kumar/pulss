@@ -39,10 +39,16 @@ export default function ForgotPasswordPage() {
   };
 
   const validatePhone = (phone: string): boolean => {
-    // Basic phone validation - digits, may include +, spaces, dashes
-    const phoneRegex = /^[\d\s+\-()]+$/;
+    // Phone validation - must be exactly 10 digits
     const digitsOnly = phone.replace(/\D/g, '');
-    return phoneRegex.test(phone) && digitsOnly.length >= 10;
+    return digitsOnly.length === 10;
+  };
+
+  // Handle phone input - restrict to 10 digits
+  const handlePhoneChange = (value: string) => {
+    const digitsOnly = value.replace(/\D/g, '');
+    const limitedDigits = digitsOnly.slice(0, 10);
+    setFormData({ ...formData, phone: limitedDigits });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -71,7 +77,7 @@ export default function ForgotPasswordPage() {
     }
 
     if (!validatePhone(formData.phone)) {
-      setError('Please enter a valid phone number (at least 10 digits)');
+      setError('Please enter a valid phone number with exactly 10 digits');
       setLoading(false);
       return;
     }
@@ -141,12 +147,18 @@ export default function ForgotPasswordPage() {
                   <input
                     type="tel"
                     required
+                    maxLength={10}
                     value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    onChange={(e) => handlePhoneChange(e.target.value)}
                     className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="+1 (555) 000-0000"
+                    placeholder="1234567890"
                   />
                 </div>
+                {formData.phone && (
+                  <p className="mt-1 text-xs text-gray-500">
+                    {formData.phone.replace(/\D/g, '').length}/10 digits
+                  </p>
+                )}
               </div>
 
               <button

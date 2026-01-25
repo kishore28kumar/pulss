@@ -187,14 +187,20 @@ export const registerCustomer = asyncHandler(
   async (req: Request, res: Response) => {
     const { email, password, firstName, lastName, phone } = req.body as RegisterData;
 
-    if (!email || !password || !firstName || !lastName) {
-      throw new AppError('Email, password, first name, and last name are required', 400);
+    if (!email || !password || !firstName || !lastName || !phone) {
+      throw new AppError('Email, password, first name, last name, and phone are required', 400);
     }
 
     // Validate password strength
     const passwordValidation = validatePassword(password);
     if (!passwordValidation.isValid) {
       throw new AppError(passwordValidation.error || 'Invalid password', 400);
+    }
+
+    // Validate phone number format - must be exactly 10 digits
+    const digitsOnly = phone.replace(/\D/g, '');
+    if (digitsOnly.length !== 10) {
+      throw new AppError('Invalid phone number format. Please provide a valid phone number with exactly 10 digits.', 400);
     }
 
     if (!req.tenantId) {
@@ -225,7 +231,7 @@ export const registerCustomer = asyncHandler(
           password: hashedPassword,
           firstName,
           lastName,
-          phone: phone || null,
+          phone,
           role: 'CUSTOMER',
           tenantId: req.tenantId!,
           emailVerified: false,
@@ -240,7 +246,7 @@ export const registerCustomer = asyncHandler(
           id: `cust_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
           userId: user.id,
           tenantId: req.tenantId!,
-          phone: phone || null,
+          phone,
           updatedAt: new Date(),
         },
         include: {
@@ -350,14 +356,11 @@ export const updateUserProfile = asyncHandler(
 
     const { firstName, lastName, phone } = req.body;
 
-    // Validate phone number format if provided
+    // Validate phone number format if provided - must be exactly 10 digits
     if (phone !== undefined && phone !== null && phone !== '') {
-      // Basic phone validation: allows digits, spaces, hyphens, parentheses, and + for international
-      // Minimum 10 digits, maximum 20 characters
-      const phoneRegex = /^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{1,9}$/;
       const digitsOnly = phone.replace(/\D/g, '');
-      if (digitsOnly.length < 10 || digitsOnly.length > 15 || !phoneRegex.test(phone)) {
-        throw new AppError('Invalid phone number format. Please provide a valid phone number (10-15 digits).', 400);
+      if (digitsOnly.length !== 10) {
+        throw new AppError('Invalid phone number format. Please provide a valid phone number with exactly 10 digits.', 400);
       }
     }
 

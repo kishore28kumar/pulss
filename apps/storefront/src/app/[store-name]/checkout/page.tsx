@@ -60,6 +60,17 @@ function CheckoutPageContent() {
   // Helper to get tenant-aware path
   const getPath = (path: string) => `/${storeName}${path}`;
 
+  // Handle phone input - restrict to 10 digits
+  const handlePhoneChange = (value: string, isShipping: boolean = true) => {
+    const digitsOnly = value.replace(/\D/g, '');
+    const limitedDigits = digitsOnly.slice(0, 10);
+    if (isShipping) {
+      setShippingAddress({ ...shippingAddress, phone: limitedDigits });
+    } else {
+      setBillingAddress({ ...billingAddress, phone: limitedDigits });
+    }
+  };
+
   const queryClient = useQueryClient();
   const { customer } = useAuth();
   const [sameAsShipping, setSameAsShipping] = useState(true);
@@ -321,10 +332,17 @@ function CheckoutPageContent() {
                       <input
                         type="tel"
                         required
+                        maxLength={10}
                         value={shippingAddress.phone}
-                        onChange={(e) => setShippingAddress({ ...shippingAddress, phone: e.target.value })}
+                        onChange={(e) => handlePhoneChange(e.target.value, true)}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="1234567890"
                       />
+                      {shippingAddress.phone && (
+                        <p className="mt-1 text-xs text-gray-500">
+                          {shippingAddress.phone.replace(/\D/g, '').length}/10 digits
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -453,10 +471,17 @@ function CheckoutPageContent() {
                         <input
                           type="tel"
                           required={!sameAsShipping}
+                          maxLength={10}
                           value={billingAddress.phone}
-                          onChange={(e) => setBillingAddress({ ...billingAddress, phone: e.target.value })}
+                          onChange={(e) => handlePhoneChange(e.target.value, false)}
+                          placeholder="1234567890"
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
+                        {billingAddress.phone && (
+                          <p className="mt-1 text-xs text-gray-500">
+                            {billingAddress.phone.replace(/\D/g, '').length}/10 digits
+                          </p>
+                        )}
                       </div>
                     </div>
 

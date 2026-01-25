@@ -526,13 +526,9 @@ export default function StaffPage() {
                             isOpen={openPopoverId === member.id}
                             onToggle={(memberId) => setOpenPopoverId(memberId)}
                             onEditStaff={() => {
-                              // For SUPER_ADMIN with tenant, use Edit Tenant instead
+                              // For SUPER_ADMIN with tenant, navigate to Edit Tenant page
                               if (mounted && userRole === 'SUPER_ADMIN' && member.tenants?.id) {
-                                setEditingTenant({ 
-                                  id: member.tenants.id, 
-                                  name: member.tenants.name,
-                                  staffMember: member
-                                });
+                                router.push(`/dashboard/staff/edit/${member.tenants.id}`);
                                 setOpenPopoverId(null);
                               } else {
                                 handleEdit(member);
@@ -540,12 +536,8 @@ export default function StaffPage() {
                             }}
                             onEditTenant={() => {
                               if (member.tenants?.id) {
-                                setEditingTenant({ 
-                                  id: member.tenants.id, 
-                                  name: member.tenants.name,
-                                  staffMember: member
-                                });
-                                setOpenPopoverId(null); // Close popover when opening tenant edit modal
+                                router.push(`/dashboard/staff/edit/${member.tenants.id}`);
+                                setOpenPopoverId(null); // Close popover when navigating to edit page
                               }
                             }}
                             onFreeze={() => handleFreeze(member)}

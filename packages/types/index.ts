@@ -35,7 +35,7 @@ export interface RegisterData {
   password: string;
   firstName: string;
   lastName: string;
-  phone?: string;
+  phone: string;
   tenantSlug?: string;
 }
 
