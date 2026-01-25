@@ -23,7 +23,6 @@ const productSchema = z.object({
   barcode: z.string().optional(),
   trackInventory: z.boolean().default(true),
   stockQuantity: z.number().min(0, 'Stock quantity must be 0 or greater').optional(),
-  lowStockThreshold: z.number().min(0, 'Low stock threshold must be 0 or greater').optional(),
   weight: z.number().min(0, 'Weight must be 0 or greater').optional(),
   weightUnit: z.string().optional(),
   categoryIds: z.array(z.string()).min(1, 'At least one category is required'),
@@ -90,7 +89,6 @@ export default function EditProductPage() {
       barcode: '',
       trackInventory: true,
       stockQuantity: 0,
-      lowStockThreshold: 10,
       weight: undefined,
       weightUnit: 'kg',
       categoryIds: [],
@@ -123,7 +121,6 @@ export default function EditProductPage() {
       setValue('barcode', product.barcode || '');
       setValue('trackInventory', product.trackInventory ?? true);
       setValue('stockQuantity', product.stock || 0);
-      setValue('lowStockThreshold', product.lowStockThreshold || 10);
       setValue('weight', product.weight || undefined);
       setValue('weightUnit', product.weightUnit || 'kg');
 
@@ -181,7 +178,6 @@ export default function EditProductPage() {
         barcode: data.barcode || undefined,
         trackInventory: data.trackInventory,
         stockQuantity: data.stockQuantity || undefined,
-        lowStockThreshold: data.lowStockThreshold || undefined,
         weight: data.weight || undefined,
         weightUnit: data.weightUnit || undefined,
         categoryIds: data.categoryIds,
@@ -473,34 +469,18 @@ export default function EditProductPage() {
           </div>
 
           {trackInventory && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="stockQuantity" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Stock Quantity
-                </label>
-                <input
-                  id="stockQuantity"
-                  type="number"
-                  {...register('stockQuantity', { valueAsNumber: true })}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
-                  placeholder="0"
-                  min="0"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="lowStockThreshold" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Low Stock Threshold
-                </label>
-                <input
-                  id="lowStockThreshold"
-                  type="number"
-                  {...register('lowStockThreshold', { valueAsNumber: true })}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
-                  placeholder="10"
-                  min="0"
-                />
-              </div>
+            <div>
+              <label htmlFor="stockQuantity" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Stock Quantity
+              </label>
+              <input
+                id="stockQuantity"
+                type="number"
+                {...register('stockQuantity', { valueAsNumber: true })}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
+                placeholder="0"
+                min="0"
+              />
             </div>
           )}
 

@@ -145,7 +145,6 @@ export interface CreateProductDTO {
   barcode?: string;
   trackInventory?: boolean;
   stockQuantity?: number;
-  lowStockThreshold?: number;
   weight?: number;
   weightUnit?: string;
   categoryIds: string[];

@@ -18,7 +18,6 @@ interface CSVRow {
   barcode?: string;
   trackInventory?: string;
   stockQuantity?: string;
-  lowStockThreshold?: string;
   weight?: string;
   weightUnit?: string;
   categorySlug?: string;
@@ -52,7 +51,6 @@ export default function BulkImportPage() {
     'barcode',
     'trackInventory',
     'stockQuantity',
-    'lowStockThreshold',
     'weight',
     'weightUnit',
     'categorySlug',
@@ -169,10 +167,6 @@ export default function BulkImportPage() {
 
       if (row.stockQuantity && (isNaN(parseInt(row.stockQuantity)) || parseInt(row.stockQuantity) < 0)) {
         validationErrors.push(`Row ${rowNum}: Stock quantity must be a valid integer >= 0`);
-      }
-
-      if (row.lowStockThreshold && (isNaN(parseInt(row.lowStockThreshold)) || parseInt(row.lowStockThreshold) < 0)) {
-        validationErrors.push(`Row ${rowNum}: Low stock threshold must be a valid integer >= 0`);
       }
 
       if (row.weight && (isNaN(parseFloat(row.weight)) || parseFloat(row.weight) < 0)) {

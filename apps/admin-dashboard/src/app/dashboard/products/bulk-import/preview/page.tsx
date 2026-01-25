@@ -21,7 +21,6 @@ interface ProductData {
   barcode?: string;
   trackInventory?: string;
   stockQuantity?: string;
-  lowStockThreshold?: string;
   weight?: string;
   weightUnit?: string;
   categorySlug?: string;
@@ -106,10 +105,6 @@ export default function BulkImportPreviewPage() {
 
     if (product.stockQuantity && (isNaN(parseInt(product.stockQuantity)) || parseInt(product.stockQuantity) < 0)) {
       errors.push(`Row ${rowNum}: Stock quantity must be a valid integer >= 0`);
-    }
-
-    if (product.lowStockThreshold && (isNaN(parseInt(product.lowStockThreshold)) || parseInt(product.lowStockThreshold) < 0)) {
-      errors.push(`Row ${rowNum}: Low stock threshold must be a valid integer >= 0`);
     }
 
     if (product.weight && (isNaN(parseFloat(product.weight)) || parseFloat(product.weight) < 0)) {
@@ -263,7 +258,6 @@ export default function BulkImportPreviewPage() {
           barcode: product.barcode || undefined,
           trackInventory: product.trackInventory === 'true' || product.trackInventory === '1' || product.trackInventory === '',
           stockQuantity: product.stockQuantity ? parseInt(product.stockQuantity) : undefined,
-          lowStockThreshold: product.lowStockThreshold ? parseInt(product.lowStockThreshold) : undefined,
           images: product.images ? product.images.split(',').map((url) => url.trim()).filter(Boolean) : undefined,
           isActive: product.isActive === 'true' || product.isActive === '1' || product.isActive === '',
           isFeatured: product.isFeatured === 'true' || product.isFeatured === '1',

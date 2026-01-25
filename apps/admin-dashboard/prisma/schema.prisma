@@ -288,7 +288,6 @@ model products {
   sku                  String?
   barcode              String?
   stock                Int                @default(0)
-  lowStockThreshold    Int                @default(10)
   trackInventory       Boolean            @default(true)
   images               String[]
   thumbnail            String?

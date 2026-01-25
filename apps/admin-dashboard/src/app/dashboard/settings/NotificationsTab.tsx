@@ -12,7 +12,6 @@ interface NotificationsTabProps {
 
 interface NotificationSettings {
   orderNotifications: boolean;
-  lowStockAlerts: boolean;
   customerRegistration: boolean;
   reviewNotifications: boolean;
   marketingEmails: boolean;
@@ -21,7 +20,6 @@ interface NotificationSettings {
 export default function NotificationsTab({ settings, onSave, isSaving, readOnly = false }: NotificationsTabProps) {
   const [notifications, setNotifications] = useState<NotificationSettings>({
     orderNotifications: true,
-    lowStockAlerts: true,
     customerRegistration: false,
     reviewNotifications: true,
     marketingEmails: false,
@@ -57,12 +55,6 @@ export default function NotificationsTab({ settings, onSave, isSaving, readOnly 
       description: 'Get notified when new orders are placed',
       icon: Bell,
       key: 'orderNotifications' as keyof NotificationSettings,
-    },
-    {
-      title: 'Low Stock Alerts',
-      description: 'Receive alerts when products are running low',
-      icon: Bell,
-      key: 'lowStockAlerts' as keyof NotificationSettings,
     },
     {
       title: 'Customer Registration',

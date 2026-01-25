@@ -44,7 +44,6 @@ interface Product {
   name: string;
   sku: string;
   stock: number;
-  lowStockThreshold: number;
 }
 
 interface Tenant {
@@ -151,18 +150,6 @@ export default function DashboardPage() {
     },
   });
 
-  // Fetch low stock products (Admin only)
-  const { data: productsData, isLoading: productsLoading } = useQuery<{ data: Product[]; meta: any }>({
-    queryKey: ['low-stock-products'],
-    queryFn: async () => {
-      const response = await api.get('/products', {
-        params: { limit: 100, page: 1 },
-      });
-      return response.data.data;
-    },
-    enabled: mounted && userRole !== 'SUPER_ADMIN',
-  });
-
   // Fetch customers (Admin only)
   const { data: customersData, isLoading: customersLoading } = useQuery<{ data: any[]; meta: any }>({
     queryKey: ['recent-customers'],
@@ -174,11 +161,6 @@ export default function DashboardPage() {
     },
     enabled: mounted && userRole !== 'SUPER_ADMIN',
   });
-
-  // Filter low stock products
-  const lowStockProducts = productsData?.data?.filter(
-    (product) => product.stock <= product.lowStockThreshold && product.stock > 0
-  ).slice(0, 5) || [];
 
   // Fetch tenants summary (Super Admin only)
   const { data: tenantsData, isLoading: tenantsLoading } = useQuery<Tenant[]>({
@@ -406,47 +388,6 @@ export default function DashboardPage() {
               <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                 <ShoppingCart className="w-12 h-12 mx-auto mb-2 text-gray-400 dark:text-gray-500" />
                 <p>No orders yet</p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Low Stock Products - Admin only */}
-        {mounted && userRole !== 'SUPER_ADMIN' && (
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Low Stock Alert</h2>
-            {productsLoading ? (
-              <div className="space-y-4">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0 animate-pulse">
-                    <div className="flex-1">
-                      <div className="w-32 h-4 bg-gray-200 rounded mb-2"></div>
-                      <div className="w-24 h-3 bg-gray-200 rounded"></div>
-                    </div>
-                    <div className="w-16 h-6 bg-gray-200 rounded"></div>
-                  </div>
-                ))}
-              </div>
-            ) : lowStockProducts.length > 0 ? (
-              <div className="space-y-4">
-                {lowStockProducts.map((product) => (
-                  <div key={product.id} className="flex items-center justify-between py-3 border-b border-gray-100 dark:border-gray-700 last:border-0">
-                    <div>
-                      <p className="font-medium text-gray-900 dark:text-gray-100">{product.name}</p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">{product.sku || 'N/A'}</p>
-                    </div>
-                    <div className="text-right">
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                        {product.stock} left
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                <Package className="w-12 h-12 mx-auto mb-2 text-gray-400 dark:text-gray-500" />
-                <p>All products are well stocked</p>
               </div>
             )}
           </div>

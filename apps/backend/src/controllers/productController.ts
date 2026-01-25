@@ -226,7 +226,6 @@ export const createProduct = asyncHandler(
         barcode: data.barcode,
         trackInventory: data.trackInventory ?? true,
         stock: data.stockQuantity ?? 0,
-        lowStockThreshold: data.lowStockThreshold ?? 10,
         isActive: data.isActive ?? true,
         isFeatured: data.isFeatured ?? false,
         requiresPrescription: data.requiresPrescription ?? false,
@@ -322,7 +321,6 @@ export const updateProduct = asyncHandler(
     if (data.barcode !== undefined) updateData.barcode = data.barcode;
     if (data.trackInventory !== undefined) updateData.trackInventory = data.trackInventory;
     if (data.stockQuantity !== undefined) updateData.stock = data.stockQuantity;
-    if (data.lowStockThreshold !== undefined) updateData.lowStockThreshold = data.lowStockThreshold;
     if (data.isActive !== undefined) updateData.isActive = data.isActive;
     if (data.isFeatured !== undefined) updateData.isFeatured = data.isFeatured;
     if (data.requiresPrescription !== undefined) updateData.requiresPrescription = data.requiresPrescription;
@@ -484,7 +482,6 @@ export const bulkCreateProducts = asyncHandler(
             barcode: productData.barcode || null,
             trackInventory: productData.trackInventory ?? true,
             stock: productData.stockQuantity ?? 0,
-            lowStockThreshold: productData.lowStockThreshold ?? 10,
             isActive: productData.isActive ?? true,
             isFeatured: productData.isFeatured ?? false,
             requiresPrescription: productData.requiresPrescription ?? false,
