@@ -9,7 +9,8 @@ import {
   Shield, 
   Info,
   Building2,
-  User
+  User,
+  FileText
 } from 'lucide-react';
 import api from '@/lib/api';
 import { toast } from 'sonner';
@@ -18,16 +19,18 @@ import AppearanceTab from './AppearanceTab';
 import NotificationsTab from './NotificationsTab';
 import TenantInfoTab from './TenantInfoTab';
 import ProfileTab from './ProfileTab';
+import ContentPagesTab from './ContentPagesTab';
 import PermissionGuard from '@/components/permissions/PermissionGuard';
 import { Permission, getUserRole } from '@/lib/permissions';
 import { authService } from '@/lib/auth';
 
-type TabType = 'profile' | 'store' | 'appearance' | 'notifications' | 'security' | 'tenant';
+type TabType = 'profile' | 'store' | 'appearance' | 'notifications' | 'security' | 'tenant' | 'content';
 
 const tabs = [
   { id: 'profile' as TabType, name: 'Profile', icon: User },
   { id: 'tenant' as TabType, name: 'Tenant Information', icon: Building2 },
   { id: 'store' as TabType, name: 'Store Information', icon: Store },
+  { id: 'content' as TabType, name: 'Content Pages', icon: FileText },
   { id: 'appearance' as TabType, name: 'Appearance', icon: Palette },
   { id: 'notifications' as TabType, name: 'Notifications', icon: Bell },
   { id: 'security' as TabType, name: 'Security', icon: Shield },
@@ -252,6 +255,25 @@ export default function SettingsPage() {
               }
             >
               <AppearanceTab
+                settings={settings}
+                onSave={handleSave}
+                isSaving={updateMutation.isPending}
+              />
+            </PermissionGuard>
+          )}
+          {activeTab === 'content' && (
+            <PermissionGuard
+              permission={Permission.SETTINGS_UPDATE}
+              fallback={
+                <ContentPagesTab
+                  settings={settings}
+                  onSave={() => {}}
+                  isSaving={false}
+                  readOnly={true}
+                />
+              }
+            >
+              <ContentPagesTab
                 settings={settings}
                 onSave={handleSave}
                 isSaving={updateMutation.isPending}

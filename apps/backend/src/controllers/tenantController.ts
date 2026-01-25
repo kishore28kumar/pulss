@@ -234,6 +234,8 @@ export const updateTenant = asyncHandler(
       if (data.ownerPhoto !== undefined) updateData.ownerPhoto = data.ownerPhoto;
       if (data.heroImages !== undefined) updateData.heroImages = data.heroImages;
       if (data.heroImageKeywords !== undefined) updateData.heroImageKeywords = data.heroImageKeywords;
+      // ADMIN can update pageContent
+      if (data.pageContent !== undefined) updateData.pageContent = data.pageContent;
     } else {
       // SUPER_ADMIN can update all fields including scheduleDrugEligible
       if (data.name !== undefined) updateData.name = data.name;
@@ -262,6 +264,8 @@ export const updateTenant = asyncHandler(
       if (data.ownerPhoto !== undefined) updateData.ownerPhoto = data.ownerPhoto;
       if (data.heroImages !== undefined) updateData.heroImages = data.heroImages;
       if (data.heroImageKeywords !== undefined) updateData.heroImageKeywords = data.heroImageKeywords;
+      // SUPER_ADMIN can update pageContent
+      if (data.pageContent !== undefined) updateData.pageContent = data.pageContent;
     }
 
     // Handle scheduleDrugEligible, returnPolicy, pharmacistPhoto, and new contact/media fields separately using raw SQL to avoid Prisma type issues
@@ -663,6 +667,7 @@ export const getTenantInfo = asyncHandler(
       upiScannerPhoto: (tenant as any).upiScannerPhoto || null,
       features: tenant.features,
       metadata: tenant.metadata,
+      pageContent: (tenant as any).pageContent || null,
     };
 
     // Check if admin is frozen (if tenant has any active admin)

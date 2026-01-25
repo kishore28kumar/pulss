@@ -389,6 +389,7 @@ model tenants {
   secondaryColor     String?          @default("#8B5CF6")
   features           Json?
   metadata           Json?
+  pageContent        Json?            // Stores content for Shipping, Privacy, Terms, About, Contact, FAQ pages
   createdAt          DateTime         @default(now())
   updatedAt          DateTime
   analytics          analytics[]

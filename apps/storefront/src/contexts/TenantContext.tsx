@@ -36,6 +36,14 @@ interface Tenant {
   ownerPhoto?: string;
   upiId?: string;
   upiScannerPhoto?: string;
+  pageContent?: {
+    shipping?: string;
+    privacy?: string;
+    terms?: string;
+    about?: string;
+    contact?: string;
+    faq?: string;
+  };
 }
 
 interface TenantContextType {
