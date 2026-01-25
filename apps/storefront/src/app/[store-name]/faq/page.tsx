@@ -6,6 +6,7 @@ import { HelpCircle } from 'lucide-react';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { useTenant } from '@/contexts/TenantContext';
 import FormattedFAQ from '@/components/content/FormattedFAQ';
+import { DEFAULT_FAQ_CONTENT } from '@/lib/contentDefaults';
 
 function FAQPageContent() {
   const params = useParams();
@@ -15,7 +16,7 @@ function FAQPageContent() {
   // Helper to get tenant-aware path
   const getPath = (path: string) => `/${storeName}${path}`;
 
-  const faqContent = tenant?.pageContent?.faq;
+  const faqContent = tenant?.pageContent?.faq || DEFAULT_FAQ_CONTENT;
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
@@ -33,13 +34,7 @@ function FAQPageContent() {
 
         {/* FAQ List */}
         <div className="max-w-4xl mx-auto">
-          {faqContent ? (
-            <FormattedFAQ text={faqContent} />
-          ) : (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center">
-              <p className="text-gray-600">FAQ content will be available soon.</p>
-            </div>
-          )}
+          <FormattedFAQ text={faqContent} />
 
           {/* Still Have Questions */}
           <div className="mt-12 bg-blue-50 rounded-xl p-8 text-center">

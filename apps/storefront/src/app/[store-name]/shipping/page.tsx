@@ -6,6 +6,7 @@ import { Truck } from 'lucide-react';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { useTenant } from '@/contexts/TenantContext';
 import FormattedContent from '@/components/content/FormattedContent';
+import { DEFAULT_SHIPPING_CONTENT } from '@/lib/contentDefaults';
 
 function ShippingPageContent() {
   const params = useParams();
@@ -15,7 +16,7 @@ function ShippingPageContent() {
   // Helper to get tenant-aware path
   const getPath = (path: string) => `/${storeName}${path}`;
 
-  const shippingContent = tenant?.pageContent?.shipping;
+  const shippingContent = tenant?.pageContent?.shipping || DEFAULT_SHIPPING_CONTENT;
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
@@ -31,13 +32,7 @@ function ShippingPageContent() {
         {/* Content */}
         <div className="max-w-4xl mx-auto mb-12">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 md:p-8">
-            {shippingContent ? (
-              <FormattedContent text={shippingContent} />
-            ) : (
-              <div className="text-gray-600 text-center py-8">
-                <p>Shipping information will be available soon.</p>
-              </div>
-            )}
+            <FormattedContent text={shippingContent} />
           </div>
         </div>
 

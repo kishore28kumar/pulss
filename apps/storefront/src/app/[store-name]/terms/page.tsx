@@ -6,6 +6,7 @@ import { FileText } from 'lucide-react';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { useTenant } from '@/contexts/TenantContext';
 import FormattedContent from '@/components/content/FormattedContent';
+import { DEFAULT_TERMS_CONTENT } from '@/lib/contentDefaults';
 
 function TermsPageContent() {
   const params = useParams();
@@ -15,7 +16,7 @@ function TermsPageContent() {
   // Helper to get tenant-aware path
   const getPath = (path: string) => `/${storeName}${path}`;
 
-  const termsContent = tenant?.pageContent?.terms;
+  const termsContent = tenant?.pageContent?.terms || DEFAULT_TERMS_CONTENT;
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
@@ -34,13 +35,7 @@ function TermsPageContent() {
         {/* Content */}
         <div className="max-w-4xl mx-auto mb-12">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 md:p-8">
-            {termsContent ? (
-              <FormattedContent text={termsContent} />
-            ) : (
-              <div className="text-gray-600 text-center py-8">
-                <p>Terms & Conditions will be available soon.</p>
-              </div>
-            )}
+            <FormattedContent text={termsContent} />
           </div>
         </div>
 

@@ -6,6 +6,7 @@ import { ArrowRight } from 'lucide-react';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { useTenant } from '@/contexts/TenantContext';
 import FormattedContent from '@/components/content/FormattedContent';
+import { DEFAULT_ABOUT_CONTENT } from '@/lib/contentDefaults';
 
 function AboutPageContent() {
   const params = useParams();
@@ -15,7 +16,7 @@ function AboutPageContent() {
   // Helper to get tenant-aware path
   const getPath = (path: string) => `/${storeName}${path}`;
 
-  const aboutContent = tenant?.pageContent?.about;
+  const aboutContent = tenant?.pageContent?.about || DEFAULT_ABOUT_CONTENT;
 
   return (
     <div>
@@ -48,13 +49,7 @@ function AboutPageContent() {
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 md:p-8">
-              {aboutContent ? (
-                <FormattedContent text={aboutContent} />
-              ) : (
-                <div className="text-gray-600 text-center py-8">
-                  <p>About us information will be available soon.</p>
-                </div>
-              )}
+              <FormattedContent text={aboutContent} />
             </div>
           </div>
         </div>

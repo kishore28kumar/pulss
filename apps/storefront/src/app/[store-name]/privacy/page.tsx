@@ -6,6 +6,7 @@ import { Shield } from 'lucide-react';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { useTenant } from '@/contexts/TenantContext';
 import FormattedContent from '@/components/content/FormattedContent';
+import { DEFAULT_PRIVACY_CONTENT } from '@/lib/contentDefaults';
 
 function PrivacyPageContent() {
   const params = useParams();
@@ -15,7 +16,7 @@ function PrivacyPageContent() {
   // Helper to get tenant-aware path
   const getPath = (path: string) => `/${storeName}${path}`;
 
-  const privacyContent = tenant?.pageContent?.privacy;
+  const privacyContent = tenant?.pageContent?.privacy || DEFAULT_PRIVACY_CONTENT;
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
@@ -34,13 +35,7 @@ function PrivacyPageContent() {
         {/* Content */}
         <div className="max-w-4xl mx-auto mb-12">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 md:p-8">
-            {privacyContent ? (
-              <FormattedContent text={privacyContent} />
-            ) : (
-              <div className="text-gray-600 text-center py-8">
-                <p>Privacy policy will be available soon.</p>
-              </div>
-            )}
+            <FormattedContent text={privacyContent} />
           </div>
         </div>
 
