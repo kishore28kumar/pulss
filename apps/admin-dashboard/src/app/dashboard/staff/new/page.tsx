@@ -64,25 +64,25 @@ const inviteSchema = z.object({
 
 type InviteFormData = z.infer<typeof inviteSchema>;
 
-// Default Return Policy Template (Plain Text)
-const DEFAULT_RETURN_POLICY = `RETURN POLICY
+// Default Return Policy Template (Markdown-style)
+const DEFAULT_RETURN_POLICY = `# Return Policy
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-30-DAY RETURN WINDOW
+# 30-Day Return Window
 You have 30 days from the date of delivery to initiate a return.
 
-ORIGINAL CONDITION REQUIRED
+# Original Condition Required
 Items must be unused, unwashed, and in original packaging with tags attached.
 
-FREE RETURN SHIPPING
+# Free Return Shipping
 We provide free return shipping labels for eligible returns.
 
-QUICK REFUND PROCESSING
+# Quick Refund Processing
 Refunds are processed within 5-7 business days after we receive your return.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-NON-RETURNABLE ITEMS
+# Non-Returnable Items
 • Perishable goods (food, beverages, etc.)
 • Personalized or custom-made items
 • Items damaged by misuse or normal wear
@@ -91,15 +91,15 @@ NON-RETURNABLE ITEMS
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-REFUND INFORMATION
+# Refund Information
 
-Refund Method
+## Refund Method:
 Refunds will be issued to the original payment method used for the purchase. Processing time may vary by payment method.
 
-Refund Timeline
+## Refund Timeline:
 Once we receive your return, we'll inspect it and process your refund within 5-7 business days. You'll receive an email confirmation when the refund is processed.
 
-Partial Refunds
+## Partial Refunds:
 If you're returning only part of your order, you'll receive a partial refund for the returned items. Shipping costs are non-refundable unless the return is due to our error.`;
 
 // Generate a strong random password
@@ -1058,12 +1058,43 @@ export default function NewStaffPage() {
                     id="returnPolicy"
                     {...register('returnPolicy')}
                     rows={15}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 text-sm whitespace-pre-wrap"
-                    placeholder="Enter your return and refund policy. Use clear section separators (like dashes or blank lines) to organize your content."
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 text-sm font-mono whitespace-pre-wrap"
+                    placeholder={`# Return Policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# 30-Day Return Window
+You have 30 days from the date of delivery to initiate a return.
+
+# Original Condition Required
+Items must be unused, unwashed, and in original packaging with tags attached.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# Non-Returnable Items
+• Perishable goods (food, beverages, etc.)
+• Personalized or custom-made items
+• Items damaged by misuse
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# Refund Information
+
+## Refund Method:
+Refunds will be issued to the original payment method used for the purchase.
+
+## Refund Timeline:
+Once we receive your return, we'll process your refund within 5-7 business days.`}
                   />
-                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                    This content will be displayed on your storefront returns page. Line breaks and spacing will be preserved.
-                  </p>
+                  <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <p className="text-xs font-semibold text-blue-900 dark:text-blue-200 mb-2">Formatting Tips:</p>
+                    <ul className="text-xs text-blue-800 dark:text-blue-300 space-y-1 list-disc list-inside">
+                      <li><strong>Headers:</strong> Use <code className="bg-blue-100 dark:bg-blue-800 px-1 rounded"># Header Text</code> for main section headers</li>
+                      <li><strong>Sub-headers:</strong> Use <code className="bg-blue-100 dark:bg-blue-800 px-1 rounded">## Sub-header Text</code> or <code className="bg-blue-100 dark:bg-blue-800 px-1 rounded">Label:</code> format</li>
+                      <li><strong>Bullets:</strong> Use <code className="bg-blue-100 dark:bg-blue-800 px-1 rounded">•</code>, <code className="bg-blue-100 dark:bg-blue-800 px-1 rounded">-</code>, or <code className="bg-blue-100 dark:bg-blue-800 px-1 rounded">*</code> for lists</li>
+                      <li><strong>Separators:</strong> Use separator lines (━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━) to divide sections</li>
+                      <li><strong>Paragraphs:</strong> Regular text will be displayed as paragraphs</li>
+                    </ul>
+                  </div>
                   {errors.returnPolicy && (
                     <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.returnPolicy.message}</p>
                   )}

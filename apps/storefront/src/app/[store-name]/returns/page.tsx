@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { RotateCcw, Clock, Package, CheckCircle } from 'lucide-react';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { useTenant } from '@/contexts/TenantContext';
+import FormattedReturnPolicy from '@/components/returns/FormattedReturnPolicy';
 
 function ReturnsPageContent() {
   const params = useParams();
@@ -65,11 +66,9 @@ function ReturnsPageContent() {
 
         {/* Return Policy Summary */}
         <div className="max-w-4xl mx-auto mb-12">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 md:p-8">
             {tenant?.returnPolicy ? (
-              <div className="whitespace-pre-wrap text-gray-700 leading-relaxed">
-                {tenant.returnPolicy}
-              </div>
+              <FormattedReturnPolicy text={tenant.returnPolicy} />
             ) : (
               <>
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">Return Policy</h2>
