@@ -85,9 +85,9 @@ export default function MailPage() {
   };
 
   const getPartnerName = (partner: any) => {
-    // Show role prefix for Super Admin
+    // Show role prefix for Customer Support
     if (partner.role === 'SUPER_ADMIN') {
-      return 'Super Admin';
+      return 'Customer Support';
     }
     
     if (partner.firstName && partner.lastName) {
@@ -111,7 +111,7 @@ export default function MailPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Mail</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            Internal messaging between Super Admin and Admin
+            Internal messaging between Customer Support and Admin
           </p>
         </div>
         <button
