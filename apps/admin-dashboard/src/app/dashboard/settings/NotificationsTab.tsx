@@ -13,16 +13,14 @@ interface NotificationsTabProps {
 interface NotificationSettings {
   orderNotifications: boolean;
   customerRegistration: boolean;
-  reviewNotifications: boolean;
-  marketingEmails: boolean;
+  chatNotification: boolean;
 }
 
 export default function NotificationsTab({ settings, onSave, isSaving, readOnly = false }: NotificationsTabProps) {
   const [notifications, setNotifications] = useState<NotificationSettings>({
     orderNotifications: true,
     customerRegistration: false,
-    reviewNotifications: true,
-    marketingEmails: false,
+    chatNotification: true,
   });
 
   useEffect(() => {
@@ -63,16 +61,10 @@ export default function NotificationsTab({ settings, onSave, isSaving, readOnly 
       key: 'customerRegistration' as keyof NotificationSettings,
     },
     {
-      title: 'Review Notifications',
-      description: 'Receive notifications for new product reviews',
+      title: 'Chat Notification',
+      description: 'Get notified when new chat messages arrive',
       icon: MessageSquare,
-      key: 'reviewNotifications' as keyof NotificationSettings,
-    },
-    {
-      title: 'Marketing Emails',
-      description: 'Receive marketing and promotional emails',
-      icon: Mail,
-      key: 'marketingEmails' as keyof NotificationSettings,
+      key: 'chatNotification' as keyof NotificationSettings,
     },
   ];
 

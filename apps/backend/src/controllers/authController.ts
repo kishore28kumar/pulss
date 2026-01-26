@@ -354,7 +354,7 @@ export const updateUserProfile = asyncHandler(
       throw new AppError('Not authenticated', 401);
     }
 
-    const { firstName, lastName, phone } = req.body;
+    const { firstName, lastName, phone, avatar } = req.body;
 
     // Validate phone number format if provided - must be exactly 10 digits
     if (phone !== undefined && phone !== null && phone !== '') {
@@ -371,6 +371,7 @@ export const updateUserProfile = asyncHandler(
         ...(firstName !== undefined && { firstName }),
         ...(lastName !== undefined && { lastName }),
         ...(phone !== undefined && { phone: phone || null }),
+        ...(avatar !== undefined && { avatar: avatar || null }),
         updatedAt: new Date(),
       },
       include: {
