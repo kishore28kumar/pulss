@@ -302,6 +302,7 @@ model products {
   metaDescription      String?
   isActive             Boolean            @default(true)
   isFeatured           Boolean            @default(false)
+  isSponsored          Boolean            @default(false)
   createdAt            DateTime           @default(now())
   updatedAt            DateTime
   cart_items           cart_items[]

@@ -31,14 +31,17 @@ interface CSVRow {
   metaDescription?: string;
 }
 
+type TemplateType = 'regular' | 'featured' | 'sponsored';
+
 export default function BulkImportPage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [csvData, setCsvData] = useState<CSVRow[]>([]);
   const [errors, setErrors] = useState<string[]>([]);
+  const [templateType, setTemplateType] = useState<TemplateType>('regular');
 
-  // CSV Template headers
+  // CSV Template headers (without isFeatured/isSponsored - will be set based on template type)
   const csvHeaders = [
     'name',
     'slug',
@@ -56,7 +59,6 @@ export default function BulkImportPage() {
     'categorySlug',
     'images',
     'isActive',
-    'isFeatured',
     'requiresPrescription',
     'isOTC',
     'manufacturer',
@@ -64,24 +66,31 @@ export default function BulkImportPage() {
     'metaDescription',
   ];
 
-  // Download CSV template
-  const downloadTemplate = () => {
+  // Download CSV template based on type
+  const downloadTemplate = (type: TemplateType) => {
     const csvContent = [
       csvHeaders.join(','),
-      // Example row
-      'Sample Product, sample-product, "This is a sample product description", "Short description", 99.99, 129.99, 50.00, SKU-001, 1234567890123, true, 100, 10, 1.5, kg, electronics, "https://example.com/image1.jpg,https://example.com/image2.jpg", true, false, false, true, "Sample Manufacturer", "SEO Title", "SEO Description"',
+      // Example row - isFeatured/isSponsored will be set automatically based on template type
+      'Sample Product, sample-product, "This is a sample product description", "Short description", 99.99, 129.99, 50.00, SKU-001, 1234567890123, true, 100, 10, 1.5, kg, electronics, "https://example.com/image1.jpg,https://example.com/image2.jpg", true, false, true, "Sample Manufacturer", "SEO Title", "SEO Description"',
     ].join('\n');
+
+    const filename = type === 'regular' 
+      ? 'regular-products-template.csv'
+      : type === 'featured'
+      ? 'featured-products-template.csv'
+      : 'sponsored-products-template.csv';
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    link.setAttribute('download', 'product-import-template.csv');
+    link.setAttribute('download', filename);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    toast.success('Template downloaded successfully');
+    toast.success(`${type === 'regular' ? 'Regular' : type === 'featured' ? 'Featured' : 'Sponsored'} products template downloaded successfully`);
+    setTemplateType(type);
   };
 
   // Parse CSV file
@@ -268,8 +277,9 @@ export default function BulkImportPage() {
       return;
     }
 
-    // Store CSV data in sessionStorage for preview page
+    // Store CSV data and template type in sessionStorage for preview page
     sessionStorage.setItem('bulkImportData', JSON.stringify(csvData));
+    sessionStorage.setItem('bulkImportTemplateType', templateType);
     router.push('/dashboard/products/bulk-import/preview');
   };
 
@@ -306,19 +316,36 @@ export default function BulkImportPage() {
         </div>
       </div>
 
-      {/* Download Template */}
+      {/* Download Templates */}
       <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">CSV Template</h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Download a template file with all required fields</p>
-          </div>
+        <div className="mb-4">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">CSV Templates</h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Download a template file based on product type. The import will automatically set the product type based on the template used.</p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <button
-            onClick={downloadTemplate}
-            className="inline-flex items-center justify-center px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition text-sm sm:text-base"
+            onClick={() => downloadTemplate('regular')}
+            className="flex flex-col items-center justify-center p-4 border-2 border-gray-300 dark:border-gray-600 rounded-lg hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition text-sm sm:text-base"
           >
-            <Download className="w-5 h-5 mr-2" />
-            Download Template
+            <Download className="w-6 h-6 mb-2 text-gray-600 dark:text-gray-400" />
+            <span className="font-medium text-gray-900 dark:text-gray-100">Regular Products</span>
+            <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">regular-products-template.csv</span>
+          </button>
+          <button
+            onClick={() => downloadTemplate('featured')}
+            className="flex flex-col items-center justify-center p-4 border-2 border-gray-300 dark:border-gray-600 rounded-lg hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition text-sm sm:text-base"
+          >
+            <Download className="w-6 h-6 mb-2 text-gray-600 dark:text-gray-400" />
+            <span className="font-medium text-gray-900 dark:text-gray-100">Featured Products</span>
+            <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">featured-products-template.csv</span>
+          </button>
+          <button
+            onClick={() => downloadTemplate('sponsored')}
+            className="flex flex-col items-center justify-center p-4 border-2 border-gray-300 dark:border-gray-600 rounded-lg hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition text-sm sm:text-base"
+          >
+            <Download className="w-6 h-6 mb-2 text-gray-600 dark:text-gray-400" />
+            <span className="font-medium text-gray-900 dark:text-gray-100">Sponsored Products</span>
+            <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">sponsored-products-template.csv</span>
           </button>
         </div>
       </div>

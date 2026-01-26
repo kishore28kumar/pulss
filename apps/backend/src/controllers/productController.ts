@@ -16,6 +16,7 @@ export const getProducts = asyncHandler(
       maxPrice,
       isActive,
       isFeatured,
+      isSponsored,
       inStock,
       page = 1,
       limit = 20,
@@ -68,6 +69,10 @@ export const getProducts = asyncHandler(
 
     if (isFeatured !== undefined) {
       where.isFeatured = isFeatured === 'true';
+    }
+
+    if (isSponsored !== undefined) {
+      where.isSponsored = isSponsored === 'true';
     }
 
     if (inStock === 'true') {
@@ -227,7 +232,9 @@ export const createProduct = asyncHandler(
         trackInventory: data.trackInventory ?? true,
         stock: data.stockQuantity ?? 0,
         isActive: data.isActive ?? true,
+        // Ensure mutual exclusivity: if featured, not sponsored; if sponsored, not featured
         isFeatured: data.isFeatured ?? false,
+        isSponsored: data.isSponsored && !data.isFeatured ? true : false,
         requiresPrescription: data.requiresPrescription ?? false,
         manufacturer: data.manufacturer,
         metaTitle: data.metaTitle,
@@ -322,7 +329,20 @@ export const updateProduct = asyncHandler(
     if (data.trackInventory !== undefined) updateData.trackInventory = data.trackInventory;
     if (data.stockQuantity !== undefined) updateData.stock = data.stockQuantity;
     if (data.isActive !== undefined) updateData.isActive = data.isActive;
-    if (data.isFeatured !== undefined) updateData.isFeatured = data.isFeatured;
+    if (data.isFeatured !== undefined) {
+      updateData.isFeatured = data.isFeatured;
+      // If setting as featured, ensure it's not sponsored (mutually exclusive)
+      if (data.isFeatured) {
+        updateData.isSponsored = false;
+      }
+    }
+    if (data.isSponsored !== undefined) {
+      updateData.isSponsored = data.isSponsored;
+      // If setting as sponsored, ensure it's not featured (mutually exclusive)
+      if (data.isSponsored) {
+        updateData.isFeatured = false;
+      }
+    }
     if (data.requiresPrescription !== undefined) updateData.requiresPrescription = data.requiresPrescription;
     if (data.manufacturer !== undefined) updateData.manufacturer = data.manufacturer;
     if (data.metaTitle !== undefined) updateData.metaTitle = data.metaTitle;
@@ -483,7 +503,9 @@ export const bulkCreateProducts = asyncHandler(
             trackInventory: productData.trackInventory ?? true,
             stock: productData.stockQuantity ?? 0,
             isActive: productData.isActive ?? true,
+            // Ensure mutual exclusivity: if featured, not sponsored; if sponsored, not featured
             isFeatured: productData.isFeatured ?? false,
+            isSponsored: productData.isSponsored && !productData.isFeatured ? true : false,
             requiresPrescription: productData.requiresPrescription ?? false,
             manufacturer: productData.manufacturer || null,
             metaTitle: productData.metaTitle || null,

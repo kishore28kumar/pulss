@@ -26,11 +26,23 @@ export default function StoreHomePage() {
     }
   }, [isAuthenticated, authLoading, router, storeName]);
 
-  const { data: featuredProducts, isLoading } = useQuery({
+  const { data: featuredProducts, isLoading: featuredLoading } = useQuery({
     queryKey: ['featured-products', storeName],
     queryFn: async () => {
       const response = await api.get('/products', {
         params: { isFeatured: true, limit: 8 },
+      });
+      return response.data.data.data;
+    },
+    enabled: isAuthenticated && typeof window !== 'undefined' && !!storeName,
+    retry: false,
+  });
+
+  const { data: sponsoredProducts, isLoading: sponsoredLoading } = useQuery({
+    queryKey: ['sponsored-products', storeName],
+    queryFn: async () => {
+      const response = await api.get('/products', {
+        params: { isSponsored: true, limit: 8 },
       });
       return response.data.data.data;
     },
@@ -121,7 +133,7 @@ export default function StoreHomePage() {
             <p className="text-sm md:text-base text-gray-600">Check out our handpicked selection</p>
           </div>
 
-          {isLoading ? (
+          {featuredLoading ? (
             <div className="text-center py-12">
               <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
               <p className="text-gray-500 mt-4">Loading products...</p>
@@ -142,6 +154,43 @@ export default function StoreHomePage() {
               {/* Desktop Grid */}
               <div className="hidden md:grid grid-cols-2 lg:grid-cols-4 gap-6">
                 {featuredProducts?.map((product: any) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      </section>
+
+      {/* Sponsored Products */}
+      <section className="py-8 md:py-16 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-6 md:mb-12">
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2 md:mb-4">Sponsored Products</h2>
+            <p className="text-sm md:text-base text-gray-600">Special promotions and featured offers</p>
+          </div>
+
+          {sponsoredLoading ? (
+            <div className="text-center py-12">
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+              <p className="text-gray-500 mt-4">Loading products...</p>
+            </div>
+          ) : (
+            <>
+              {/* Mobile Slider */}
+              <div className="md:hidden overflow-x-auto scrollbar-hide -mx-4 px-4">
+                <div className="flex gap-4 snap-x snap-mandatory scroll-smooth pb-4">
+                  {sponsoredProducts?.map((product: any) => (
+                    <div key={product.id} className="flex-shrink-0 w-[75%] snap-start">
+                      <ProductCard product={product} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Desktop Grid */}
+              <div className="hidden md:grid grid-cols-2 lg:grid-cols-4 gap-6">
+                {sponsoredProducts?.map((product: any) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
               </div>

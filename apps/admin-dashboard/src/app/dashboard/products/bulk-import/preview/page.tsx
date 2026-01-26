@@ -9,6 +9,8 @@ import api from '@/lib/api';
 import { toast } from 'sonner';
 import { formatCurrency } from '@/lib/utils';
 
+type TemplateType = 'regular' | 'featured' | 'sponsored';
+
 interface ProductData {
   name: string;
   slug: string;
@@ -27,6 +29,7 @@ interface ProductData {
   images?: string;
   isActive?: string;
   isFeatured?: string;
+  isSponsored?: string;
   requiresPrescription?: string;
   isOTC?: string;
   manufacturer?: string;
@@ -132,6 +135,7 @@ export default function BulkImportPreviewPage() {
 
     setIsLoading(true);
     const storedData = sessionStorage.getItem('bulkImportData');
+    const templateType = (sessionStorage.getItem('bulkImportTemplateType') || 'regular') as TemplateType;
     
     if (storedData) {
       try {
@@ -148,17 +152,25 @@ export default function BulkImportPreviewPage() {
         }
         
         // Convert CSV data to EditableProduct format with validation
+        // Automatically set isFeatured/isSponsored based on template type
         const editableProducts: EditableProduct[] = csvData.map((product, index) => {
-          const errors = validateProduct(product, index);
-          return {
+          // Set isFeatured/isSponsored based on template type
+          const productWithType: ProductData = {
             ...product,
+            isFeatured: templateType === 'featured' ? 'true' : 'false',
+            isSponsored: templateType === 'sponsored' ? 'true' : 'false',
+          };
+          
+          const errors = validateProduct(productWithType, index);
+          return {
+            ...productWithType,
             id: `product_${index}_${Date.now()}_${Math.random()}`,
             isValid: errors.length === 0,
             errors,
           };
         });
 
-        console.log('Loaded products:', editableProducts.length);
+        console.log('Loaded products:', editableProducts.length, 'Template type:', templateType);
         setProducts(editableProducts);
         setIsLoading(false);
       } catch (error) {
@@ -241,11 +253,18 @@ export default function BulkImportPreviewPage() {
       // Find category IDs from slugs
       const categoryMap = new Map(categories?.map((cat) => [cat.slug, cat.id]) || []);
 
+      // Get template type from sessionStorage
+      const templateType = (sessionStorage.getItem('bulkImportTemplateType') || 'regular') as TemplateType;
+
       // Prepare products for bulk upload
       const productsPayload = validProducts.map((product) => {
         const categoryId = product.categorySlug
           ? categoryMap.get(product.categorySlug) || null
           : null;
+
+        // Set isFeatured/isSponsored based on template type (mutually exclusive)
+        const isFeatured = templateType === 'featured';
+        const isSponsored = templateType === 'sponsored';
 
         return {
           name: product.name,
@@ -260,7 +279,8 @@ export default function BulkImportPreviewPage() {
           stockQuantity: product.stockQuantity ? parseInt(product.stockQuantity) : undefined,
           images: product.images ? product.images.split(',').map((url) => url.trim()).filter(Boolean) : undefined,
           isActive: product.isActive === 'true' || product.isActive === '1' || product.isActive === '',
-          isFeatured: product.isFeatured === 'true' || product.isFeatured === '1',
+          isFeatured,
+          isSponsored,
           requiresPrescription: product.requiresPrescription === 'true' || product.requiresPrescription === '1',
           manufacturer: product.manufacturer || undefined,
           metaTitle: product.metaTitle || undefined,

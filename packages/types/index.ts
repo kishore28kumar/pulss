@@ -151,6 +151,7 @@ export interface CreateProductDTO {
   images?: string[];
   isActive?: boolean;
   isFeatured?: boolean;
+  isSponsored?: boolean;
   requiresPrescription?: boolean;
   isOTC?: boolean;
   manufacturer?: string;
