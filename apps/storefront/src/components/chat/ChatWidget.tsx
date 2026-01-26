@@ -140,12 +140,9 @@ export default function ChatWidget() {
 
                 // Determine sender display name
                 let displayName = senderName;
-                if (message.senderType === 'super_admin') {
-                  displayName = 'Super Admin';
-                } else if (message.senderType === 'admin') {
+                // All non-customer sender types display as "Admin"
+                if (!isCustomer) {
                   displayName = 'Admin';
-                } else if (message.senderType === 'staff') {
-                  displayName = 'Staff';
                 }
 
                 return (
