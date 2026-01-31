@@ -9,6 +9,7 @@ import api from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWishlist } from '@/hooks/useWishlist';
 import { useTenant } from '@/contexts/TenantContext';
+import NotificationBell from './NotificationBell';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -159,6 +160,8 @@ export default function Header() {
 
             {/* Actions */}
             <div className="flex items-center space-x-4">
+              {mounted && isAuthenticated && <NotificationBell />}
+
               <Link
                 href={getPath('/wishlist')}
                 className="hidden md:flex items-center relative text-gray-700 hover:text-blue-600 transition group"
