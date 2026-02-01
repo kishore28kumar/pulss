@@ -7,9 +7,11 @@ import { Trash2, Plus, ExternalLink, Image as ImageIcon } from 'lucide-react';
 import { authService } from '@/lib/auth';
 import api from '@/lib/api';
 import { toast } from 'sonner';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 
 export default function BroadcastsPage() {
   const { broadcasts: receivedBroadcasts, isLoading: isContextLoading, markAsRead, refreshBroadcasts } = useBroadcasts();
+  const { checkAccess, isSubscriptionActive } = useSubscription();
   const [activeTab, setActiveTab] = useState<'received' | 'sent'>('received');
   const [sentBroadcasts, setSentBroadcasts] = useState<any[]>([]);
   const [isLoadingSent, setIsLoadingSent] = useState(false);
@@ -129,8 +131,12 @@ export default function BroadcastsPage() {
         </div>
         {canSendBroadcast && (
           <button
-            onClick={() => setShowCreateForm(!showCreateForm)}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            onClick={() => {
+              if (checkAccess('broadcast')) {
+                setShowCreateForm(!showCreateForm);
+              }
+            }}
+            className={`flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors ${!isSubscriptionActive ? 'opacity-75' : ''}`}
           >
             <Plus className="w-4 h-4" />
             <span className="hidden sm:inline">New Broadcast</span>

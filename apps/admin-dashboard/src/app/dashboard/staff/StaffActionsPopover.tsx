@@ -2,7 +2,7 @@
 
 import { useRef, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Settings, Edit, Building2, Snowflake, Unlock, Download, Trash2, KeyRound } from 'lucide-react';
+import { Settings, Edit, Building2, Snowflake, Unlock, Download, Trash2, KeyRound, ShieldCheck } from 'lucide-react';
 import PermissionGuard from '@/components/permissions/PermissionGuard';
 import { Permission } from '@/lib/permissions';
 
@@ -26,6 +26,7 @@ interface StaffActionsPopoverProps {
   onToggle: (memberId: string | null) => void;
   onEditStaff: () => void;
   onEditTenant: () => void;
+  onManageAccess?: () => void;
   onFreeze: () => void;
   onUnfreeze: () => void;
   onDownloadCustomers: () => void;
@@ -43,6 +44,7 @@ export default function StaffActionsPopover({
   onToggle,
   onEditStaff,
   onEditTenant,
+  onManageAccess,
   onFreeze,
   onUnfreeze,
   onDownloadCustomers,
@@ -148,7 +150,7 @@ export default function StaffActionsPopover({
           <span>Edit Tenant</span>
         </button>
       ) : (
-        <PermissionGuard permission={Permission.STAFF_UPDATE}>
+      <PermissionGuard permission={Permission.STAFF_UPDATE}>
           <button
             onClick={() => handleAction(onEditStaff)}
             className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition"
@@ -157,6 +159,17 @@ export default function StaffActionsPopover({
             <span>Edit Staff</span>
           </button>
         </PermissionGuard>
+      )}
+
+      {/* Manage Access - SUPER_ADMIN only */}
+      {isSuperAdmin && hasTenant && onManageAccess && (
+        <button
+          onClick={() => handleAction(onManageAccess)}
+          className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+        >
+          <ShieldCheck className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+          <span>Manage Access</span>
+        </button>
       )}
 
       {/* Freeze/Unfreeze - SUPER_ADMIN only */}

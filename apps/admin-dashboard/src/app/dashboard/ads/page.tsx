@@ -6,6 +6,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Check, X, AlertCircle, Eye, Image as ImageIcon } from 'lucide-react';
 import api from '@/lib/api';
 import { toast } from 'sonner';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 import { Permission, isSuperAdmin } from '@/lib/permissions';
 import PermissionGuard from '@/components/permissions/PermissionGuard';
 import Link from 'next/link';
@@ -37,6 +38,7 @@ export default function AdsPage() {
 
     // Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const { checkAccess, isSubscriptionActive } = useSubscription();
     const [selectedAdId, setSelectedAdId] = useState<string | null>(null);
     const [targetStatus, setTargetStatus] = useState<string>('');
     const [adminNote, setAdminNote] = useState('');
@@ -189,8 +191,12 @@ export default function AdsPage() {
                                 New Ad Request
                         </Link>
                             <button
-                                onClick={() => setIsHeroImageModalOpen(true)}
-                                className="inline-flex items-center justify-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
+                                onClick={() => {
+                                    if (checkAccess('heroCarousel')) {
+                                        setIsHeroImageModalOpen(true);
+                                    }
+                                }}
+                                className={`inline-flex items-center justify-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition ${!isSubscriptionActive ? 'opacity-75' : ''}`}
                             >
                                 <ImageIcon className="w-5 h-5 mr-2" />
                                 Hero/Sponsored Request
@@ -470,9 +476,14 @@ export default function AdsPage() {
                                 {/* Image URLs */}
                                 {(!heroImageRequestType.includes('REMOVE')) && (
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                             Image URLs * (Max 10)
                                         </label>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                                            {heroImageRequestType.startsWith('SPONSORED_BANNER') 
+                                                ? 'Recommended size: 1600x200px (8:1 aspect ratio)' 
+                                                : 'Recommended size: 1920x820px (21:9 aspect ratio) or 1600x900px (16:9 aspect ratio)'}
+                                        </p>
                                         <div className="space-y-2">
                                             {heroImageUrls.map((url, index) => (
                                                 <div key={index} className="flex gap-2">

@@ -63,6 +63,9 @@ export interface AuthUser {
     id: string;
     name: string;
     slug: string;
+    status?: string;
+    subscriptionPlan?: string;
+    subscriptionEndsAt?: string | Date | null;
   };
 }
 
@@ -127,6 +130,7 @@ export interface UpdateTenantDTO {
     contact?: string;
     faq?: string;
   };
+  features?: Record<string, boolean>;
 }
 
 // ============================================
@@ -159,7 +163,7 @@ export interface CreateProductDTO {
   metaDescription?: string;
 }
 
-export interface UpdateProductDTO extends Partial<CreateProductDTO> {}
+export interface UpdateProductDTO extends Partial<CreateProductDTO> { }
 
 export interface ProductFilters {
   categoryId?: string;
@@ -190,7 +194,7 @@ export interface CreateCategoryDTO {
   sortOrder?: number;
 }
 
-export interface UpdateCategoryDTO extends Partial<CreateCategoryDTO> {}
+export interface UpdateCategoryDTO extends Partial<CreateCategoryDTO> { }
 
 // ============================================
 // Cart Types
@@ -294,7 +298,7 @@ export interface CreateAddressDTO {
   isDefault?: boolean;
 }
 
-export interface UpdateAddressDTO extends Partial<CreateAddressDTO> {}
+export interface UpdateAddressDTO extends Partial<CreateAddressDTO> { }
 
 // ============================================
 // Dashboard Analytics Types

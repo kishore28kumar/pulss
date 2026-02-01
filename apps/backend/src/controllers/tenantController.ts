@@ -266,6 +266,8 @@ export const updateTenant = asyncHandler(
       if (data.heroImageKeywords !== undefined) updateData.heroImageKeywords = data.heroImageKeywords;
       // SUPER_ADMIN can update pageContent
       if (data.pageContent !== undefined) updateData.pageContent = data.pageContent;
+      // SUPER_ADMIN can update features (Manage Access)
+      if (data.features !== undefined) updateData.features = data.features;
     }
 
     // Handle scheduleDrugEligible, returnPolicy, pharmacistPhoto, and new contact/media fields separately using raw SQL to avoid Prisma type issues
@@ -283,7 +285,7 @@ export const updateTenant = asyncHandler(
     delete updateData.isPrimaryContactWhatsApp; // Remove from updateData to avoid Prisma errors
     delete updateData.shopFrontPhoto; // Remove from updateData to avoid Prisma errors
     delete updateData.ownerPhoto; // Remove from updateData to avoid Prisma errors
-    
+
     // Update other fields first if any
     if (Object.keys(updateData).length > 0) {
       await prisma.tenants.update({
@@ -291,7 +293,7 @@ export const updateTenant = asyncHandler(
         data: updateData,
       });
     }
-    
+
     // Update scheduleDrugEligible using raw SQL if provided
     if (scheduleDrugValue !== undefined) {
       try {
@@ -308,7 +310,7 @@ export const updateTenant = asyncHandler(
             END IF;
           END $$;
         `);
-        
+
         // Now update the value
         await prisma.$executeRawUnsafe(
           `UPDATE tenants SET "scheduleDrugEligible" = $1 WHERE id = $2`,
@@ -340,7 +342,7 @@ export const updateTenant = asyncHandler(
             END IF;
           END $$;
         `);
-        
+
         // Now update the value
         await prisma.$executeRawUnsafe(
           `UPDATE tenants SET "returnPolicy" = $1 WHERE id = $2`,
@@ -372,7 +374,7 @@ export const updateTenant = asyncHandler(
             END IF;
           END $$;
         `);
-        
+
         // Now update the value
         await prisma.$executeRawUnsafe(
           `UPDATE tenants SET "pharmacistPhoto" = $1 WHERE id = $2`,
@@ -455,7 +457,7 @@ export const updateTenant = asyncHandler(
         throw new AppError(`Failed to update ownerPhoto: ${error.message}`, 500);
       }
     }
-    
+
     // Fetch updated tenant with all fields including those updated via raw SQL
     const updatedTenant = await prisma.tenants.findUnique({
       where: { id },
