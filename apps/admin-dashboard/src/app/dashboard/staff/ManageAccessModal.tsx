@@ -45,7 +45,6 @@ export default function ManageAccessModal({ tenantId, tenantName, onClose, onSuc
   });
 
   const {
-    register,
     handleSubmit,
     setValue,
     watch,
@@ -166,7 +165,7 @@ export default function ManageAccessModal({ tenantId, tenantName, onClose, onSuc
         <div className="bg-blue-50 dark:bg-blue-900/20 px-6 py-3 border-b border-blue-100 dark:border-blue-900/30 flex items-start gap-3">
             <Info className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
             <p className="text-sm text-blue-700 dark:text-blue-300">
-                Disabling these features will hide them from the tenant's admin dashboard and prevent their usage, regardless of their subscription status.
+                Disabling these features will hide them from the tenant&apos;s admin dashboard and prevent their usage, regardless of their subscription status.
             </p>
         </div>
 

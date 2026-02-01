@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Loader2, UserPlus, Eye, EyeOff, RefreshCw, Store, Copy, ShieldCheck, RotateCcw, Image as ImageIcon, Upload, X, FileText, RotateCcw as ResetIcon } from 'lucide-react';
+import { ArrowLeft, Loader2, UserPlus, Eye, EyeOff, RefreshCw, Store, Copy, ShieldCheck, Image as ImageIcon, Upload, X, FileText, RotateCcw as ResetIcon } from 'lucide-react';
 import FormattedContent from '@/components/content/FormattedContent';
 import FormattedFAQ from '@/components/content/FormattedFAQ';
 import { useForm } from 'react-hook-form';

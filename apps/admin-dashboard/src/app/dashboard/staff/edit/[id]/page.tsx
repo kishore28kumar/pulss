@@ -2,7 +2,7 @@
 
 import { useRouter, useParams } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Loader2, Store, Copy, ShieldCheck, RotateCcw, Image as ImageIcon, Upload, X, Lock, FileText, Eye, RotateCcw as ResetIcon } from 'lucide-react';
+import { ArrowLeft, Loader2, Store, Copy, ShieldCheck, Image as ImageIcon, Upload, X, Lock, FileText, Eye, RotateCcw as ResetIcon } from 'lucide-react';
 import FormattedContent from '@/components/content/FormattedContent';
 import FormattedFAQ from '@/components/content/FormattedFAQ';
 import { useForm } from 'react-hook-form';
@@ -11,7 +11,7 @@ import { z } from 'zod';
 import api from '@/lib/api';
 import { toast } from 'sonner';
 import { useState, useEffect, useRef } from 'react';
-import { getUserRole, isSuperAdmin } from '@/lib/permissions';
+import { isSuperAdmin } from '@/lib/permissions';
 import PermissionGuard from '@/components/permissions/PermissionGuard';
 import { Permission } from '@/lib/permissions';
 
@@ -321,6 +321,14 @@ interface Tenant {
   heroImageKeywords?: string[];
   primaryContactWhatsApp?: string;
   isPrimaryContactWhatsApp?: boolean;
+  pageContent?: {
+    shipping?: string;
+    privacy?: string;
+    terms?: string;
+    about?: string;
+    contact?: string;
+    faq?: string;
+  };
   shopFrontPhoto?: string;
   ownerPhoto?: string;
   upiId?: string;
@@ -335,21 +343,19 @@ interface AdminUser {
   phone?: string;
 }
 
+
+
 export default function EditTenantPage() {
   const router = useRouter();
   const params = useParams();
   const tenantId = params.id as string;
   const queryClient = useQueryClient();
   const [mounted, setMounted] = useState(false);
-  const [userRole, setUserRole] = useState<string | null>(null);
+  // userRole appears unused based on previous analysis
   const [storefrontUrl, setStorefrontUrl] = useState<string>('');
   const [heroImages, setHeroImages] = useState<string[]>([]);
   const [heroImageKeywords, setHeroImageKeywords] = useState<string[]>([]);
-  const [uploadingHeroImage, setUploadingHeroImage] = useState(false);
-  const [showHeroImageModal, setShowHeroImageModal] = useState(false);
-  const [heroImageUrlInput, setHeroImageUrlInput] = useState('');
-  const [heroImageKeywordInput, setHeroImageKeywordInput] = useState('');
-  const heroImageFileInputRef = useRef<HTMLInputElement>(null);
+
   const [shopFrontPhoto, setShopFrontPhoto] = useState<string>('');
   const [ownerPhoto, setOwnerPhoto] = useState<string>('');
   const [uploadingShopFrontPhoto, setUploadingShopFrontPhoto] = useState(false);
@@ -366,7 +372,6 @@ export default function EditTenantPage() {
 
   useEffect(() => {
     setMounted(true);
-    setUserRole(getUserRole());
   }, []);
 
   // Check if user is SUPER_ADMIN
@@ -455,7 +460,6 @@ export default function EditTenantPage() {
     setValue,
     watch,
     reset,
-    clearErrors,
   } = useForm<EditFormData>({
     resolver: zodResolver(editSchema),
     mode: 'onSubmit',
@@ -528,109 +532,7 @@ export default function EditTenantPage() {
     return READ_ONLY_FIELDS[fieldName] === true;
   };
 
-  // Hero Image Upload Handler
-  const handleHeroImageUpload = async (file: File) => {
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please upload an image file (JPG or PNG)');
-      return;
-    }
 
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image size must be less than 5MB');
-      return;
-    }
-
-    if (heroImages.length >= 10) {
-      toast.error('Maximum 10 hero images allowed');
-      return;
-    }
-
-    setUploadingHeroImage(true);
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const response = await api.post('/upload', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-
-      const uploadedUrl = response.data.data.url;
-      const updatedImages = [...heroImages, uploadedUrl];
-      const updatedKeywords = [...heroImageKeywords, ''];
-      setHeroImages(updatedImages);
-      setHeroImageKeywords(updatedKeywords);
-      setValue('heroImages', updatedImages);
-      toast.success('Hero image uploaded successfully');
-
-      if (heroImageFileInputRef.current) {
-        heroImageFileInputRef.current.value = '';
-      }
-    } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Failed to upload hero image');
-    } finally {
-      setUploadingHeroImage(false);
-    }
-  };
-
-  const handleHeroImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      handleHeroImageUpload(file);
-    }
-  };
-
-  const handleAddHeroImageUrl = () => {
-    setHeroImageUrlInput('');
-    setHeroImageKeywordInput('');
-    setShowHeroImageModal(true);
-  };
-
-  const handleSubmitHeroImage = () => {
-    const url = heroImageUrlInput.trim();
-    const keyword = heroImageKeywordInput.trim();
-
-    if (!url) {
-      toast.error('Please enter an image URL');
-      return;
-    }
-
-    try {
-      new URL(url);
-      if (heroImages.length >= 10) {
-        toast.error('Maximum 10 hero images allowed');
-        return;
-      }
-      const updatedImages = [...heroImages, url];
-      const updatedKeywords = [...heroImageKeywords, keyword || ''];
-      setHeroImages(updatedImages);
-      setHeroImageKeywords(updatedKeywords);
-      setValue('heroImages', updatedImages);
-      setValue('heroImageKeywords', updatedKeywords);
-      setShowHeroImageModal(false);
-      setHeroImageUrlInput('');
-      setHeroImageKeywordInput('');
-      toast.success('Hero image added successfully');
-    } catch {
-      toast.error('Invalid URL');
-    }
-  };
-
-  const handleCancelHeroImageModal = () => {
-    setShowHeroImageModal(false);
-    setHeroImageUrlInput('');
-    setHeroImageKeywordInput('');
-  };
-
-  const handleRemoveHeroImage = (index: number) => {
-    const updatedImages = heroImages.filter((_, i) => i !== index);
-    const updatedKeywords = heroImageKeywords.filter((_, i) => i !== index);
-    setHeroImages(updatedImages);
-    setHeroImageKeywords(updatedKeywords);
-    setValue('heroImages', updatedImages);
-    toast.success('Hero image removed');
-  };
 
   // Photo upload handlers (similar to Create Tenant page)
   const handlePhotoUpload = async (file: File, type: 'shopFront' | 'owner' | 'upiScanner') => {

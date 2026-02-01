@@ -12,7 +12,7 @@ export default function FormattedReturnPolicy({ text }: FormattedReturnPolicyPro
     // Check if line is mostly dashes, underscores, or similar characters
     // Support various separator characters: ━ (box drawing), ─ (em dash), - (hyphen), _ (underscore), = (equals)
     const specialChars = trimmed.match(/[━─\-_=]/g);
-    return specialChars && specialChars.length / trimmed.length > 0.6;
+    return !!specialChars && specialChars.length / trimmed.length > 0.6;
   };
 
   // Helper to check if a line is a header (starts with #)
@@ -111,7 +111,6 @@ export default function FormattedReturnPolicy({ text }: FormattedReturnPolicyPro
         const prevElement = index > 0 ? elements[index - 1] : null;
         const nextElement = index < elements.length - 1 ? elements[index + 1] : null;
         const isFirstElement = index === 0;
-        const isLastElement = index === elements.length - 1;
 
         switch (element.type) {
           case 'separator':

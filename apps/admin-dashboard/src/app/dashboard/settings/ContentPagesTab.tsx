@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { FileText, Eye, Save } from 'lucide-react';
+import { Eye, Save } from 'lucide-react';
 import FormattedContent from '@/components/content/FormattedContent';
 import FormattedFAQ from '@/components/content/FormattedFAQ';
 

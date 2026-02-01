@@ -42,7 +42,7 @@ export default function BroadcastsPage() {
     try {
       const response = await api.get('/broadcasts?type=sent');
       setSentBroadcasts(response.data.data);
-    } catch (error: any) {
+    } catch {
       toast.error('Failed to load sent broadcasts');
     } finally {
       setIsLoadingSent(false);

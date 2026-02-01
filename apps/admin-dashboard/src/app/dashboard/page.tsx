@@ -39,12 +39,6 @@ interface Order {
   guestEmail?: string;
 }
 
-interface Product {
-  id: string;
-  name: string;
-  sku: string;
-  stock: number;
-}
 
 interface Tenant {
   id: string;

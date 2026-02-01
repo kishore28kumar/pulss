@@ -71,7 +71,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       if (typeof tenantFeatures === 'string') {
         try {
           tenantFeatures = JSON.parse(tenantFeatures);
-        } catch (e) {
+        } catch {
           // Ignore parsing error, will fail check below
         }
       }

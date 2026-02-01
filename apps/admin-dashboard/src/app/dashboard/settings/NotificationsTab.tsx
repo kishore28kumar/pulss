@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Save, Bell, Mail, MessageSquare } from 'lucide-react';
+import { Save, Bell, MessageSquare } from 'lucide-react';
 
 interface NotificationsTabProps {
   settings: any;

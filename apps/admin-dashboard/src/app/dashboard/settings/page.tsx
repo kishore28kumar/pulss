@@ -14,8 +14,7 @@ import AppearanceTab from './AppearanceTab';
 import NotificationsTab from './NotificationsTab';
 import ProfileTab from './ProfileTab';
 import PermissionGuard from '@/components/permissions/PermissionGuard';
-import { Permission, getUserRole } from '@/lib/permissions';
-import { authService } from '@/lib/auth';
+import { Permission } from '@/lib/permissions';
 
 type TabType = 'profile' | 'appearance' | 'notifications';
 
@@ -27,11 +26,9 @@ const tabs = [
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<TabType>('profile');
-  const [mounted, setMounted] = useState(false);
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    setMounted(true);
     // Set default tab - Profile first for all users
     setActiveTab('profile');
   }, []);
