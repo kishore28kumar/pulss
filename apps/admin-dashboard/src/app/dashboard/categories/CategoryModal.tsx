@@ -121,15 +121,15 @@ export default function CategoryModal({ category, categories, onClose, onSuccess
         <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" onClick={onClose} />
 
         {/* Modal */}
-        <div className="relative bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            <h2 className="text-2xl font-bold text-gray-900">
+          <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
               {isEditing ? 'Edit Category' : 'Create Category'}
             </h2>
             <button
               onClick={onClose}
-              className="p-2 text-gray-400 hover:text-gray-600 transition"
+              className="p-2 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition"
             >
               <X className="w-5 h-5" />
             </button>
@@ -140,85 +140,85 @@ export default function CategoryModal({ category, categories, onClose, onSuccess
             {/* Name & Slug */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Category Name *
                 </label>
                 <input
                   id="name"
                   type="text"
                   {...register('name')}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                   placeholder="e.g., Electronics"
                 />
                 {errors.name && (
-                  <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.name.message}</p>
                 )}
               </div>
 
               <div>
-                <label htmlFor="slug" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="slug" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Slug *
                 </label>
                 <input
                   id="slug"
                   type="text"
                   {...register('slug')}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                   placeholder="e.g., electronics"
                 />
                 {errors.slug && (
-                  <p className="mt-1 text-sm text-red-600">{errors.slug.message}</p>
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.slug.message}</p>
                 )}
               </div>
             </div>
 
             {/* Description */}
             <div>
-              <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Description
               </label>
               <textarea
                 id="description"
                 {...register('description')}
                 rows={3}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                 placeholder="Brief description of the category..."
               />
               {errors.description && (
-                <p className="mt-1 text-sm text-red-600">{errors.description.message}</p>
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.description.message}</p>
               )}
             </div>
 
             {/* Image URL */}
             <div>
-              <label htmlFor="image" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="image" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Image URL
               </label>
               <div className="relative">
-                <ImageIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <ImageIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
                 <input
                   id="image"
                   type="url"
                   {...register('image')}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                   placeholder="https://example.com/image.jpg"
                 />
               </div>
               {errors.image && (
-                <p className="mt-1 text-sm text-red-600">{errors.image.message}</p>
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.image.message}</p>
               )}
             </div>
 
             {/* Parent Category & Display Order */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label htmlFor="parentId" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="parentId" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Parent Category
                 </label>
                 <select
                   id="parentId"
                   {...register('parentId')}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 >
                   <option value="">None (Top Level)</option>
                   {parentOptions.map((cat) => (
@@ -230,33 +230,33 @@ export default function CategoryModal({ category, categories, onClose, onSuccess
               </div>
 
               <div>
-                <label htmlFor="displayOrder" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="displayOrder" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Display Order
                 </label>
                 <input
                   id="displayOrder"
                   type="number"
                   {...register('displayOrder', { valueAsNumber: true })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                   placeholder="0"
                   min="0"
                 />
                 {errors.displayOrder && (
-                  <p className="mt-1 text-sm text-red-600">{errors.displayOrder.message}</p>
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.displayOrder.message}</p>
                 )}
               </div>
             </div>
 
             {/* Icon */}
             <div>
-              <label htmlFor="icon" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="icon" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Icon (optional)
               </label>
               <input
                 id="icon"
                 type="text"
                 {...register('icon')}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                 placeholder="e.g., 🏥 or icon name"
               />
             </div>
@@ -267,19 +267,19 @@ export default function CategoryModal({ category, categories, onClose, onSuccess
                 id="isActive"
                 type="checkbox"
                 {...register('isActive')}
-                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:bg-gray-700"
               />
-              <label htmlFor="isActive" className="ml-2 text-sm font-medium text-gray-700">
+              <label htmlFor="isActive" className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                 Active (visible on storefront)
               </label>
             </div>
 
             {/* Actions */}
-            <div className="flex items-center justify-end space-x-3 pt-4 border-t border-gray-200">
+            <div className="flex items-center justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition"
                 disabled={mutation.isPending}
               >
                 Cancel
@@ -287,7 +287,7 @@ export default function CategoryModal({ category, categories, onClose, onSuccess
               <button
                 type="submit"
                 disabled={mutation.isPending}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center"
+                className="px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center"
               >
                 {mutation.isPending ? (
                   <>

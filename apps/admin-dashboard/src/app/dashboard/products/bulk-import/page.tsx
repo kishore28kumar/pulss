@@ -287,15 +287,18 @@ export default function BulkImportPage() {
     <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div>
-        <Link
-          href="/dashboard/products"
-          className="inline-flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 mb-2 text-sm sm:text-base"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Products
-        </Link>
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Bulk Import Products</h1>
-        <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-1">Upload a CSV file to import multiple products at once</p>
+        <div className="flex items-center gap-4">
+          <Link
+            href="/dashboard/products"
+            className="p-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl transition shadow-sm"
+          >
+            <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+          </Link>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Bulk Import Products</h1>
+            <p className="text-sm text-gray-500 font-medium">Upload a CSV file to import multiple products at once</p>
+          </div>
+        </div>
       </div>
 
       {/* Instructions */}
@@ -347,6 +350,75 @@ export default function BulkImportPage() {
             <span className="font-medium text-gray-900 dark:text-gray-100">Sponsored Products</span>
             <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">sponsored-products-template.csv</span>
           </button>
+        </div>
+      </div>
+
+      {/* Import Type Selection */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6 transition-all duration-200">
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Select Import Type</h3>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+            Select the type of products you are uploading. This will determine how they are categorized in the system, regardless of which template you used.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-4">
+            {/* Regular Option */}
+            <label className={`relative flex flex-1 items-center p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 ${
+                templateType === 'regular' 
+                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-sm ring-1 ring-blue-500/20'
+                : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+            }`}>
+                <input
+                    type="radio"
+                    name="importType"
+                    value="regular"
+                    checked={templateType === 'regular'}
+                    onChange={() => setTemplateType('regular')}
+                    className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500 mr-3 accent-blue-600"
+                />
+                <div>
+                    <span className="block text-sm font-medium text-gray-900 dark:text-gray-100">Regular Products</span>
+                    <span className="block text-xs text-gray-500 dark:text-gray-400 mt-1">Standard listing</span>
+                </div>
+            </label>
+
+            {/* Featured Option */}
+            <label className={`relative flex flex-1 items-center p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 ${
+                templateType === 'featured' 
+                ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20 shadow-sm ring-1 ring-purple-500/20'
+                : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+            }`}>
+                <input
+                    type="radio"
+                    name="importType"
+                    value="featured"
+                    checked={templateType === 'featured'}
+                    onChange={() => setTemplateType('featured')}
+                    className="w-4 h-4 text-purple-600 border-gray-300 focus:ring-purple-500 mr-3 accent-purple-600"
+                />
+                <div>
+                    <span className="block text-sm font-medium text-gray-900 dark:text-gray-100">Featured Products</span>
+                    <span className="block text-xs text-gray-500 dark:text-gray-400 mt-1">Highlighted on homepage</span>
+                </div>
+            </label>
+
+            {/* Sponsored Option */}
+            <label className={`relative flex flex-1 items-center p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 ${
+                templateType === 'sponsored' 
+                ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/20 shadow-sm ring-1 ring-amber-500/20'
+                : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+            }`}>
+                <input
+                    type="radio"
+                    name="importType"
+                    value="sponsored"
+                    checked={templateType === 'sponsored'}
+                    onChange={() => setTemplateType('sponsored')}
+                    className="w-4 h-4 text-amber-600 border-gray-300 focus:ring-amber-500 mr-3 accent-amber-600"
+                />
+                <div>
+                    <span className="block text-sm font-medium text-gray-900 dark:text-gray-100">Sponsored Products</span>
+                    <span className="block text-xs text-gray-500 dark:text-gray-400 mt-1">Promoted placements</span>
+                </div>
+            </label>
         </div>
       </div>
 
