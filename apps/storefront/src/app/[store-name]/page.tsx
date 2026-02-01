@@ -9,6 +9,7 @@ import { useParams } from 'next/navigation';
 import api from '@/lib/api';
 import ProductCard from '@/components/products/ProductCard';
 import HeroSection from '@/components/home/HeroSection';
+import SponsoredSection from '@/components/home/SponsoredSection';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTenant } from '@/contexts/TenantContext';
 
@@ -161,6 +162,12 @@ export default function StoreHomePage() {
           )}
         </div>
       </section>
+      
+      {/* Sponsored Banner Section */}
+      <SponsoredSection
+        isAuthenticated={isAuthenticated}
+        customerName={customer?.firstName}
+      />
 
       {/* Sponsored Products */}
       {(sponsoredLoading || (sponsoredProducts && sponsoredProducts.length > 0)) && (

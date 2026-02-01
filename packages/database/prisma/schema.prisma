@@ -375,7 +375,7 @@ model tenants {
   pharmacistPhoto    String?
   scheduleDrugEligible Boolean        @default(false)
   returnPolicy        String?         @db.Text
-  heroImages         String[]         @default([])
+  heroImages         Json?            @default("{\"heroImages\": [], \"sponsoredBannerImages\": []}")
   heroImageKeywords  String[]         @default([])
   logoUrl            String?
   faviconUrl         String?
@@ -641,4 +641,8 @@ enum AdRequestType {
   HERO_IMAGES_REMOVE
   HERO_IMAGES_REORDER
   HERO_IMAGES_ADD
+  SPONSORED_BANNER_CHANGE
+  SPONSORED_BANNER_ADD
+  SPONSORED_BANNER_REMOVE
+  SPONSORED_BANNER_REORDER
 }

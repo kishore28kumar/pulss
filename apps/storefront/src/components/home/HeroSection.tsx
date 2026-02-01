@@ -19,7 +19,14 @@ export default function HeroSection({}: HeroSectionProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
 
   // Use tenant hero images, fallback to default images
-  const tenantHeroImages = tenant?.heroImages || [];
+  let tenantHeroImages: string[] = [];
+  if (Array.isArray(tenant?.heroImages)) {
+    tenantHeroImages = tenant.heroImages;
+  } else if (tenant?.heroImages && typeof tenant.heroImages === 'object') {
+    tenantHeroImages = tenant.heroImages.heroImages || [];
+  }
+  
+  // const tenantHeroImages = tenant?.heroImages || [];
   const tenantHeroKeywords = tenant?.heroImageKeywords || [];
   const hasHeroImages = tenantHeroImages.length > 0;
 

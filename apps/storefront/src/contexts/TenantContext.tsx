@@ -28,7 +28,7 @@ interface Tenant {
   pharmacistName?: string;
   pharmacistRegNumber?: string;
   pharmacistPhoto?: string;
-  heroImages?: string[];
+  heroImages?: string[] | { heroImages: string[], sponsoredBannerImages: string[] };
   heroImageKeywords?: string[];
   primaryContactWhatsApp?: string;
   isPrimaryContactWhatsApp?: boolean;

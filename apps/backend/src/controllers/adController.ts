@@ -13,20 +13,24 @@ export const createAdRequest = asyncHandler(async (req: Request, res: Response) 
     }
 
     // Validate requestType
-    const validRequestTypes = ['AD_PLACEMENT', 'HERO_IMAGES_CHANGE', 'HERO_IMAGES_REMOVE', 'HERO_IMAGES_REORDER', 'HERO_IMAGES_ADD'];
+    const validRequestTypes = [
+        'AD_PLACEMENT', 
+        'HERO_IMAGES_CHANGE', 'HERO_IMAGES_REMOVE', 'HERO_IMAGES_REORDER', 'HERO_IMAGES_ADD',
+        'SPONSORED_BANNER_CHANGE', 'SPONSORED_BANNER_REMOVE', 'SPONSORED_BANNER_REORDER', 'SPONSORED_BANNER_ADD'
+    ];
     const finalRequestType = requestType || 'AD_PLACEMENT';
     
     if (!validRequestTypes.includes(finalRequestType)) {
         throw new AppError('Invalid request type', 400);
     }
 
-    // For hero image requests, images are required (except for REMOVE)
-    if (finalRequestType.startsWith('HERO_IMAGES') && finalRequestType !== 'HERO_IMAGES_REMOVE') {
+    // For hero/banner image requests, images are required (except for REMOVE)
+    if ((finalRequestType.startsWith('HERO_IMAGES') || finalRequestType.startsWith('SPONSORED_BANNER')) && !finalRequestType.includes('REMOVE')) {
         if (!images || !Array.isArray(images) || images.length === 0) {
             throw new AppError('At least one image is required', 400);
         }
         if (images.length > 10) {
-            throw new AppError('Maximum 10 hero images allowed', 400);
+            throw new AppError('Maximum 10 images allowed', 400);
         }
     } else if (finalRequestType === 'AD_PLACEMENT') {
     if (!images || !Array.isArray(images) || images.length === 0) {
@@ -183,8 +187,8 @@ export const updateAdRequestStatus = asyncHandler(async (req: Request, res: Resp
     const isActive = status === 'APPROVED';
     const requestType = (adRequest as any).requestType || 'AD_PLACEMENT';
 
-    // Handle hero image requests - apply changes to tenant when approved
-    if (status === 'APPROVED' && requestType.startsWith('HERO_IMAGES')) {
+    // Handle hero/banner image requests - apply changes to tenant when approved
+    if (status === 'APPROVED' && (requestType.startsWith('HERO_IMAGES') || requestType.startsWith('SPONSORED_BANNER'))) {
         const tenant = await prisma.tenants.findUnique({
             where: { id: adRequest.tenantId }
         });
@@ -193,69 +197,47 @@ export const updateAdRequestStatus = asyncHandler(async (req: Request, res: Resp
             throw new AppError('Tenant not found', 404);
         }
 
-        let updatedHeroImages: string[] = [];
+        // Parse current images from JSON or Array
+        const currentData: any = tenant.heroImages;
+        let heroImagesList: string[] = [];
+        let sponsoredImagesList: string[] = [];
 
-        switch (requestType) {
-            case 'HERO_IMAGES_CHANGE': {
-                // Replace all hero images with new ones
-                updatedHeroImages = adRequest.images || [];
-                break;
-            }
-            case 'HERO_IMAGES_ADD': {
-                // Add new images to existing ones
-                const currentHeroImages = (tenant as any).heroImages || [];
-                updatedHeroImages = [...currentHeroImages, ...(adRequest.images || [])].slice(0, 10);
-                break;
-            }
-            case 'HERO_IMAGES_REMOVE': {
-                // Remove specified images (images array contains URLs to remove)
-                const existingHeroImages = (tenant as any).heroImages || [];
-                updatedHeroImages = existingHeroImages.filter((url: string) => !adRequest.images.includes(url));
-                break;
-            }
-            case 'HERO_IMAGES_REORDER': {
-                // Reorder images (images array contains the new order)
-                updatedHeroImages = adRequest.images || [];
-                break;
-            }
-            default: {
-                updatedHeroImages = (tenant as any).heroImages || [];
-            }
+        if (Array.isArray(currentData)) {
+            // Legacy: it was just an array of hero images
+            heroImagesList = [...currentData];
+        } else if (typeof currentData === 'object' && currentData !== null) {
+            // New JSON structure
+            if (Array.isArray(currentData.heroImages)) heroImagesList = [...currentData.heroImages];
+            if (Array.isArray(currentData.sponsoredBannerImages)) sponsoredImagesList = [...currentData.sponsoredBannerImages];
         }
 
-        // Update tenant hero images using raw SQL to avoid Prisma type issues
-        try {
-            await prisma.$executeRawUnsafe(
-                `UPDATE tenants SET "heroImages" = $1 WHERE id = $2`,
-                JSON.stringify(updatedHeroImages),
-                adRequest.tenantId
-            );
-        } catch (error: any) {
-            console.error('Error updating heroImages:', error);
-            // Try to create column if it doesn't exist
-            try {
-                await prisma.$executeRawUnsafe(`
-                    DO $$
-                    BEGIN
-                        IF NOT EXISTS (
-                            SELECT 1 FROM information_schema.columns 
-                            WHERE table_name = 'tenants' 
-                            AND column_name = 'heroImages'
-                        ) THEN
-                            ALTER TABLE tenants ADD COLUMN "heroImages" TEXT[] DEFAULT '{}';
-                        END IF;
-                    END $$;
-                `);
-                await prisma.$executeRawUnsafe(
-                    `UPDATE tenants SET "heroImages" = $1 WHERE id = $2`,
-                    JSON.stringify(updatedHeroImages),
-                    adRequest.tenantId
-                );
-            } catch (retryError: any) {
-                console.error('Error creating/updating heroImages column:', retryError);
-                throw new AppError('Failed to update hero images. Database migration might be needed.', 500);
-            }
+        // Helper to update a list based on action
+        const updateList = (list: string[], action: string, newImages: string[]) => {
+            if (action.endsWith('CHANGE')) return newImages || [];
+            if (action.endsWith('ADD')) return [...list, ...(newImages || [])].slice(0, 10);
+            if (action.endsWith('REMOVE')) return list.filter(url => !newImages.includes(url));
+            if (action.endsWith('REORDER')) return newImages || [];
+            return list;
+        };
+
+        if (requestType.startsWith('HERO_IMAGES')) {
+            heroImagesList = updateList(heroImagesList, requestType, adRequest.images);
+        } else if (requestType.startsWith('SPONSORED_BANNER')) {
+            sponsoredImagesList = updateList(sponsoredImagesList, requestType, adRequest.images);
         }
+
+        const newData = {
+            heroImages: heroImagesList,
+            sponsoredBannerImages: sponsoredImagesList
+        };
+
+        // Update tenant heroImages column with new JSON
+        await prisma.tenants.update({
+            where: { id: adRequest.tenantId },
+            data: {
+                heroImages: newData as any // Type cast until client is regenerated
+            }
+        });
     }
 
     // If approving ad placement, deactivate previous active ad requests
