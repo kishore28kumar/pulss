@@ -22,7 +22,7 @@ export interface RegisterData {
   password: string;
   firstName: string;
   lastName: string;
-  phone: string;
+  phone?: string;
 }
 
 export interface AuthTokens {
@@ -69,18 +69,18 @@ export const authService = {
       localStorage.removeItem('customerToken');
       localStorage.removeItem('refreshToken');
       localStorage.removeItem('customer');
-      
+
       // Extract tenant slug from URL path
       // Path format: /[store-name]/... or /[store-name]
       const pathSegments = window.location.pathname.split('/').filter(Boolean);
       const storeName = pathSegments[0];
-      
+
       if (storeName) {
         // Redirect to tenant-specific login page
         window.location.href = `/${storeName}/login`;
       } else {
         // No tenant context, redirect to home (QR message)
-      window.location.href = '/';
+        window.location.href = '/';
       }
     }
   },
@@ -99,14 +99,14 @@ export const authService = {
   async requestPasswordReset(email: string, phone: string): Promise<{ token: string }> {
     const response = await api.post('/auth/customer/forgot-password', { email, phone });
     const { token } = response.data.data;
-    
+
     // Store token and user info in sessionStorage
     if (typeof window !== 'undefined') {
       sessionStorage.setItem('_ptoken', token);
       sessionStorage.setItem('_pemail', email);
       sessionStorage.setItem('_pphone', phone);
     }
-    
+
     return { token };
   },
 
