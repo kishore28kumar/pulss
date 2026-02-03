@@ -265,11 +265,7 @@ export default function ProductsPage() {
                         {product.sku || 'N/A'}
                       </td>
                       <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
-                        <span className={`text-sm font-medium ${
-                          product.stock > product.lowStockThreshold
-                            ? 'text-green-600 dark:text-green-400'
-                            : 'text-red-600 dark:text-red-400'
-                        }`}>
+                        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                           {product.stock} units
                         </span>
                       </td>

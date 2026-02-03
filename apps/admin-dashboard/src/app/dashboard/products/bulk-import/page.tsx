@@ -18,7 +18,6 @@ interface CSVRow {
   barcode?: string;
   trackInventory?: string;
   stockQuantity?: string;
-  lowStockThreshold?: string;
   weight?: string;
   weightUnit?: string;
   categorySlug?: string;
@@ -32,14 +31,17 @@ interface CSVRow {
   metaDescription?: string;
 }
 
+type TemplateType = 'regular' | 'featured' | 'sponsored';
+
 export default function BulkImportPage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [csvData, setCsvData] = useState<CSVRow[]>([]);
   const [errors, setErrors] = useState<string[]>([]);
+  const [templateType, setTemplateType] = useState<TemplateType>('regular');
 
-  // CSV Template headers
+  // CSV Template headers (without isFeatured/isSponsored - will be set based on template type)
   const csvHeaders = [
     'name',
     'slug',
@@ -52,13 +54,11 @@ export default function BulkImportPage() {
     'barcode',
     'trackInventory',
     'stockQuantity',
-    'lowStockThreshold',
     'weight',
     'weightUnit',
     'categorySlug',
     'images',
     'isActive',
-    'isFeatured',
     'requiresPrescription',
     'isOTC',
     'manufacturer',
@@ -66,24 +66,31 @@ export default function BulkImportPage() {
     'metaDescription',
   ];
 
-  // Download CSV template
-  const downloadTemplate = () => {
+  // Download CSV template based on type
+  const downloadTemplate = (type: TemplateType) => {
     const csvContent = [
       csvHeaders.join(','),
-      // Example row
-      'Sample Product, sample-product, "This is a sample product description", "Short description", 99.99, 129.99, 50.00, SKU-001, 1234567890123, true, 100, 10, 1.5, kg, electronics, "https://example.com/image1.jpg,https://example.com/image2.jpg", true, false, false, true, "Sample Manufacturer", "SEO Title", "SEO Description"',
+      // Example row - isFeatured/isSponsored will be set automatically based on template type
+      'Sample Product, sample-product, "This is a sample product description", "Short description", 99.99, 129.99, 50.00, SKU-001, 1234567890123, true, 100, 10, 1.5, kg, electronics, "https://example.com/image1.jpg,https://example.com/image2.jpg", true, false, true, "Sample Manufacturer", "SEO Title", "SEO Description"',
     ].join('\n');
+
+    const filename = type === 'regular' 
+      ? 'regular-products-template.csv'
+      : type === 'featured'
+      ? 'featured-products-template.csv'
+      : 'sponsored-products-template.csv';
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    link.setAttribute('download', 'product-import-template.csv');
+    link.setAttribute('download', filename);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    toast.success('Template downloaded successfully');
+    toast.success(`${type === 'regular' ? 'Regular' : type === 'featured' ? 'Featured' : 'Sponsored'} products template downloaded successfully`);
+    setTemplateType(type);
   };
 
   // Parse CSV file
@@ -169,10 +176,6 @@ export default function BulkImportPage() {
 
       if (row.stockQuantity && (isNaN(parseInt(row.stockQuantity)) || parseInt(row.stockQuantity) < 0)) {
         validationErrors.push(`Row ${rowNum}: Stock quantity must be a valid integer >= 0`);
-      }
-
-      if (row.lowStockThreshold && (isNaN(parseInt(row.lowStockThreshold)) || parseInt(row.lowStockThreshold) < 0)) {
-        validationErrors.push(`Row ${rowNum}: Low stock threshold must be a valid integer >= 0`);
       }
 
       if (row.weight && (isNaN(parseFloat(row.weight)) || parseFloat(row.weight) < 0)) {
@@ -274,8 +277,9 @@ export default function BulkImportPage() {
       return;
     }
 
-    // Store CSV data in sessionStorage for preview page
+    // Store CSV data and template type in sessionStorage for preview page
     sessionStorage.setItem('bulkImportData', JSON.stringify(csvData));
+    sessionStorage.setItem('bulkImportTemplateType', templateType);
     router.push('/dashboard/products/bulk-import/preview');
   };
 
@@ -283,15 +287,18 @@ export default function BulkImportPage() {
     <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div>
-        <Link
-          href="/dashboard/products"
-          className="inline-flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 mb-2 text-sm sm:text-base"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Products
-        </Link>
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Bulk Import Products</h1>
-        <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-1">Upload a CSV file to import multiple products at once</p>
+        <div className="flex items-center gap-4">
+          <Link
+            href="/dashboard/products"
+            className="p-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl transition shadow-sm"
+          >
+            <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+          </Link>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Bulk Import Products</h1>
+            <p className="text-sm text-gray-500 font-medium">Upload a CSV file to import multiple products at once</p>
+          </div>
+        </div>
       </div>
 
       {/* Instructions */}
@@ -312,20 +319,106 @@ export default function BulkImportPage() {
         </div>
       </div>
 
-      {/* Download Template */}
+      {/* Download Templates */}
       <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">CSV Template</h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Download a template file with all required fields</p>
-          </div>
+        <div className="mb-4">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">CSV Templates</h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Download a template file based on product type. The import will automatically set the product type based on the template used.</p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <button
-            onClick={downloadTemplate}
-            className="inline-flex items-center justify-center px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition text-sm sm:text-base"
+            onClick={() => downloadTemplate('regular')}
+            className="flex flex-col items-center justify-center p-4 border-2 border-gray-300 dark:border-gray-600 rounded-lg hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition text-sm sm:text-base"
           >
-            <Download className="w-5 h-5 mr-2" />
-            Download Template
+            <Download className="w-6 h-6 mb-2 text-gray-600 dark:text-gray-400" />
+            <span className="font-medium text-gray-900 dark:text-gray-100">Regular Products</span>
+            <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">regular-products-template.csv</span>
           </button>
+          <button
+            onClick={() => downloadTemplate('featured')}
+            className="flex flex-col items-center justify-center p-4 border-2 border-gray-300 dark:border-gray-600 rounded-lg hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition text-sm sm:text-base"
+          >
+            <Download className="w-6 h-6 mb-2 text-gray-600 dark:text-gray-400" />
+            <span className="font-medium text-gray-900 dark:text-gray-100">Featured Products</span>
+            <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">featured-products-template.csv</span>
+          </button>
+          <button
+            onClick={() => downloadTemplate('sponsored')}
+            className="flex flex-col items-center justify-center p-4 border-2 border-gray-300 dark:border-gray-600 rounded-lg hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition text-sm sm:text-base"
+          >
+            <Download className="w-6 h-6 mb-2 text-gray-600 dark:text-gray-400" />
+            <span className="font-medium text-gray-900 dark:text-gray-100">Sponsored Products</span>
+            <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">sponsored-products-template.csv</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Import Type Selection */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6 transition-all duration-200">
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Select Import Type</h3>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+            Select the type of products you are uploading. This will determine how they are categorized in the system, regardless of which template you used.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-4">
+            {/* Regular Option */}
+            <label className={`relative flex flex-1 items-center p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 ${
+                templateType === 'regular' 
+                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-sm ring-1 ring-blue-500/20'
+                : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+            }`}>
+                <input
+                    type="radio"
+                    name="importType"
+                    value="regular"
+                    checked={templateType === 'regular'}
+                    onChange={() => setTemplateType('regular')}
+                    className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500 mr-3 accent-blue-600"
+                />
+                <div>
+                    <span className="block text-sm font-medium text-gray-900 dark:text-gray-100">Regular Products</span>
+                    <span className="block text-xs text-gray-500 dark:text-gray-400 mt-1">Standard listing</span>
+                </div>
+            </label>
+
+            {/* Featured Option */}
+            <label className={`relative flex flex-1 items-center p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 ${
+                templateType === 'featured' 
+                ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20 shadow-sm ring-1 ring-purple-500/20'
+                : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+            }`}>
+                <input
+                    type="radio"
+                    name="importType"
+                    value="featured"
+                    checked={templateType === 'featured'}
+                    onChange={() => setTemplateType('featured')}
+                    className="w-4 h-4 text-purple-600 border-gray-300 focus:ring-purple-500 mr-3 accent-purple-600"
+                />
+                <div>
+                    <span className="block text-sm font-medium text-gray-900 dark:text-gray-100">Featured Products</span>
+                    <span className="block text-xs text-gray-500 dark:text-gray-400 mt-1">Highlighted on homepage</span>
+                </div>
+            </label>
+
+            {/* Sponsored Option */}
+            <label className={`relative flex flex-1 items-center p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 ${
+                templateType === 'sponsored' 
+                ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/20 shadow-sm ring-1 ring-amber-500/20'
+                : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+            }`}>
+                <input
+                    type="radio"
+                    name="importType"
+                    value="sponsored"
+                    checked={templateType === 'sponsored'}
+                    onChange={() => setTemplateType('sponsored')}
+                    className="w-4 h-4 text-amber-600 border-gray-300 focus:ring-amber-500 mr-3 accent-amber-600"
+                />
+                <div>
+                    <span className="block text-sm font-medium text-gray-900 dark:text-gray-100">Sponsored Products</span>
+                    <span className="block text-xs text-gray-500 dark:text-gray-400 mt-1">Promoted placements</span>
+                </div>
+            </label>
         </div>
       </div>
 

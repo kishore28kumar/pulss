@@ -1,10 +1,11 @@
 import { Request, Response } from 'express';
 import { prisma } from '@pulss/database';
 import { ApiResponse, LoginCredentials, RegisterData, AuthUser } from '@pulss/types';
-import { hashPassword, comparePassword } from '../utils/password';
+import { hashPassword, comparePassword, validatePassword } from '../utils/password';
 import { generateTokens, verifyRefreshToken } from '../utils/jwt';
 import { AppError, asyncHandler } from '../middleware/errorHandler';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 
 // ============================================
 // ADMIN/STAFF LOGIN
@@ -30,6 +31,10 @@ export const loginUser = asyncHandler(
             id: true,
             name: true,
             slug: true,
+            status: true,
+            subscriptionPlan: true,
+            subscriptionEndsAt: true,
+            features: true,
           },
         },
       },
@@ -122,6 +127,10 @@ export const loginCustomer = asyncHandler(
             id: true,
             name: true,
             slug: true,
+            status: true,
+            subscriptionPlan: true,
+            subscriptionEndsAt: true,
+            features: true,
           },
         },
       },
@@ -186,8 +195,20 @@ export const registerCustomer = asyncHandler(
   async (req: Request, res: Response) => {
     const { email, password, firstName, lastName, phone } = req.body as RegisterData;
 
-    if (!email || !password || !firstName || !lastName) {
-      throw new AppError('Email, password, first name, and last name are required', 400);
+    if (!email || !password || !firstName || !lastName || !phone) {
+      throw new AppError('Email, password, first name, last name, and phone are required', 400);
+    }
+
+    // Validate password strength
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.isValid) {
+      throw new AppError(passwordValidation.error || 'Invalid password', 400);
+    }
+
+    // Validate phone number format - must be exactly 10 digits
+    const digitsOnly = phone.replace(/\D/g, '');
+    if (digitsOnly.length !== 10) {
+      throw new AppError('Invalid phone number format. Please provide a valid phone number with exactly 10 digits.', 400);
     }
 
     if (!req.tenantId) {
@@ -218,7 +239,7 @@ export const registerCustomer = asyncHandler(
           password: hashedPassword,
           firstName,
           lastName,
-          phone: phone || null,
+          phone,
           role: 'CUSTOMER',
           tenantId: req.tenantId!,
           emailVerified: false,
@@ -233,7 +254,7 @@ export const registerCustomer = asyncHandler(
           id: `cust_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
           userId: user.id,
           tenantId: req.tenantId!,
-          phone: phone || null,
+          phone,
           updatedAt: new Date(),
         },
         include: {
@@ -242,6 +263,10 @@ export const registerCustomer = asyncHandler(
               id: true,
               name: true,
               slug: true,
+              status: true,
+              subscriptionPlan: true,
+              subscriptionEndsAt: true,
+              features: true,
             },
           },
         },
@@ -299,6 +324,10 @@ export const getCurrentUser = asyncHandler(
             logoUrl: true,
             primaryColor: true,
             secondaryColor: true,
+            status: true,
+            subscriptionPlan: true,
+            subscriptionEndsAt: true,
+            features: true,
           },
         },
       },
@@ -341,16 +370,13 @@ export const updateUserProfile = asyncHandler(
       throw new AppError('Not authenticated', 401);
     }
 
-    const { firstName, lastName, phone } = req.body;
+    const { firstName, lastName, phone, avatar } = req.body;
 
-    // Validate phone number format if provided
+    // Validate phone number format if provided - must be exactly 10 digits
     if (phone !== undefined && phone !== null && phone !== '') {
-      // Basic phone validation: allows digits, spaces, hyphens, parentheses, and + for international
-      // Minimum 10 digits, maximum 20 characters
-      const phoneRegex = /^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{1,9}$/;
       const digitsOnly = phone.replace(/\D/g, '');
-      if (digitsOnly.length < 10 || digitsOnly.length > 15 || !phoneRegex.test(phone)) {
-        throw new AppError('Invalid phone number format. Please provide a valid phone number (10-15 digits).', 400);
+      if (digitsOnly.length !== 10) {
+        throw new AppError('Invalid phone number format. Please provide a valid phone number with exactly 10 digits.', 400);
       }
     }
 
@@ -361,6 +387,7 @@ export const updateUserProfile = asyncHandler(
         ...(firstName !== undefined && { firstName }),
         ...(lastName !== undefined && { lastName }),
         ...(phone !== undefined && { phone: phone || null }),
+        ...(avatar !== undefined && { avatar: avatar || null }),
         updatedAt: new Date(),
       },
       include: {
@@ -372,6 +399,10 @@ export const updateUserProfile = asyncHandler(
             logoUrl: true,
             primaryColor: true,
             secondaryColor: true,
+            status: true,
+            subscriptionPlan: true,
+            subscriptionEndsAt: true,
+            features: true,
           },
         },
       },
@@ -414,6 +445,9 @@ export const getCurrentCustomer = asyncHandler(
             logoUrl: true,
             primaryColor: true,
             secondaryColor: true,
+            status: true,
+            subscriptionPlan: true,
+            subscriptionEndsAt: true,
           },
         },
       },
@@ -508,6 +542,9 @@ export const updateCustomerProfile = asyncHandler(
             logoUrl: true,
             primaryColor: true,
             secondaryColor: true,
+            status: true,
+            subscriptionPlan: true,
+            subscriptionEndsAt: true,
           },
         },
       },
@@ -599,6 +636,9 @@ export const generateLoginToken = asyncHandler(
             id: true,
             name: true,
             slug: true,
+            status: true,
+            subscriptionPlan: true,
+            subscriptionEndsAt: true,
           },
         },
       },
@@ -681,6 +721,10 @@ export const verifyLoginToken = asyncHandler(
               id: true,
               name: true,
               slug: true,
+              status: true,
+              subscriptionPlan: true,
+              subscriptionEndsAt: true,
+              features: true,
             },
           },
         },
@@ -733,5 +777,165 @@ export const verifyLoginToken = asyncHandler(
       }
       throw error;
     }
+  }
+);
+
+// In-memory store for password reset tokens (expires after 15 minutes)
+const passwordResetTokens = new Map<string, { email: string; phone: string; expiresAt: Date }>();
+
+// Clean up expired tokens every 5 minutes
+setInterval(() => {
+  const now = new Date();
+  for (const [token, data] of passwordResetTokens.entries()) {
+    if (data.expiresAt < now) {
+      passwordResetTokens.delete(token);
+    }
+  }
+}, 5 * 60 * 1000);
+
+// ============================================
+// CUSTOMER FORGOT PASSWORD
+// ============================================
+
+export const forgotPasswordCustomer = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { email, phone } = req.body;
+
+    if (!email || !phone) {
+      throw new AppError('Email and phone are required', 400);
+    }
+
+    if (!req.tenantId) {
+      throw new AppError('Tenant not found', 400);
+    }
+
+    // Find customer by email and phone
+    const user = await prisma.users.findFirst({
+      where: {
+        email: email.trim().toLowerCase(),
+        role: 'CUSTOMER',
+        tenantId: req.tenantId,
+        isActive: true,
+      },
+      include: {
+        customers: true,
+      },
+    });
+
+    if (!user) {
+      throw new AppError('Account not found with provided email and phone number', 404);
+    }
+
+    const customer = user.customers;
+    if (!customer) {
+      throw new AppError('Customer record not found', 404);
+    }
+
+    // Verify phone number matches (normalize phone for comparison)
+    const normalizedPhone = phone.replace(/\D/g, '');
+    const userPhone = (customer.phone || user.phone || '').replace(/\D/g, '');
+
+    if (normalizedPhone !== userPhone) {
+      throw new AppError('Account not found with provided email and phone number', 404);
+    }
+
+    // Generate reset token (32 character random string)
+    const token = crypto.randomBytes(16).toString('hex');
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
+    // Store token in memory
+    passwordResetTokens.set(token, {
+      email: email.trim().toLowerCase(),
+      phone: phone.trim(),
+      expiresAt,
+    });
+
+    const response: ApiResponse = {
+      success: true,
+      data: {
+        token,
+        expiresAt: expiresAt.toISOString(),
+      },
+      message: 'Password reset token generated successfully',
+    };
+
+    res.json(response);
+  }
+);
+
+// ============================================
+// CUSTOMER RESET PASSWORD
+// ============================================
+
+export const resetPasswordCustomer = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { email, phone, token, newPassword } = req.body;
+
+    if (!email || !phone || !token || !newPassword) {
+      throw new AppError('Email, phone, token, and new password are required', 400);
+    }
+
+    // Validate password strength
+    const passwordValidation = validatePassword(newPassword);
+    if (!passwordValidation.isValid) {
+      throw new AppError(passwordValidation.error || 'Invalid password', 400);
+    }
+
+    if (!req.tenantId) {
+      throw new AppError('Tenant not found', 400);
+    }
+
+    // Validate token
+    const tokenData = passwordResetTokens.get(token);
+    if (!tokenData) {
+      throw new AppError('Invalid or expired reset token', 400);
+    }
+
+    // Check if token expired
+    if (tokenData.expiresAt < new Date()) {
+      passwordResetTokens.delete(token);
+      throw new AppError('Reset token has expired. Please request a new one', 400);
+    }
+
+    // Verify email and phone match token data
+    if (tokenData.email !== email.trim().toLowerCase() || tokenData.phone !== phone.trim()) {
+      throw new AppError('Email or phone does not match reset token', 400);
+    }
+
+    // Find user
+    const user = await prisma.users.findFirst({
+      where: {
+        email: email.trim().toLowerCase(),
+        role: 'CUSTOMER',
+        tenantId: req.tenantId,
+        isActive: true,
+      },
+    });
+
+    if (!user) {
+      throw new AppError('Account not found', 404);
+    }
+
+    // Hash new password
+    const hashedPassword = await hashPassword(newPassword);
+
+    // Update password
+    await prisma.users.update({
+      where: { id: user.id },
+      data: {
+        password: hashedPassword,
+        updatedAt: new Date(),
+      },
+    });
+
+    // Delete used token
+    passwordResetTokens.delete(token);
+
+    const response: ApiResponse = {
+      success: true,
+      message: 'Password reset successfully',
+    };
+
+    res.json(response);
   }
 );

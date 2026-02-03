@@ -22,7 +22,7 @@ export interface RegisterData {
   password: string;
   firstName: string;
   lastName: string;
-  phone?: string;
+  phone: string;
 }
 
 export interface AuthTokens {
@@ -94,6 +94,71 @@ export const authService = {
   isAuthenticated(): boolean {
     if (typeof window === 'undefined') return false;
     return !!localStorage.getItem('customerToken');
+  },
+
+  async requestPasswordReset(email: string, phone: string): Promise<{ token: string }> {
+    const response = await api.post('/auth/customer/forgot-password', { email, phone });
+    const { token } = response.data.data;
+    
+    // Store token and user info in sessionStorage
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('_ptoken', token);
+      sessionStorage.setItem('_pemail', email);
+      sessionStorage.setItem('_pphone', phone);
+    }
+    
+    return { token };
+  },
+
+  async resetPassword(newPassword: string): Promise<void> {
+    if (typeof window === 'undefined') {
+      throw new Error('Cannot reset password on server side');
+    }
+
+    const token = sessionStorage.getItem('_ptoken');
+    const email = sessionStorage.getItem('_pemail');
+    const phone = sessionStorage.getItem('_pphone');
+
+    if (!token || !email || !phone) {
+      throw new Error('Reset token not found. Please request a new password reset.');
+    }
+
+    const response = await api.post('/auth/customer/reset-password', {
+      email,
+      phone,
+      token,
+      newPassword,
+    });
+
+    // Clear sessionStorage after successful reset
+    sessionStorage.removeItem('_ptoken');
+    sessionStorage.removeItem('_pemail');
+    sessionStorage.removeItem('_pphone');
+
+    return response.data;
+  },
+
+  getPasswordResetToken(): string | null {
+    if (typeof window === 'undefined') return null;
+    return sessionStorage.getItem('_ptoken');
+  },
+
+  getPasswordResetEmail(): string | null {
+    if (typeof window === 'undefined') return null;
+    return sessionStorage.getItem('_pemail');
+  },
+
+  getPasswordResetPhone(): string | null {
+    if (typeof window === 'undefined') return null;
+    return sessionStorage.getItem('_pphone');
+  },
+
+  clearPasswordResetData(): void {
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('_ptoken');
+      sessionStorage.removeItem('_pemail');
+      sessionStorage.removeItem('_pphone');
+    }
   },
 };
 

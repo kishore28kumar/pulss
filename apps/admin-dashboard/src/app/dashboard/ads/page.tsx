@@ -6,6 +6,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Check, X, AlertCircle, Eye, Image as ImageIcon } from 'lucide-react';
 import api from '@/lib/api';
 import { toast } from 'sonner';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 import { Permission, isSuperAdmin } from '@/lib/permissions';
 import PermissionGuard from '@/components/permissions/PermissionGuard';
 import Link from 'next/link';
@@ -16,7 +17,7 @@ interface AdRequest {
     description: string;
     images: string[];
     links: string[];
-    requestType?: 'AD_PLACEMENT' | 'HERO_IMAGES_CHANGE' | 'HERO_IMAGES_REMOVE' | 'HERO_IMAGES_REORDER' | 'HERO_IMAGES_ADD';
+    requestType?: 'AD_PLACEMENT' | 'HERO_IMAGES_CHANGE' | 'HERO_IMAGES_REMOVE' | 'HERO_IMAGES_REORDER' | 'HERO_IMAGES_ADD' | 'SPONSORED_BANNER_CHANGE' | 'SPONSORED_BANNER_REMOVE' | 'SPONSORED_BANNER_REORDER' | 'SPONSORED_BANNER_ADD';
     status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'REVOKED';
     adminNote?: string;
     startDate?: string;
@@ -37,6 +38,7 @@ export default function AdsPage() {
 
     // Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const { checkAccess, isSubscriptionActive } = useSubscription();
     const [selectedAdId, setSelectedAdId] = useState<string | null>(null);
     const [targetStatus, setTargetStatus] = useState<string>('');
     const [adminNote, setAdminNote] = useState('');
@@ -116,6 +118,10 @@ export default function AdsPage() {
             case 'HERO_IMAGES_REMOVE': return 'Remove Hero Images';
             case 'HERO_IMAGES_REORDER': return 'Reorder Hero Images';
             case 'HERO_IMAGES_ADD': return 'Add Hero Images';
+            case 'SPONSORED_BANNER_CHANGE': return 'Change Sponsored Banners';
+            case 'SPONSORED_BANNER_REMOVE': return 'Remove Sponsored Banners';
+            case 'SPONSORED_BANNER_REORDER': return 'Reorder Sponsored Banners';
+            case 'SPONSORED_BANNER_ADD': return 'Add Sponsored Banners';
             case 'AD_PLACEMENT': return 'Ad Placement';
             default: return 'Ad Placement';
         }
@@ -129,7 +135,7 @@ export default function AdsPage() {
 
         const validUrls = heroImageUrls.filter(url => url.trim() !== '');
         
-        if (heroImageRequestType !== 'HERO_IMAGES_REMOVE' && validUrls.length === 0) {
+        if (!heroImageRequestType.includes('REMOVE') && validUrls.length === 0) {
             toast.error('Please provide at least one image URL');
             return;
         }
@@ -185,11 +191,15 @@ export default function AdsPage() {
                                 New Ad Request
                         </Link>
                             <button
-                                onClick={() => setIsHeroImageModalOpen(true)}
-                                className="inline-flex items-center justify-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
+                                onClick={() => {
+                                    if (checkAccess('heroCarousel')) {
+                                        setIsHeroImageModalOpen(true);
+                                    }
+                                }}
+                                className={`inline-flex items-center justify-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition ${!isSubscriptionActive ? 'opacity-75' : ''}`}
                             >
                                 <ImageIcon className="w-5 h-5 mr-2" />
-                                Hero Image Request
+                                Hero/Sponsored Request
                             </button>
                         </div>
                     </PermissionGuard>
@@ -405,7 +415,7 @@ export default function AdsPage() {
                                         <ImageIcon className="w-5 h-5" />
                                     </div>
                                     <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                                        Request Hero Image Changes
+                                        Request Banner Changes
                                     </h3>
                                 </div>
                                 <button
@@ -426,7 +436,7 @@ export default function AdsPage() {
                                         value={heroImageRequestType}
                                         onChange={(e) => {
                                             setHeroImageRequestType(e.target.value);
-                                            if (e.target.value === 'HERO_IMAGES_REMOVE') {
+                                            if (e.target.value.includes('REMOVE')) {
                                                 setHeroImageUrls(['']);
                                             } else if (heroImageUrls.length === 0 || heroImageUrls[0] === '') {
                                                 setHeroImageUrls(['']);
@@ -434,10 +444,18 @@ export default function AdsPage() {
                                         }}
                                         className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500 outline-none"
                                     >
-                                        <option value="HERO_IMAGES_CHANGE">Change Hero Images</option>
-                                        <option value="HERO_IMAGES_ADD">Add Hero Images</option>
-                                        <option value="HERO_IMAGES_REMOVE">Remove Hero Images</option>
-                                        <option value="HERO_IMAGES_REORDER">Reorder Hero Images</option>
+                                        <optgroup label="Hero Images">
+                                            <option value="HERO_IMAGES_CHANGE">Change Hero Images</option>
+                                            <option value="HERO_IMAGES_ADD">Add Hero Images</option>
+                                            <option value="HERO_IMAGES_REMOVE">Remove Hero Images</option>
+                                            <option value="HERO_IMAGES_REORDER">Reorder Hero Images</option>
+                                        </optgroup>
+                                        <optgroup label="Sponsored Banners">
+                                            <option value="SPONSORED_BANNER_CHANGE">Change Sponsored Banners</option>
+                                            <option value="SPONSORED_BANNER_ADD">Add Sponsored Banners</option>
+                                            <option value="SPONSORED_BANNER_REMOVE">Remove Sponsored Banners</option>
+                                            <option value="SPONSORED_BANNER_REORDER">Reorder Sponsored Banners</option>
+                                        </optgroup>
                                     </select>
                                 </div>
 
@@ -456,11 +474,16 @@ export default function AdsPage() {
                                 </div>
 
                                 {/* Image URLs */}
-                                {heroImageRequestType !== 'HERO_IMAGES_REMOVE' && (
+                                {(!heroImageRequestType.includes('REMOVE')) && (
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                             Image URLs * (Max 10)
                                         </label>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                                            {heroImageRequestType.startsWith('SPONSORED_BANNER') 
+                                                ? 'Recommended size: 1600x200px (8:1 aspect ratio)' 
+                                                : 'Recommended size: 1920x820px (21:9 aspect ratio) or 1600x900px (16:9 aspect ratio)'}
+                                        </p>
                                         <div className="space-y-2">
                                             {heroImageUrls.map((url, index) => (
                                                 <div key={index} className="flex gap-2">
@@ -506,7 +529,7 @@ export default function AdsPage() {
                                     </div>
                                 )}
 
-                                {heroImageRequestType === 'HERO_IMAGES_REMOVE' && (
+                                {heroImageRequestType.includes('REMOVE') && (
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                             Image URLs to Remove *

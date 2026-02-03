@@ -2,7 +2,9 @@
 
 import { useRouter } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Loader2, UserPlus, Eye, EyeOff, RefreshCw, Store, Copy, ShieldCheck, RotateCcw, Image as ImageIcon, Upload, X } from 'lucide-react';
+import { ArrowLeft, Loader2, UserPlus, Eye, EyeOff, RefreshCw, Store, Copy, ShieldCheck, Image as ImageIcon, Upload, X, FileText, RotateCcw as ResetIcon } from 'lucide-react';
+import FormattedContent from '@/components/content/FormattedContent';
+import FormattedFAQ from '@/components/content/FormattedFAQ';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -37,6 +39,12 @@ const inviteSchema = z.object({
   pharmacistRegNumber: z.string().min(1, 'Pharmacist Registration number is required').optional(),
   scheduleDrugEligible: z.boolean().default(false).optional(),
   returnPolicy: z.string().optional(),
+  shippingContent: z.string().optional(),
+  privacyContent: z.string().optional(),
+  termsContent: z.string().optional(),
+  aboutContent: z.string().optional(),
+  contactContent: z.string().optional(),
+  faqContent: z.string().optional(),
   heroImages: z.array(z.string().url('Must be a valid URL')).max(10, 'Maximum 10 hero images allowed').optional(),
   isPrimaryContactWhatsApp: z.boolean().default(false).optional(),
   primaryContactWhatsApp: z.string().optional().or(z.literal('')),
@@ -64,25 +72,25 @@ const inviteSchema = z.object({
 
 type InviteFormData = z.infer<typeof inviteSchema>;
 
-// Default Return Policy Template (Plain Text)
-const DEFAULT_RETURN_POLICY = `RETURN POLICY
+// Default Return Policy Template (Markdown-style)
+const DEFAULT_RETURN_POLICY = `# Return Policy
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-30-DAY RETURN WINDOW
+# 30-Day Return Window
 You have 30 days from the date of delivery to initiate a return.
 
-ORIGINAL CONDITION REQUIRED
+# Original Condition Required
 Items must be unused, unwashed, and in original packaging with tags attached.
 
-FREE RETURN SHIPPING
+# Free Return Shipping
 We provide free return shipping labels for eligible returns.
 
-QUICK REFUND PROCESSING
+# Quick Refund Processing
 Refunds are processed within 5-7 business days after we receive your return.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-NON-RETURNABLE ITEMS
+# Non-Returnable Items
 • Perishable goods (food, beverages, etc.)
 • Personalized or custom-made items
 • Items damaged by misuse or normal wear
@@ -91,16 +99,197 @@ NON-RETURNABLE ITEMS
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-REFUND INFORMATION
+# Refund Information
 
-Refund Method
+## Refund Method:
 Refunds will be issued to the original payment method used for the purchase. Processing time may vary by payment method.
 
-Refund Timeline
+## Refund Timeline:
 Once we receive your return, we'll inspect it and process your refund within 5-7 business days. You'll receive an email confirmation when the refund is processed.
 
-Partial Refunds
+## Partial Refunds:
 If you're returning only part of your order, you'll receive a partial refund for the returned items. Shipping costs are non-refundable unless the return is due to our error.`;
+
+// Default Content Page Templates
+const DEFAULT_SHIPPING_CONTENT = `# Shipping Information
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# Shipping Methods
+We offer multiple shipping options to meet your needs:
+
+• Standard Shipping: 3-5 business days
+• Express Shipping: 1-2 business days
+• Same-Day Delivery: Available in select areas
+
+# Shipping Rates
+Shipping costs are calculated based on:
+
+• Order weight and dimensions
+• Delivery location
+• Selected shipping method
+
+Free shipping is available on orders over ₹500.
+
+# Delivery Areas
+We currently ship to all major cities and towns across India. Delivery times may vary based on your location.
+
+# Order Tracking
+Once your order is shipped, you'll receive:
+
+• Tracking number via email and SMS
+• Real-time tracking updates
+• Estimated delivery date
+
+# Shipping Restrictions
+Some items may have shipping restrictions:
+
+• Prescription medications require special handling
+• Fragile items may have limited shipping options
+• Certain areas may have delivery restrictions`;
+
+const DEFAULT_PRIVACY_CONTENT = `# Privacy Policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# Information We Collect
+We collect the following types of information:
+
+• Personal information (name, email, phone number, address)
+• Payment information (processed securely through our payment partners)
+• Order history and preferences
+• Device information and browsing behavior
+• Cookies and tracking technologies
+
+# How We Use Your Information
+We use your information to:
+
+• Process and fulfill your orders
+• Communicate with you about your orders and account
+• Send you marketing communications (with your consent)
+• Improve our website and services
+• Prevent fraud and ensure security
+• Comply with legal obligations
+
+# Information Sharing
+We respect your privacy:
+
+• We do not sell your personal information to third parties
+• We may share information with service providers who assist us in operating our business
+• We may disclose information if required by law or to protect our rights
+• In case of business transfer, your information may be transferred to the new owner
+
+# Your Rights
+You have the right to:
+
+• Access your personal information
+• Correct inaccurate information
+• Request deletion of your information
+• Opt-out of marketing communications
+• Request data portability
+• File a complaint with regulatory authorities
+
+# Security
+We implement appropriate technical and organizational measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction.`;
+
+const DEFAULT_TERMS_CONTENT = `# Terms & Conditions
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# Acceptance of Terms
+By accessing and using this website, you accept and agree to be bound by the terms and provision of this agreement.
+
+# Use License
+Permission is granted to temporarily access the materials on our website for personal, non-commercial transitory viewing only.
+
+# Disclaimer
+The materials on our website are provided on an 'as is' basis. We make no warranties, expressed or implied, and hereby disclaim and negate all other warranties.
+
+# Limitations
+In no event shall we or our suppliers be liable for any damages arising out of the use or inability to use the materials on our website.
+
+# Accuracy of Materials
+The materials appearing on our website could include technical, typographical, or photographic errors. We do not warrant that any of the materials on its website are accurate, complete, or current.
+
+# Links
+We have not reviewed all of the sites linked to our website and are not responsible for the contents of any such linked site.
+
+# Modifications
+We may revise these terms of service at any time without notice. By using this website you are agreeing to be bound by the then current version of these terms of service.`;
+
+const DEFAULT_ABOUT_CONTENT = `# About Us
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# Our Story
+Welcome to our store! We are committed to providing you with the best products and exceptional service.
+
+# Our Mission
+Our mission is to:
+
+• Provide high-quality products to our customers
+• Deliver exceptional customer service
+• Build lasting relationships with our community
+• Maintain the highest standards of integrity and professionalism
+
+# Our Values
+We believe in:
+
+• Customer satisfaction above all
+• Quality products and services
+• Transparent business practices
+• Community engagement and support
+
+# Why Choose Us
+What sets us apart:
+
+• Years of experience in the industry
+• Dedicated customer support team
+• Wide selection of quality products
+• Competitive pricing
+• Fast and reliable shipping
+
+# Our Team
+Our team consists of experienced professionals dedicated to serving you better every day.`;
+
+const DEFAULT_CONTACT_CONTENT = `# Contact Us
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# Get in Touch
+We'd love to hear from you! Reach out to us through any of the contact methods shown above.
+
+# Business Hours
+Our customer service team is available:
+
+• Monday to Friday: 9:00 AM - 6:00 PM
+• Saturday: 10:00 AM - 4:00 PM
+• Sunday: Closed
+
+# Visit Us
+We welcome you to visit our physical store during business hours. Our friendly staff will be happy to assist you.
+
+# Customer Support
+For any questions, concerns, or feedback, please don't hesitate to contact our customer support team. We're here to help!`;
+
+const DEFAULT_FAQ_CONTENT = `Q: How do I place an order?
+A: You can place an order by browsing our products, adding items to your cart, and proceeding to checkout. Make sure you're logged in to your account first.
+
+Q: What payment methods do you accept?
+A: We accept Cash on Delivery (COD), Credit, and Online Payment methods including UPI, Net Banking, and Wallet payments.
+
+Q: How long does shipping take?
+A: Standard shipping typically takes 3-5 business days. Express shipping options are available at checkout for faster delivery.
+
+Q: Can I track my order?
+A: Yes! Once your order is shipped, you'll receive a tracking number via email. You can also track your order in the "Orders" section of your account.
+
+Q: What is your return policy?
+A: We offer a 30-day return policy for most items. Products must be unused and in original packaging. Please visit our Returns page for detailed information.
+
+Q: Do you ship internationally?
+A: Currently, we only ship within India. We're working on expanding our shipping options to other countries soon.
+
+Q: How can I cancel my order?
+A: You can cancel your order within 24 hours of placing it by contacting our customer support team or through your account dashboard.
+
+Q: What if I receive a damaged item?
+A: If you receive a damaged item, please contact us immediately with photos of the damage. We'll arrange for a replacement or refund.`;
 
 // Generate a strong random password
 const generateStrongPassword = (): string => {
@@ -156,6 +345,8 @@ export default function NewStaffPage() {
   const [upiScannerPhoto, setUpiScannerPhoto] = useState<string>('');
   const [uploadingUpiScannerPhoto, setUploadingUpiScannerPhoto] = useState(false);
   const upiScannerPhotoInputRef = useRef<HTMLInputElement>(null);
+  const [activeContentTab, setActiveContentTab] = useState<'return' | 'shipping' | 'privacy' | 'terms' | 'about' | 'contact' | 'faq'>('return');
+  const [showContentPreview, setShowContentPreview] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -169,8 +360,11 @@ export default function NewStaffPage() {
     setValue,
     watch,
     reset,
+    clearErrors,
   } = useForm<InviteFormData>({
     resolver: zodResolver(inviteSchema),
+    mode: 'onSubmit',
+    reValidateMode: 'onSubmit',
     defaultValues: {
       email: '',
       firstName: '',
@@ -190,6 +384,12 @@ export default function NewStaffPage() {
       pharmacistRegNumber: '',
       scheduleDrugEligible: false,
       returnPolicy: DEFAULT_RETURN_POLICY,
+      shippingContent: DEFAULT_SHIPPING_CONTENT,
+      privacyContent: DEFAULT_PRIVACY_CONTENT,
+      termsContent: DEFAULT_TERMS_CONTENT,
+      aboutContent: DEFAULT_ABOUT_CONTENT,
+      contactContent: DEFAULT_CONTACT_CONTENT,
+      faqContent: DEFAULT_FAQ_CONTENT,
       heroImages: [],
       isPrimaryContactWhatsApp: false,
       primaryContactWhatsApp: '',
@@ -221,6 +421,12 @@ export default function NewStaffPage() {
       pharmacistRegNumber: '',
       scheduleDrugEligible: false,
       returnPolicy: DEFAULT_RETURN_POLICY,
+      shippingContent: DEFAULT_SHIPPING_CONTENT,
+      privacyContent: DEFAULT_PRIVACY_CONTENT,
+      termsContent: DEFAULT_TERMS_CONTENT,
+      aboutContent: DEFAULT_ABOUT_CONTENT,
+      contactContent: DEFAULT_CONTACT_CONTENT,
+      faqContent: DEFAULT_FAQ_CONTENT,
       heroImages: [],
       isPrimaryContactWhatsApp: false,
       primaryContactWhatsApp: '',
@@ -401,6 +607,15 @@ export default function NewStaffPage() {
         payload.pharmacistRegNumber = data.pharmacistRegNumber;
         payload.scheduleDrugEligible = data.scheduleDrugEligible ?? false;
         payload.returnPolicy = data.returnPolicy || DEFAULT_RETURN_POLICY;
+        // Add pageContent for content pages
+        payload.pageContent = {
+          shipping: data.shippingContent || DEFAULT_SHIPPING_CONTENT,
+          privacy: data.privacyContent || DEFAULT_PRIVACY_CONTENT,
+          terms: data.termsContent || DEFAULT_TERMS_CONTENT,
+          about: data.aboutContent || DEFAULT_ABOUT_CONTENT,
+          contact: data.contactContent || DEFAULT_CONTACT_CONTENT,
+          faq: data.faqContent || DEFAULT_FAQ_CONTENT,
+        };
         payload.heroImages = heroImages.length > 0 ? heroImages : [];
         payload.heroImageKeywords = heroImageKeywords.length > 0 ? heroImageKeywords : [];
         payload.isPrimaryContactWhatsApp = data.isPrimaryContactWhatsApp ?? false;
@@ -1041,32 +1256,184 @@ export default function NewStaffPage() {
                 </div>
               </div>
 
-              {/* Return Policy */}
+              {/* Content Pages */}
               <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
-                  <RotateCcw className="w-5 h-5 mr-2" />
-                  Return and Refund Policy
+                  <FileText className="w-5 h-5 mr-2" />
+                  Content Pages
                 </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                  Customize the return and refund policy that will be displayed on the storefront returns page. You can edit this later.
-                </p>
-                <div>
-                  <label htmlFor="returnPolicy" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Return and Refund Policy
-                  </label>
-                  <textarea
-                    id="returnPolicy"
-                    {...register('returnPolicy')}
-                    rows={15}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 text-sm whitespace-pre-wrap"
-                    placeholder="Enter your return and refund policy. Use clear section separators (like dashes or blank lines) to organize your content."
-                  />
-                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                    This content will be displayed on your storefront returns page. Line breaks and spacing will be preserved.
+                
+                {/* Important Note */}
+                <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                  <p className="text-sm text-yellow-800 dark:text-yellow-300">
+                    <strong>Note:</strong> Use the tabs below to switch between different content pages. All content will be saved together when you submit the form.
                   </p>
-                  {errors.returnPolicy && (
-                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.returnPolicy.message}</p>
+                </div>
+
+                {/* Tabs */}
+                <div className="mb-4 border-b border-gray-200 dark:border-gray-700">
+                  <nav className="flex overflow-x-auto space-x-1" aria-label="Content Tabs">
+                    {[
+                      { id: 'return' as const, name: 'Return Policy' },
+                      { id: 'shipping' as const, name: 'Shipping Info' },
+                      { id: 'privacy' as const, name: 'Privacy Policy' },
+                      { id: 'terms' as const, name: 'Terms & Conditions' },
+                      { id: 'about' as const, name: 'About Us' },
+                      { id: 'contact' as const, name: 'Contact' },
+                      { id: 'faq' as const, name: 'FAQ' },
+                    ].map((tab) => {
+                      const isActive = activeContentTab === tab.id;
+                      return (
+                        <button
+                          key={tab.id}
+                          type="button"
+                          onClick={() => {
+                            clearErrors();
+                            setActiveContentTab(tab.id);
+                          }}
+                          className={`px-4 py-2 text-sm font-medium border-b-2 transition whitespace-nowrap ${
+                            isActive
+                              ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                              : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
+                          }`}
+                        >
+                          {tab.name}
+                        </button>
+                      );
+                    })}
+                  </nav>
+                </div>
+
+                {/* Active Tab Content */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <label htmlFor={activeContentTab === 'return' ? 'returnPolicy' : `${activeContentTab}Content`} className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      {activeContentTab === 'return' && 'Return and Refund Policy'}
+                      {activeContentTab === 'shipping' && 'Shipping Info'}
+                      {activeContentTab === 'privacy' && 'Privacy Policy'}
+                      {activeContentTab === 'terms' && 'Terms & Conditions'}
+                      {activeContentTab === 'about' && 'About Us'}
+                      {activeContentTab === 'contact' && 'Contact'}
+                      {activeContentTab === 'faq' && 'FAQ'}
+                    </label>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const defaultContent = 
+                            activeContentTab === 'return' ? DEFAULT_RETURN_POLICY :
+                            activeContentTab === 'shipping' ? DEFAULT_SHIPPING_CONTENT :
+                            activeContentTab === 'privacy' ? DEFAULT_PRIVACY_CONTENT :
+                            activeContentTab === 'terms' ? DEFAULT_TERMS_CONTENT :
+                            activeContentTab === 'about' ? DEFAULT_ABOUT_CONTENT :
+                            activeContentTab === 'contact' ? DEFAULT_CONTACT_CONTENT :
+                            DEFAULT_FAQ_CONTENT;
+                          if (activeContentTab === 'return') {
+                            setValue('returnPolicy', defaultContent);
+                          } else {
+                            setValue(`${activeContentTab}Content`, defaultContent);
+                          }
+                        }}
+                        className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition"
+                      >
+                        <ResetIcon className="w-3 h-3 mr-1.5" />
+                        Reset to Default
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowContentPreview(true)}
+                        className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition"
+                      >
+                        <Eye className="w-3 h-3 mr-1.5" />
+                        Preview
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Textarea for active tab */}
+                  {activeContentTab === 'return' && (
+                    <textarea
+                      id="returnPolicy"
+                      {...register('returnPolicy')}
+                      rows={15}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 text-sm font-mono whitespace-pre-wrap"
+                      placeholder={DEFAULT_RETURN_POLICY}
+                    />
                   )}
+                  {activeContentTab === 'shipping' && (
+                    <textarea
+                      id="shippingContent"
+                      {...register('shippingContent')}
+                      rows={15}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 text-sm font-mono whitespace-pre-wrap"
+                      placeholder={DEFAULT_SHIPPING_CONTENT}
+                    />
+                  )}
+                  {activeContentTab === 'privacy' && (
+                    <textarea
+                      id="privacyContent"
+                      {...register('privacyContent')}
+                      rows={15}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 text-sm font-mono whitespace-pre-wrap"
+                      placeholder={DEFAULT_PRIVACY_CONTENT}
+                    />
+                  )}
+                  {activeContentTab === 'terms' && (
+                    <textarea
+                      id="termsContent"
+                      {...register('termsContent')}
+                      rows={15}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 text-sm font-mono whitespace-pre-wrap"
+                      placeholder={DEFAULT_TERMS_CONTENT}
+                    />
+                  )}
+                  {activeContentTab === 'about' && (
+                    <textarea
+                      id="aboutContent"
+                      {...register('aboutContent')}
+                      rows={15}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 text-sm font-mono whitespace-pre-wrap"
+                      placeholder={DEFAULT_ABOUT_CONTENT}
+                    />
+                  )}
+                  {activeContentTab === 'contact' && (
+                    <textarea
+                      id="contactContent"
+                      {...register('contactContent')}
+                      rows={15}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 text-sm font-mono whitespace-pre-wrap"
+                      placeholder={DEFAULT_CONTACT_CONTENT}
+                    />
+                  )}
+                  {activeContentTab === 'faq' && (
+                    <textarea
+                      id="faqContent"
+                      {...register('faqContent')}
+                      rows={15}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 text-sm font-mono whitespace-pre-wrap"
+                      placeholder={DEFAULT_FAQ_CONTENT}
+                    />
+                  )}
+
+                  {/* Formatting Hints */}
+                  <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <p className="text-xs font-semibold text-blue-900 dark:text-blue-200 mb-2">Formatting Tips:</p>
+                    {activeContentTab === 'faq' ? (
+                      <ul className="text-xs text-blue-800 dark:text-blue-300 space-y-1 list-disc list-inside">
+                        <li>Use <code className="bg-blue-100 dark:bg-blue-800 px-1 rounded">Q: Question</code> for questions</li>
+                        <li>Use <code className="bg-blue-100 dark:bg-blue-800 px-1 rounded">A: Answer</code> for answers</li>
+                        <li>Each Q/A pair will be displayed as an expandable FAQ item</li>
+                      </ul>
+                    ) : (
+                      <ul className="text-xs text-blue-800 dark:text-blue-300 space-y-1 list-disc list-inside">
+                        <li><strong>Headers:</strong> Use <code className="bg-blue-100 dark:bg-blue-800 px-1 rounded"># Header Text</code> for main section headers</li>
+                        <li><strong>Sub-headers:</strong> Use <code className="bg-blue-100 dark:bg-blue-800 px-1 rounded">## Sub-header Text</code> or <code className="bg-blue-100 dark:bg-blue-800 px-1 rounded">Label:</code> format</li>
+                        <li><strong>Bullets:</strong> Use <code className="bg-blue-100 dark:bg-blue-800 px-1 rounded">•</code>, <code className="bg-blue-100 dark:bg-blue-800 px-1 rounded">-</code>, or <code className="bg-blue-100 dark:bg-blue-800 px-1 rounded">*</code> for lists</li>
+                        <li><strong>Separators:</strong> Use separator lines (━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━) to divide sections</li>
+                        <li><strong>Paragraphs:</strong> Regular text will be displayed as paragraphs</li>
+                      </ul>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -1615,6 +1982,75 @@ export default function NewStaffPage() {
           </div>
         </form>
       </div>
+
+      {/* Content Preview Modal */}
+      {showContentPreview && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex min-h-screen items-center justify-center p-4">
+            {/* Backdrop */}
+            <div 
+              className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" 
+              onClick={() => setShowContentPreview(false)}
+            />
+
+            {/* Modal */}
+            <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-4xl m-4 transition-colors max-h-[90vh] flex flex-col">
+              {/* Header */}
+              <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                  Preview: {
+                    activeContentTab === 'return' ? 'Return and Refund Policy' :
+                    activeContentTab === 'shipping' ? 'Shipping Info' :
+                    activeContentTab === 'privacy' ? 'Privacy Policy' :
+                    activeContentTab === 'terms' ? 'Terms & Conditions' :
+                    activeContentTab === 'about' ? 'About Us' :
+                    activeContentTab === 'contact' ? 'Contact' :
+                    'FAQ'
+                  }
+                </h2>
+                <button
+                  onClick={() => setShowContentPreview(false)}
+                  className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="p-4 sm:p-6 overflow-y-auto flex-1">
+                <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-6">
+                  {(() => {
+                    const content = activeContentTab === 'return' 
+                      ? (watch('returnPolicy') || DEFAULT_RETURN_POLICY)
+                      : (watch(`${activeContentTab}Content`) || 
+                         (activeContentTab === 'shipping' ? DEFAULT_SHIPPING_CONTENT :
+                          activeContentTab === 'privacy' ? DEFAULT_PRIVACY_CONTENT :
+                          activeContentTab === 'terms' ? DEFAULT_TERMS_CONTENT :
+                          activeContentTab === 'about' ? DEFAULT_ABOUT_CONTENT :
+                          activeContentTab === 'contact' ? DEFAULT_CONTACT_CONTENT :
+                          DEFAULT_FAQ_CONTENT));
+                    return activeContentTab === 'faq' ? (
+                      <FormattedFAQ text={content} />
+                    ) : (
+                      <FormattedContent text={content} />
+                    );
+                  })()}
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 p-4 sm:p-6 border-t border-gray-200 dark:border-gray-700">
+                <button
+                  onClick={() => setShowContentPreview(false)}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Hero Image Modal */}
       {showHeroImageModal && (

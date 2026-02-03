@@ -28,7 +28,7 @@ interface Tenant {
   pharmacistName?: string;
   pharmacistRegNumber?: string;
   pharmacistPhoto?: string;
-  heroImages?: string[];
+  heroImages?: string[] | { heroImages: string[], sponsoredBannerImages: string[] };
   heroImageKeywords?: string[];
   primaryContactWhatsApp?: string;
   isPrimaryContactWhatsApp?: boolean;
@@ -36,6 +36,14 @@ interface Tenant {
   ownerPhoto?: string;
   upiId?: string;
   upiScannerPhoto?: string;
+  pageContent?: {
+    shipping?: string;
+    privacy?: string;
+    terms?: string;
+    about?: string;
+    contact?: string;
+    faq?: string;
+  };
 }
 
 interface TenantContextType {

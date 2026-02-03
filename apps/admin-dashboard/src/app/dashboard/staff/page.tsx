@@ -13,6 +13,7 @@ import { authService } from '@/lib/auth';
 import EditStaffModal from './EditStaffModal';
 import EditTenantModal from './EditTenantModal';
 import ResetPasswordModal from './ResetPasswordModal';
+import ManageAccessModal from './ManageAccessModal';
 import StaffActionsPopover from './StaffActionsPopover';
 import { useRouter } from 'next/navigation';
 import { getStorefrontUrl } from '@/lib/config/urls';
@@ -47,6 +48,7 @@ export default function StaffPage() {
   const [page, setPage] = useState(1);
   const [editingStaff, setEditingStaff] = useState<StaffMember | null>(null);
   const [editingTenant, setEditingTenant] = useState<{ id: string; name: string; staffMember: StaffMember } | null>(null);
+  const [managingAccessTenant, setManagingAccessTenant] = useState<{ id: string; name: string } | null>(null);
   const [freezingStaff, setFreezingStaff] = useState<StaffMember | null>(null);
   const [unfreezingStaff, setUnfreezingStaff] = useState<StaffMember | null>(null);
   const [resettingPassword, setResettingPassword] = useState<StaffMember | null>(null);
@@ -526,13 +528,9 @@ export default function StaffPage() {
                             isOpen={openPopoverId === member.id}
                             onToggle={(memberId) => setOpenPopoverId(memberId)}
                             onEditStaff={() => {
-                              // For SUPER_ADMIN with tenant, use Edit Tenant instead
+                              // For SUPER_ADMIN with tenant, navigate to Edit Tenant page
                               if (mounted && userRole === 'SUPER_ADMIN' && member.tenants?.id) {
-                                setEditingTenant({ 
-                                  id: member.tenants.id, 
-                                  name: member.tenants.name,
-                                  staffMember: member
-                                });
+                                router.push(`/dashboard/staff/edit/${member.tenants.id}`);
                                 setOpenPopoverId(null);
                               } else {
                                 handleEdit(member);
@@ -540,12 +538,17 @@ export default function StaffPage() {
                             }}
                             onEditTenant={() => {
                               if (member.tenants?.id) {
-                                setEditingTenant({ 
-                                  id: member.tenants.id, 
+                                router.push(`/dashboard/staff/edit/${member.tenants.id}`);
+                                setOpenPopoverId(null); // Close popover when navigating to edit page
+                              }
+                            }}
+                            onManageAccess={() => {
+                              if (member.tenants?.id) {
+                                setManagingAccessTenant({
+                                  id: member.tenants.id,
                                   name: member.tenants.name,
-                                  staffMember: member
                                 });
-                                setOpenPopoverId(null); // Close popover when opening tenant edit modal
+                                setOpenPopoverId(null);
                               }
                             }}
                             onFreeze={() => handleFreeze(member)}
@@ -765,6 +768,18 @@ export default function StaffPage() {
           onSuccess={() => {
             setResettingPassword(null);
             queryClient.invalidateQueries({ queryKey: ['staff'] });
+          }}
+        />
+      )}
+
+      {/* Manage Access Modal */}
+      {managingAccessTenant && (
+        <ManageAccessModal
+          tenantId={managingAccessTenant.id}
+          tenantName={managingAccessTenant.name}
+          onClose={() => setManagingAccessTenant(null)}
+          onSuccess={() => {
+            // Optional: refresh queries if needed
           }}
         />
       )}

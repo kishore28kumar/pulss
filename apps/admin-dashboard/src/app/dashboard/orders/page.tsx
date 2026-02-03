@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   Search,
@@ -9,7 +9,8 @@ import {
   ShoppingBag,
   IndianRupee,
   Package,
-  Download
+  Download,
+  Store
 } from 'lucide-react';
 import api from '@/lib/api';
 import { formatCurrency, formatDateTime } from '@/lib/utils';
@@ -17,6 +18,7 @@ import OrderDetailsModal from './OrderDetailsModal';
 import OrderFilters from './OrderFilters';
 import PermissionGuard from '@/components/permissions/PermissionGuard';
 import { Permission } from '@/lib/permissions';
+import { isSuperAdmin } from '@/lib/permissions';
 import { toast } from 'sonner';
 
 interface Order {
@@ -69,11 +71,24 @@ const PAYMENT_STATUS_COLORS: Record<string, { bg: string; text: string }> = {
   REFUNDED: { bg: 'bg-gray-100 dark:bg-gray-700', text: 'text-gray-800 dark:text-gray-200' },
 };
 
+interface Admin {
+  id: string;
+  firstName: string;
+  lastName: string;
+  tenants?: {
+    id: string;
+    name: string;
+    slug: string;
+  };
+}
+
 export default function OrdersPage() {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [selectedTenantId, setSelectedTenantId] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
   const [filters, setFilters] = useState({
     status: '',
     paymentStatus: '',
@@ -81,27 +96,64 @@ export default function OrdersPage() {
     endDate: '',
   });
 
-  // Fetch orders
-  const { data, isLoading, refetch } = useQuery({
-    queryKey: ['orders', { search, page, ...filters }],
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isSuperAdminUser = mounted && isSuperAdmin();
+
+  // Fetch admins list for SUPER_ADMIN
+  const { data: adminsData } = useQuery<{ data: Admin[] }>({
+    queryKey: ['staff'],
     queryFn: async () => {
-      const response = await api.get('/orders', {
-        params: {
-          search,
-          page,
-          limit: 10,
-          ...filters,
-        },
-      });
+      const response = await api.get('/staff');
       return response.data.data;
     },
+    enabled: isSuperAdminUser,
+  });
+
+  // Fetch orders
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ['orders', { search, page, tenantId: selectedTenantId, ...filters }],
+    queryFn: async () => {
+      const params: any = {
+        search,
+        page,
+        limit: 10,
+        ...filters,
+      };
+      const config: any = {};
+      
+      // For SUPER_ADMIN, include tenant slug in header if selected
+      if (isSuperAdminUser && selectedTenantId) {
+        const selectedAdmin = adminsData?.data?.find(admin => admin.tenants?.id === selectedTenantId);
+        if (selectedAdmin?.tenants?.slug) {
+          config.headers = { 'X-Tenant-Slug': selectedAdmin.tenants.slug };
+        }
+      }
+      
+      const response = await api.get('/orders', { ...config, params });
+      return response.data.data;
+    },
+    enabled: !isSuperAdminUser || !!selectedTenantId, // SUPER_ADMIN must select a tenant
   });
 
   // Fetch stats
   const { data: stats } = useQuery({
-    queryKey: ['order-stats'],
+    queryKey: ['order-stats', { tenantId: selectedTenantId }],
     queryFn: async () => {
+      const config: any = {};
+      
+      // For SUPER_ADMIN, include tenant slug in header if selected
+      if (isSuperAdminUser && selectedTenantId) {
+        const selectedAdmin = adminsData?.data?.find(admin => admin.tenants?.id === selectedTenantId);
+        if (selectedAdmin?.tenants?.slug) {
+          config.headers = { 'X-Tenant-Slug': selectedAdmin.tenants.slug };
+        }
+      }
+      
       const response = await api.get('/orders', {
+        ...config,
         params: { limit: 1000 }, // Get all for stats
       });
       const orders = response.data.data.data;
@@ -116,6 +168,7 @@ export default function OrdersPage() {
           .reduce((sum: number, o: Order) => sum + o.total, 0),
       };
     },
+    enabled: !isSuperAdminUser || !!selectedTenantId, // SUPER_ADMIN must select a tenant
   });
 
   const handleViewOrder = (order: Order) => {
@@ -138,9 +191,17 @@ export default function OrdersPage() {
       if (filters.endDate) params.set('endDate', filters.endDate);
       if (search) params.set('search', search);
 
-      const response = await api.get(`/orders/export?${params.toString()}`, {
-        responseType: 'blob',
-      });
+      const config: any = { responseType: 'blob' };
+      
+      // For SUPER_ADMIN, include tenant slug in header if selected
+      if (isSuperAdminUser && selectedTenantId) {
+        const selectedAdmin = adminsData?.data?.find(admin => admin.tenants?.id === selectedTenantId);
+        if (selectedAdmin?.tenants?.slug) {
+          config.headers = { 'X-Tenant-Slug': selectedAdmin.tenants.slug };
+        }
+      }
+
+      const response = await api.get(`/orders/export?${params.toString()}`, config);
 
       // Create blob and download
       const blob = new Blob([response.data], { type: 'text/csv;charset=utf-8;' });
@@ -185,6 +246,7 @@ export default function OrdersPage() {
         <PermissionGuard permission={Permission.ORDERS_EXPORT}>
           <button
             onClick={handleExportOrders}
+            disabled={isSuperAdminUser && !selectedTenantId}
             className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Download className="w-5 h-5 mr-2" />
@@ -192,6 +254,37 @@ export default function OrdersPage() {
           </button>
         </PermissionGuard>
       </div>
+
+      {/* Tenant Selector for SUPER_ADMIN */}
+      {isSuperAdminUser && (
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+          <label htmlFor="tenant-select" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <Store className="w-4 h-4 inline mr-2" />
+            Select Admin/Store
+          </label>
+          <select
+            id="tenant-select"
+            value={selectedTenantId || ''}
+            onChange={(e) => {
+              setSelectedTenantId(e.target.value || null);
+              setPage(1); // Reset to first page when tenant changes
+            }}
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+          >
+            <option value="">-- Select an Admin/Store --</option>
+            {adminsData?.data?.map((admin) => (
+              <option key={admin.id} value={admin.tenants?.id || ''}>
+                {admin.firstName} {admin.lastName} ({admin.tenants?.name || 'No Store'})
+              </option>
+            ))}
+          </select>
+          {!selectedTenantId && (
+            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+              Please select an admin/store to view and manage their orders.
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 sm:gap-6">

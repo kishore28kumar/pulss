@@ -4,44 +4,64 @@ import { AppError, asyncHandler } from '../middleware/errorHandler';
 import { getIO } from '../socket/socketHandler';
 
 /**
- * Create a new broadcast (Super Admin only)
+ * Create a new broadcast (Super Admin or Admin/Staff)
  * POST /api/broadcasts
  */
 export const createBroadcast = asyncHandler(async (req: Request, res: Response) => {
   try {
-    const { title, message } = req.body;
+    const { title, message, imageUrl, link } = req.body;
     const senderId = req.user?.userId;
     const userRole = req.user?.role;
+    const tenantId = req.user?.tenantId;
 
-    if (!senderId || userRole !== 'SUPER_ADMIN') {
-      throw new AppError('Only Super Admin can create broadcasts', 403);
+    if (!senderId || !['SUPER_ADMIN', 'ADMIN', 'STAFF'].includes(userRole || '')) {
+      throw new AppError('Unauthorized', 403);
     }
 
     if (!title || !message) {
       throw new AppError('Title and message are required', 400);
     }
 
+    // Determine target audience and tenant context
+    let targetAudience = 'ADMIN'; // Default for Super Admin
+    let broadcastTenantId = null;
+
+    if (userRole === 'SUPER_ADMIN') {
+      // Super Admin sends to Admins globally (for now)
+      targetAudience = 'ADMIN';
+    } else {
+      // Admin/Staff send to Customers of their tenant
+      if (!tenantId) {
+        throw new AppError('Tenant context required for non-Super Admin', 400);
+      }
+      targetAudience = 'CUSTOMER';
+      broadcastTenantId = tenantId;
+    }
+
     let broadcast;
     try {
       broadcast = await prisma.broadcasts.create({
-      data: {
-        title: title.trim(),
-        message: message.trim(),
-        senderId,
-      },
-      include: {
-        sender: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
+        data: {
+          title: title.trim(),
+          message: message.trim(),
+          imageUrl: imageUrl?.trim(),
+          link: link?.trim(),
+          targetAudience: targetAudience as any,
+          senderId,
+          tenantId: broadcastTenantId,
+        },
+        include: {
+          sender: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+            },
           },
         },
-      },
-    });
+      });
     } catch (dbError: any) {
-      // If table doesn't exist, return error
       if (dbError.message?.includes('does not exist') || dbError.code === 'P2021') {
         throw new AppError('Broadcasts feature is not available. Please run database migrations.', 503);
       } else {
@@ -49,24 +69,33 @@ export const createBroadcast = asyncHandler(async (req: Request, res: Response) 
       }
     }
 
-    // Emit broadcast event to all Admin/Staff users via WebSocket
+    // Emit broadcast event via WebSocket
     try {
       const io = getIO();
       const formattedBroadcast = {
         id: broadcast.id,
         title: broadcast.title,
         message: broadcast.message,
+        imageUrl: broadcast.imageUrl,
+        link: broadcast.link,
         sender: broadcast.sender,
         createdAt: broadcast.createdAt.toISOString(),
         isRead: false,
         readAt: null,
       };
-      
-      // Emit to all connected Admin/Staff users
-      io.emit('broadcast:new', formattedBroadcast);
+
+      if (targetAudience === 'ADMIN') {
+        // Emit to all Admin/Staff users
+        io.emit('broadcast:new', formattedBroadcast);
+      } else {
+        // Emit to Customers of this tenant
+        // Assuming we have a room for tenant customers or check on client side
+        // Typically: io.to(`tenant:${tenantId}`).emit('broadcast:customer:new', formattedBroadcast);
+        // For now, we'll emit to a tenant-specific channel
+        io.to(`tenant:${broadcastTenantId}`).emit('broadcast:customer:new', formattedBroadcast);
+      }
     } catch (error) {
       console.error('Failed to emit broadcast event:', error);
-      // Don't fail the request if WebSocket emit fails
     }
 
     res.status(201).json({
@@ -80,23 +109,29 @@ export const createBroadcast = asyncHandler(async (req: Request, res: Response) 
 });
 
 /**
- * Get all broadcasts for current user (Admin/Staff)
- * GET /api/broadcasts
+ * Get broadcasts (Received or Sent)
+ * GET /api/broadcasts?type=received|sent
  */
 export const getBroadcasts = asyncHandler(async (req: Request, res: Response) => {
   try {
     const userId = req.user?.userId;
     const userRole = req.user?.role;
+    const { type = 'received' } = req.query; // 'received' or 'sent'
 
     if (!userId || !['SUPER_ADMIN', 'ADMIN', 'STAFF'].includes(userRole || '')) {
       throw new AppError('Unauthorized', 403);
     }
 
-    // Get all non-deleted broadcasts
+    const isSent = type === 'sent';
+
+    // Get broadcasts
     type BroadcastWithRelations = {
       id: string;
       title: string;
       message: string;
+      imageUrl: string | null;
+      link: string | null;
+      targetAudience: string;
       senderId: string;
       createdAt: Date;
       deletedAt: Date | null;
@@ -110,37 +145,49 @@ export const getBroadcasts = asyncHandler(async (req: Request, res: Response) =>
         readAt: Date;
       }>;
     };
-    
+
     let broadcasts: BroadcastWithRelations[] = [];
+
+    const where: any = {
+      deletedAt: null,
+    };
+
+    if (isSent) {
+      // Sent by me
+      where.senderId = userId;
+    } else {
+      // Received by me (Admin/Staff receiving from Super Admin)
+      // Filter for ADMIN audience
+      where.targetAudience = 'ADMIN';
+      // In future: also filter by tenantId if SA targets specific tenant
+    }
+
     try {
       broadcasts = await prisma.broadcasts.findMany({
-      where: {
-        deletedAt: null,
-      },
-      include: {
-        sender: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
+        where,
+        include: {
+          sender: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+            },
+          },
+          readBy: {
+            where: {
+              userId,
+            },
+            select: {
+              readAt: true,
+            },
           },
         },
-        readBy: {
-          where: {
-            userId,
-          },
-          select: {
-            readAt: true,
-          },
+        orderBy: {
+          createdAt: 'desc',
         },
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
+      }) as any;
     } catch (dbError: any) {
-      // If table doesn't exist, return empty array instead of crashing
       if (dbError.message?.includes('does not exist') || dbError.code === 'P2021') {
         console.warn('[Broadcasts] Broadcasts table does not exist yet. Please run migrations.');
         broadcasts = [];
@@ -149,21 +196,25 @@ export const getBroadcasts = asyncHandler(async (req: Request, res: Response) =>
       }
     }
 
-    // Format response with read status
-    // For Super Admin, mark their own broadcasts as read automatically
+    // Format response
     const formattedBroadcasts = broadcasts.map((broadcast) => {
-      const isOwnBroadcast = userRole === 'SUPER_ADMIN' && broadcast.senderId === userId;
-      
+      // For Sent tab, or if I sent it (SA), it's "read" by definition (or N/A)
+      // For Received tab, check readBy
+      const isRead = isSent || broadcast.readBy.length > 0;
+
       return {
         id: broadcast.id,
         title: broadcast.title,
         message: broadcast.message,
+        imageUrl: broadcast.imageUrl,
+        link: broadcast.link,
+        targetAudience: broadcast.targetAudience,
         sender: broadcast.sender,
         createdAt: broadcast.createdAt.toISOString(),
-        isRead: isOwnBroadcast || broadcast.readBy.length > 0,
-        readAt: isOwnBroadcast 
-          ? broadcast.createdAt.toISOString() 
-          : (broadcast.readBy[0]?.readAt?.toISOString() || null),
+        isRead,
+        readAt: isRead && !isSent
+          ? (broadcast.readBy[0]?.readAt?.toISOString() || null)
+          : null,
       };
     });
 
@@ -201,30 +252,30 @@ export const getUnreadCount = asyncHandler(async (req: Request, res: Response) =
 
     let totalBroadcasts = 0;
     let readCount = 0;
-    
+
     try {
       totalBroadcasts = await prisma.broadcasts.count({
-      where: whereClause,
-    });
+        where: whereClause,
+      });
 
-    // Get read broadcasts count for this user (excluding own broadcasts for Super Admin)
-    const readWhereClause: any = {
-      userId,
-      broadcast: {
-        deletedAt: null,
-      },
-    };
-
-    if (userRole === 'SUPER_ADMIN') {
-      readWhereClause.broadcast = {
-        ...readWhereClause.broadcast,
-        senderId: { not: userId },
+      // Get read broadcasts count for this user (excluding own broadcasts for Super Admin)
+      const readWhereClause: any = {
+        userId,
+        broadcast: {
+          deletedAt: null,
+        },
       };
-    }
+
+      if (userRole === 'SUPER_ADMIN') {
+        readWhereClause.broadcast = {
+          ...readWhereClause.broadcast,
+          senderId: { not: userId },
+        };
+      }
 
       readCount = await prisma.broadcast_reads.count({
-      where: readWhereClause,
-    });
+        where: readWhereClause,
+      });
     } catch (dbError: any) {
       // If table doesn't exist, return 0 count instead of crashing
       if (dbError.message?.includes('does not exist') || dbError.code === 'P2021') {
@@ -265,11 +316,11 @@ export const markBroadcastAsRead = asyncHandler(async (req: Request, res: Respon
     let broadcast;
     try {
       broadcast = await prisma.broadcasts.findFirst({
-      where: {
-        id,
-        deletedAt: null,
-      },
-    });
+        where: {
+          id,
+          deletedAt: null,
+        },
+      });
     } catch (dbError: any) {
       // If table doesn't exist, return 404
       if (dbError.message?.includes('does not exist') || dbError.code === 'P2021') {
@@ -285,22 +336,22 @@ export const markBroadcastAsRead = asyncHandler(async (req: Request, res: Respon
 
     // Create or update read record
     try {
-    await prisma.broadcast_reads.upsert({
-      where: {
-        broadcastId_userId: {
+      await prisma.broadcast_reads.upsert({
+        where: {
+          broadcastId_userId: {
+            broadcastId: id,
+            userId,
+          },
+        },
+        create: {
           broadcastId: id,
           userId,
+          readAt: new Date(),
         },
-      },
-      create: {
-        broadcastId: id,
-        userId,
-        readAt: new Date(),
-      },
-      update: {
-        readAt: new Date(),
-      },
-    });
+        update: {
+          readAt: new Date(),
+        },
+      });
     } catch (dbError: any) {
       // If table doesn't exist, just return success (no reads to update)
       if (dbError.message?.includes('does not exist') || dbError.code === 'P2021') {
@@ -336,30 +387,30 @@ export const markAllBroadcastsAsRead = asyncHandler(async (req: Request, res: Re
     let unreadBroadcasts = [];
     try {
       unreadBroadcasts = await prisma.broadcasts.findMany({
-      where: {
-        deletedAt: null,
-        readBy: {
-          none: {
-            userId,
+        where: {
+          deletedAt: null,
+          readBy: {
+            none: {
+              userId,
+            },
           },
         },
-      },
-      select: {
-        id: true,
-      },
-    });
-
-    // Mark all as read
-    if (unreadBroadcasts.length > 0) {
-        try {
-      await prisma.broadcast_reads.createMany({
-        data: unreadBroadcasts.map((broadcast) => ({
-          broadcastId: broadcast.id,
-          userId,
-          readAt: new Date(),
-        })),
-        skipDuplicates: true,
+        select: {
+          id: true,
+        },
       });
+
+      // Mark all as read
+      if (unreadBroadcasts.length > 0) {
+        try {
+          await prisma.broadcast_reads.createMany({
+            data: unreadBroadcasts.map((broadcast) => ({
+              broadcastId: broadcast.id,
+              userId,
+              readAt: new Date(),
+            })),
+            skipDuplicates: true,
+          });
         } catch (dbError: any) {
           // If table doesn't exist, just skip (no reads to create)
           if (dbError.message?.includes('does not exist') || dbError.code === 'P2021') {
@@ -403,12 +454,12 @@ export const deleteBroadcast = asyncHandler(async (req: Request, res: Response) 
 
     // Soft delete
     try {
-    await prisma.broadcasts.update({
-      where: { id },
-      data: {
-        deletedAt: new Date(),
-      },
-    });
+      await prisma.broadcasts.update({
+        where: { id },
+        data: {
+          deletedAt: new Date(),
+        },
+      });
     } catch (dbError: any) {
       // If table doesn't exist, return 404
       if (dbError.message?.includes('does not exist') || dbError.code === 'P2021') {

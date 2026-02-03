@@ -289,7 +289,6 @@ model products {
   sku                  String?
   barcode              String?
   stock                Int                @default(0)
-  lowStockThreshold    Int                @default(10)
   trackInventory       Boolean            @default(true)
   images               String[]
   thumbnail            String?
@@ -303,6 +302,7 @@ model products {
   metaDescription      String?
   isActive             Boolean            @default(true)
   isFeatured           Boolean            @default(false)
+  isSponsored          Boolean            @default(false)
   createdAt            DateTime           @default(now())
   updatedAt            DateTime
   cart_items           cart_items[]
@@ -375,7 +375,7 @@ model tenants {
   pharmacistPhoto    String?
   scheduleDrugEligible Boolean        @default(false)
   returnPolicy        String?         @db.Text
-  heroImages         String[]         @default([])
+  heroImages         Json?            @default("{\"heroImages\": [], \"sponsoredBannerImages\": []}")
   heroImageKeywords  String[]         @default([])
   logoUrl            String?
   faviconUrl         String?
@@ -389,6 +389,7 @@ model tenants {
   secondaryColor     String?          @default("#8B5CF6")
   features           Json?
   metadata           Json?
+  pageContent        Json?            // Stores content for Shipping, Privacy, Terms, About, Contact, FAQ pages
   createdAt          DateTime         @default(now())
   updatedAt          DateTime
   analytics          analytics[]
@@ -397,6 +398,7 @@ model tenants {
   coupons            coupons[]
   customers          customers[]
   invoices           invoices[]
+  broadcasts         broadcasts[]
   notifications      notifications[]
   orders             orders[]
   products           products[]
@@ -463,18 +465,31 @@ model messages {
   @@index([senderId])
 }
 
+
+
+enum BroadcastAudience {
+  ADMIN
+  CUSTOMER
+}
+
 model broadcasts {
-  id          String   @id @default(cuid())
-  title       String
-  message     String
-  senderId    String   // Super Admin who sent it
-  createdAt   DateTime @default(now())
-  deletedAt   DateTime?
-  sender      users    @relation("BroadcastSender", fields: [senderId], references: [id], onDelete: Cascade)
-  readBy      broadcast_reads[]
+  id             String            @id @default(cuid())
+  title          String
+  message        String
+  imageUrl       String?
+  link           String?
+  targetAudience BroadcastAudience @default(ADMIN)
+  senderId       String
+  tenantId       String?
+  createdAt      DateTime          @default(now())
+  deletedAt      DateTime?
+  sender         users             @relation("BroadcastSender", fields: [senderId], references: [id], onDelete: Cascade)
+  tenant         tenants?          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  readBy         broadcast_reads[]
 
   @@index([createdAt])
   @@index([senderId])
+  @@index([tenantId])
 }
 
 model broadcast_reads {
@@ -626,4 +641,8 @@ enum AdRequestType {
   HERO_IMAGES_REMOVE
   HERO_IMAGES_REORDER
   HERO_IMAGES_ADD
+  SPONSORED_BANNER_CHANGE
+  SPONSORED_BANNER_ADD
+  SPONSORED_BANNER_REMOVE
+  SPONSORED_BANNER_REORDER
 }

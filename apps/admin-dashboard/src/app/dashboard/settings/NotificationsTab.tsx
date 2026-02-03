@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Save, Bell, Mail, MessageSquare } from 'lucide-react';
+import { Save, Bell, MessageSquare } from 'lucide-react';
 
 interface NotificationsTabProps {
   settings: any;
@@ -12,19 +12,15 @@ interface NotificationsTabProps {
 
 interface NotificationSettings {
   orderNotifications: boolean;
-  lowStockAlerts: boolean;
   customerRegistration: boolean;
-  reviewNotifications: boolean;
-  marketingEmails: boolean;
+  chatNotification: boolean;
 }
 
 export default function NotificationsTab({ settings, onSave, isSaving, readOnly = false }: NotificationsTabProps) {
   const [notifications, setNotifications] = useState<NotificationSettings>({
     orderNotifications: true,
-    lowStockAlerts: true,
     customerRegistration: false,
-    reviewNotifications: true,
-    marketingEmails: false,
+    chatNotification: true,
   });
 
   useEffect(() => {
@@ -59,28 +55,16 @@ export default function NotificationsTab({ settings, onSave, isSaving, readOnly 
       key: 'orderNotifications' as keyof NotificationSettings,
     },
     {
-      title: 'Low Stock Alerts',
-      description: 'Receive alerts when products are running low',
-      icon: Bell,
-      key: 'lowStockAlerts' as keyof NotificationSettings,
-    },
-    {
       title: 'Customer Registration',
       description: 'Get notified when new customers sign up',
       icon: Bell,
       key: 'customerRegistration' as keyof NotificationSettings,
     },
     {
-      title: 'Review Notifications',
-      description: 'Receive notifications for new product reviews',
+      title: 'Chat Notification',
+      description: 'Get notified when new chat messages arrive',
       icon: MessageSquare,
-      key: 'reviewNotifications' as keyof NotificationSettings,
-    },
-    {
-      title: 'Marketing Emails',
-      description: 'Receive marketing and promotional emails',
-      icon: Mail,
-      key: 'marketingEmails' as keyof NotificationSettings,
+      key: 'chatNotification' as keyof NotificationSettings,
     },
   ];
 

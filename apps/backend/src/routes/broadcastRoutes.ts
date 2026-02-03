@@ -7,24 +7,41 @@ import {
   markAllBroadcastsAsRead,
   deleteBroadcast,
 } from '../controllers/broadcastController';
-import { authenticateUser, requireSuperAdmin } from '../middleware/authMiddleware';
+import {
+  getStorefrontNotifications,
+  markBroadcastAsRead as markCustomerBroadcastAsRead,
+  markAllAsRead as markAllCustomerBroadcastsAsRead
+} from '../controllers/customerBroadcastController';
+import { authenticateUser, authenticateCustomer, authorize, requireSuperAdmin } from '../middleware/authMiddleware';
 
 const router = Router();
 
-// All routes require authentication
-router.use(authenticateUser);
+// ==========================================
+// CUSTOMER ROUTES
+// ==========================================
+router.get('/storefront', authenticateCustomer, getStorefrontNotifications);
+router.post('/storefront/:id/read', authenticateCustomer, markCustomerBroadcastAsRead);
+router.post('/storefront/mark-all-read', authenticateCustomer, markAllCustomerBroadcastsAsRead);
 
-// Get broadcasts and unread count (Admin/Staff/Super Admin)
-router.get('/', getBroadcasts);
-router.get('/unread-count', getUnreadCount);
+// ==========================================
+// ADMIN ROUTES
+// ==========================================
 
-// Mark as read (Admin/Staff/Super Admin)
-router.post('/:id/read', markBroadcastAsRead);
-router.post('/mark-all-read', markAllBroadcastsAsRead);
+// Create (Super Admin, Admin, Staff permissions handled in controller)
+// The user asked to reuse Super Admin logic, we updated controller to handle roles.
+// We need to allow ADMIN/STAFF to call createBroadcast.
+// requireSuperAdmin middleware would block them. We should remove it and let controller/authorize handle it.
+router.post('/', authenticateUser, authorize('SUPER_ADMIN', 'ADMIN', 'STAFF'), createBroadcast);
 
-// Create and delete (Super Admin only)
-router.post('/', requireSuperAdmin, createBroadcast);
-router.delete('/:id', requireSuperAdmin, deleteBroadcast);
+// Read
+router.get('/', authenticateUser, authorize('SUPER_ADMIN', 'ADMIN', 'STAFF'), getBroadcasts);
+router.get('/unread-count', authenticateUser, authorize('SUPER_ADMIN', 'ADMIN', 'STAFF'), getUnreadCount);
+
+// Update/Action
+router.post('/:id/read', authenticateUser, authorize('SUPER_ADMIN', 'ADMIN', 'STAFF'), markBroadcastAsRead);
+router.post('/mark-all-read', authenticateUser, authorize('SUPER_ADMIN', 'ADMIN', 'STAFF'), markAllBroadcastsAsRead);
+
+// Delete (Super Admin only)
+router.delete('/:id', authenticateUser, requireSuperAdmin, deleteBroadcast);
 
 export default router;
-

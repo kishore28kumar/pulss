@@ -10,6 +10,8 @@ import {
   refreshToken,
   generateLoginToken,
   verifyLoginToken,
+  forgotPasswordCustomer,
+  resetPasswordCustomer,
 } from '../controllers/authController';
 import { authenticateUser, authenticateCustomer } from '../middleware/authMiddleware';
 
@@ -25,6 +27,8 @@ router.post('/customer/login', loginCustomer);
 router.post('/customer/register', registerCustomer);
 router.get('/customer/me', authenticateCustomer, getCurrentCustomer);
 router.put('/customer/profile', authenticateCustomer, updateCustomerProfile);
+router.post('/customer/forgot-password', forgotPasswordCustomer);
+router.post('/customer/reset-password', resetPasswordCustomer);
 
 // Token Refresh
 router.post('/refresh', refreshToken);

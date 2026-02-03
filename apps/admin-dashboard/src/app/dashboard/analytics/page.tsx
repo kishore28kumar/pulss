@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { IndianRupee, ShoppingBag, Users, Package, TrendingUp, TrendingDown, Search, MapPin, Building2, X, Calendar, Download } from 'lucide-react';
+import { IndianRupee, ShoppingBag, Users, Package, TrendingUp, TrendingDown, Search, MapPin, Building2, X, Calendar, Download, CheckCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import api from '@/lib/api';
 import { formatCurrency } from '@/lib/utils';
@@ -198,7 +198,7 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+      <div className={`grid grid-cols-1 sm:grid-cols-2 ${mounted && userRole !== 'SUPER_ADMIN' ? 'md:grid-cols-5' : 'md:grid-cols-4'} gap-4 sm:gap-6`}>
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="w-12 h-12 bg-green-50 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
@@ -242,6 +242,21 @@ export default function AnalyticsPage() {
           </h3>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Total Orders</p>
         </div>
+
+        {/* Total Delivered Orders - Admin only */}
+        {mounted && userRole !== 'SUPER_ADMIN' && (
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-emerald-50 dark:bg-emerald-900/30 rounded-lg flex items-center justify-center">
+                <CheckCircle className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+              </div>
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+              {dashboardStats?.totalDeliveredOrders || 0}
+            </h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Total Delivered Orders</p>
+          </div>
+        )}
 
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
           <div className="flex items-center justify-between mb-4">

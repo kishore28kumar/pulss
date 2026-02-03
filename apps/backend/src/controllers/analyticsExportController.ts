@@ -271,6 +271,147 @@ export const exportAnalytics = asyncHandler(
         worksheet.getRow(1).font = { bold: true };
       }
 
+      // All Tenants Details
+      if (sectionsList.includes('allTenants')) {
+        const tenants = await prisma.tenants.findMany({
+          where: {
+            createdAt: {
+              gte: start,
+              lte: end,
+            },
+          },
+          include: {
+            _count: {
+              select: {
+                users: true,
+                products: true,
+                orders: true,
+                customers: true,
+              },
+            },
+          },
+          orderBy: { createdAt: 'desc' },
+        });
+
+        const tenantsData = tenants.map((tenant) => ({
+          name: tenant.name,
+          slug: tenant.slug,
+          email: tenant.email || '',
+          phone: tenant.phone || '',
+          city: tenant.city || '',
+          state: tenant.state || '',
+          pincode: tenant.pincode || '',
+          status: tenant.status,
+          subscriptionPlan: tenant.subscriptionPlan || '',
+          createdAt: tenant.createdAt.toISOString().split('T')[0],
+          totalUsers: tenant._count.users,
+          totalProducts: tenant._count.products,
+          totalOrders: tenant._count.orders,
+          totalCustomers: tenant._count.customers,
+        }));
+
+        const worksheet = workbook.addWorksheet('All Tenants');
+        worksheet.columns = [
+          { header: 'Name', key: 'name', width: 30 },
+          { header: 'Slug', key: 'slug', width: 20 },
+          { header: 'Email', key: 'email', width: 30 },
+          { header: 'Phone', key: 'phone', width: 15 },
+          { header: 'City', key: 'city', width: 20 },
+          { header: 'State', key: 'state', width: 20 },
+          { header: 'Pincode', key: 'pincode', width: 10 },
+          { header: 'Status', key: 'status', width: 15 },
+          { header: 'Subscription Plan', key: 'subscriptionPlan', width: 20 },
+          { header: 'Created Date', key: 'createdAt', width: 15 },
+          { header: 'Total Users', key: 'totalUsers', width: 15 },
+          { header: 'Total Products', key: 'totalProducts', width: 15 },
+          { header: 'Total Orders', key: 'totalOrders', width: 15 },
+          { header: 'Total Customers', key: 'totalCustomers', width: 15 },
+        ];
+        worksheet.addRows(tenantsData);
+        worksheet.getRow(1).font = { bold: true };
+      }
+
+      // All Customers Details
+      if (sectionsList.includes('allCustomers')) {
+        const customers = await prisma.customers.findMany({
+          where: {
+            createdAt: {
+              gte: start,
+              lte: end,
+            },
+          },
+          include: {
+            users: {
+              select: {
+                firstName: true,
+                lastName: true,
+                email: true,
+                phone: true,
+              },
+            },
+            tenants: {
+              select: {
+                name: true,
+                slug: true,
+              },
+            },
+            addresses: {
+              take: 1,
+              orderBy: { createdAt: 'desc' },
+            },
+            orders: {
+              select: {
+                total: true,
+                createdAt: true,
+              },
+              orderBy: { createdAt: 'desc' },
+            },
+          },
+          orderBy: { createdAt: 'desc' },
+        });
+
+        const customersData = customers.map((customer) => {
+          const totalOrders = customer.orders.length;
+          const totalSpent = customer.orders.reduce((sum, order) => sum + Number(order.total), 0);
+          const lastOrderDate = customer.orders.length > 0 
+            ? customer.orders[0].createdAt.toISOString().split('T')[0]
+            : '';
+          const address = customer.addresses[0];
+          const fullName = `${customer.users.firstName || ''} ${customer.users.lastName || ''}`.trim() || customer.users.email;
+
+          return {
+            name: fullName,
+            email: customer.users.email,
+            phone: customer.users.phone || '',
+            tenantName: customer.tenants.name,
+            tenantSlug: customer.tenants.slug,
+            address: address ? `${address.line1 || ''} ${address.line2 || ''}`.trim() : '',
+            city: address?.city || '',
+            registrationDate: customer.createdAt.toISOString().split('T')[0],
+            totalOrders,
+            totalSpent: totalSpent.toFixed(2),
+            lastOrderDate,
+          };
+        });
+
+        const worksheet = workbook.addWorksheet('All Customers');
+        worksheet.columns = [
+          { header: 'Name', key: 'name', width: 30 },
+          { header: 'Email', key: 'email', width: 30 },
+          { header: 'Phone', key: 'phone', width: 15 },
+          { header: 'Tenant Name', key: 'tenantName', width: 25 },
+          { header: 'Tenant Slug', key: 'tenantSlug', width: 20 },
+          { header: 'Address', key: 'address', width: 40 },
+          { header: 'City', key: 'city', width: 20 },
+          { header: 'Registration Date', key: 'registrationDate', width: 18 },
+          { header: 'Total Orders', key: 'totalOrders', width: 15 },
+          { header: 'Total Spent', key: 'totalSpent', width: 15 },
+          { header: 'Last Order Date', key: 'lastOrderDate', width: 18 },
+        ];
+        worksheet.addRows(customersData);
+        worksheet.getRow(1).font = { bold: true };
+      }
+
       // Set response headers
       const filename = `analytics-export-${startDate}-to-${endDate}.xlsx`;
       res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
@@ -488,6 +629,143 @@ export const exportAnalytics = asyncHandler(
         ];
 
         csvSections.push(`Store Performance\n${headers.map(escapeCSV).join(',')}\n${rows.map(row => row.map(escapeCSV).join(',')).join('\n')}`);
+      }
+
+      // All Tenants Details
+      if (sectionsList.includes('allTenants')) {
+        const tenants = await prisma.tenants.findMany({
+          where: {
+            createdAt: {
+              gte: start,
+              lte: end,
+            },
+          },
+          include: {
+            _count: {
+              select: {
+                users: true,
+                products: true,
+                orders: true,
+                customers: true,
+              },
+            },
+          },
+          orderBy: { createdAt: 'desc' },
+        });
+
+        const headers = [
+          'Name',
+          'Slug',
+          'Email',
+          'Phone',
+          'City',
+          'State',
+          'Pincode',
+          'Status',
+          'Subscription Plan',
+          'Created Date',
+          'Total Users',
+          'Total Products',
+          'Total Orders',
+          'Total Customers',
+        ];
+        const rows = tenants.map((tenant) => [
+          tenant.name,
+          tenant.slug,
+          tenant.email || '',
+          tenant.phone || '',
+          tenant.city || '',
+          tenant.state || '',
+          tenant.pincode || '',
+          tenant.status,
+          tenant.subscriptionPlan || '',
+          tenant.createdAt.toISOString().split('T')[0],
+          tenant._count.users,
+          tenant._count.products,
+          tenant._count.orders,
+          tenant._count.customers,
+        ]);
+
+        csvSections.push(`All Tenants Details\n${headers.map(escapeCSV).join(',')}\n${rows.map(row => row.map(escapeCSV).join(',')).join('\n')}`);
+      }
+
+      // All Customers Details
+      if (sectionsList.includes('allCustomers')) {
+        const customers = await prisma.customers.findMany({
+          where: {
+            createdAt: {
+              gte: start,
+              lte: end,
+            },
+          },
+          include: {
+            users: {
+              select: {
+                firstName: true,
+                lastName: true,
+                email: true,
+                phone: true,
+              },
+            },
+            tenants: {
+              select: {
+                name: true,
+                slug: true,
+              },
+            },
+            addresses: {
+              take: 1,
+              orderBy: { createdAt: 'desc' },
+            },
+            orders: {
+              select: {
+                total: true,
+                createdAt: true,
+              },
+              orderBy: { createdAt: 'desc' },
+            },
+          },
+          orderBy: { createdAt: 'desc' },
+        });
+
+        const headers = [
+          'Name',
+          'Email',
+          'Phone',
+          'Tenant Name',
+          'Tenant Slug',
+          'Address',
+          'City',
+          'Registration Date',
+          'Total Orders',
+          'Total Spent',
+          'Last Order Date',
+        ];
+        const rows = customers.map((customer) => {
+          const totalOrders = customer.orders.length;
+          const totalSpent = customer.orders.reduce((sum, order) => sum + Number(order.total), 0);
+          const lastOrderDate = customer.orders.length > 0 
+            ? customer.orders[0].createdAt.toISOString().split('T')[0]
+            : '';
+          const address = customer.addresses[0];
+          const fullName = `${customer.users.firstName || ''} ${customer.users.lastName || ''}`.trim() || customer.users.email;
+
+          return [
+            fullName,
+            customer.users.email,
+            customer.users.phone || '',
+            customer.tenants.name,
+            customer.tenants.slug,
+            address ? `${address.line1 || ''} ${address.line2 || ''}`.trim() : '',
+            address?.city || '',
+            customer.createdAt.toISOString().split('T')[0],
+            totalOrders,
+            totalSpent.toFixed(2),
+            lastOrderDate,
+          ];
+        });
+
+        csvSections.push(`All Customers Details\n${headers.map(escapeCSV).join(',')}\n${rows.map(row => row.map(escapeCSV).join(',')).join('\n')}`);
       }
 
       const csvContent = csvSections.join('\n\n');

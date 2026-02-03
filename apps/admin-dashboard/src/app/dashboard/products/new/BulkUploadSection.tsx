@@ -30,7 +30,6 @@ interface BulkProduct {
   barcode?: string;
   trackInventory: boolean;
   stockQuantity: number;
-  lowStockThreshold: number;
   categorySlug?: string;
   categoryId?: string;
   images?: string[];
@@ -55,7 +54,6 @@ const CSV_HEADERS = [
   'barcode',
   'trackInventory',
   'stockQuantity',
-  'lowStockThreshold',
   'categorySlug',
   'images',
   'isActive',
@@ -154,7 +152,6 @@ export default function BulkUploadSection({
         else if (header === 'barcode') product.barcode = value || undefined;
         else if (header === 'trackinventory') product.trackInventory = value.toLowerCase() === 'true';
         else if (header === 'stockquantity') product.stockQuantity = parseInt(value) || 0;
-        else if (header === 'lowstockthreshold') product.lowStockThreshold = parseInt(value) || 10;
         else if (header === 'categoryslug') product.categorySlug = value || undefined;
         else if (header === 'images') {
           product.images = value ? value.split(',').map((img: string) => img.trim()).filter(Boolean) : [];
@@ -170,7 +167,6 @@ export default function BulkUploadSection({
       // Set defaults
       product.trackInventory = product.trackInventory ?? true;
       product.stockQuantity = product.stockQuantity ?? 0;
-      product.lowStockThreshold = product.lowStockThreshold ?? 10;
       product.isActive = product.isActive ?? true;
       product.isFeatured = product.isFeatured ?? false;
       product.requiresPrescription = product.requiresPrescription ?? false;
@@ -361,7 +357,6 @@ export default function BulkUploadSection({
           barcode: p.barcode,
           trackInventory: p.trackInventory,
           stockQuantity: p.stockQuantity,
-          lowStockThreshold: p.lowStockThreshold,
           categoryIds: p.categoryId ? [p.categoryId] : [],
           images: p.images || [],
           isActive: p.isActive,

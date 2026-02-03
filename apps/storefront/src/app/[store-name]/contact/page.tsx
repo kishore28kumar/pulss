@@ -14,6 +14,7 @@ import {
 import Image from 'next/image';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { useTenant } from '@/contexts/TenantContext';
+import FormattedContent from '@/components/content/FormattedContent';
 
 function ContactPageContent() {
   const { tenant, isLoading: tenantLoading } = useTenant();
@@ -336,36 +337,51 @@ function ContactPageContent() {
         </div>
       </section>
 
-      {/* FAQ Section */}
-      <section className="py-16 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                Frequently Asked Questions
-              </h2>
-              <p className="text-gray-600">
-                Find quick answers to common questions
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              {faqs.map((faq, index) => (
-                <div key={index} className="bg-gray-50 rounded-xl p-6 hover:bg-gray-100 transition-colors duration-300">
-                  <h3 className="text-lg font-bold text-gray-900 mb-3 flex items-start">
-                    <span className="text-blue-600 mr-2">Q:</span>
-                    {faq.question}
-                  </h3>
-                  <p className="text-gray-600 ml-6">
-                    <span className="text-green-600 font-semibold mr-2">A:</span>
-                    {faq.answer}
-                  </p>
-                </div>
-              ))}
+      {/* Editable Content Section */}
+      {tenant?.pageContent?.contact && (
+        <section className={`py-16 ${tenant?.shopFrontPhoto || tenant?.ownerPhoto ? 'bg-white' : 'bg-gray-50'}`}>
+          <div className="container mx-auto px-4">
+            <div className="max-w-4xl mx-auto">
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 md:p-8">
+                <FormattedContent text={tenant.pageContent.contact} />
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
+
+      {/* FAQ Section - Only show if no editable content */}
+      {!tenant?.pageContent?.contact && (
+        <section className="py-16 bg-white">
+          <div className="container mx-auto px-4">
+            <div className="max-w-4xl mx-auto">
+              <div className="text-center mb-12">
+                <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                  Frequently Asked Questions
+                </h2>
+                <p className="text-gray-600">
+                  Find quick answers to common questions
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                {faqs.map((faq, index) => (
+                  <div key={index} className="bg-gray-50 rounded-xl p-6 hover:bg-gray-100 transition-colors duration-300">
+                    <h3 className="text-lg font-bold text-gray-900 mb-3 flex items-start">
+                      <span className="text-blue-600 mr-2">Q:</span>
+                      {faq.question}
+                    </h3>
+                    <p className="text-gray-600 ml-6">
+                      <span className="text-green-600 font-semibold mr-2">A:</span>
+                      {faq.answer}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* CTA Section */}
       <section className="py-16 bg-gradient-to-r from-blue-600 to-indigo-700 text-white">

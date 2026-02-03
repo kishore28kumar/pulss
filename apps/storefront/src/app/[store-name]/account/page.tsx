@@ -55,6 +55,13 @@ export default function AccountPage() {
   // Helper to get tenant-aware path
   const getPath = (path: string) => `/${storeName}${path}`;
 
+  // Handle phone input - restrict to 10 digits
+  const handlePhoneChange = (value: string) => {
+    const digitsOnly = value.replace(/\D/g, '');
+    const limitedDigits = digitsOnly.slice(0, 10);
+    setEditFormData({ ...editFormData, phone: limitedDigits });
+  };
+
   // Initialize edit form data when customer data is available
   useEffect(() => {
     if (customer) {
@@ -486,11 +493,17 @@ export default function AccountPage() {
                   </label>
                   <input
                     type="tel"
+                    maxLength={10}
                     value={editFormData.phone}
-                    onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
+                    onChange={(e) => handlePhoneChange(e.target.value)}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="+1 (555) 000-0000"
+                    placeholder="1234567890"
                   />
+                  {editFormData.phone && (
+                    <p className="mt-1 text-xs text-gray-500">
+                      {editFormData.phone.replace(/\D/g, '').length}/10 digits
+                    </p>
+                  )}
                 </div>
 
                 <div>

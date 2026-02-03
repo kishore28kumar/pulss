@@ -89,6 +89,7 @@ export const getDashboardStats = asyncHandler(
     const [
       totalRevenue,
       totalOrders,
+      totalDeliveredOrders,
       totalCustomers,
       totalProducts,
       previousPeriodOrders,
@@ -107,6 +108,14 @@ export const getDashboardStats = asyncHandler(
       // Total orders
       prisma.orders.count({
         where: ordersWhere,
+      }),
+
+      // Total delivered orders
+      prisma.orders.count({
+        where: {
+          ...ordersWhere,
+          status: 'DELIVERED',
+        },
       }),
 
       // Total customers
@@ -147,6 +156,7 @@ export const getDashboardStats = asyncHandler(
       data: {
         totalRevenue: revenue,
         totalOrders,
+        totalDeliveredOrders,
         totalCustomers,
         totalProducts,
         revenueChange: Math.round(revenueChange * 100) / 100,

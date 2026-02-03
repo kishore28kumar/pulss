@@ -108,8 +108,7 @@ export default function ProductDetailPage() {
 
             <div>
               <h3 className="text-sm font-medium text-gray-500">Stock</h3>
-              <p className={`text-lg font-semibold ${product.stock > product.lowStockThreshold ? 'text-green-600' : 'text-red-600'
-                }`}>
+              <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                 {product.stock} units
               </p>
             </div>

@@ -35,7 +35,7 @@ export interface RegisterData {
   password: string;
   firstName: string;
   lastName: string;
-  phone?: string;
+  phone: string;
   tenantSlug?: string;
 }
 
@@ -63,6 +63,9 @@ export interface AuthUser {
     id: string;
     name: string;
     slug: string;
+    status?: string;
+    subscriptionPlan?: string;
+    subscriptionEndsAt?: string | Date | null;
   };
 }
 
@@ -119,6 +122,15 @@ export interface UpdateTenantDTO {
   ownerPhoto?: string;
   upiId?: string;
   upiScannerPhoto?: string;
+  pageContent?: {
+    shipping?: string;
+    privacy?: string;
+    terms?: string;
+    about?: string;
+    contact?: string;
+    faq?: string;
+  };
+  features?: Record<string, boolean>;
 }
 
 // ============================================
@@ -137,13 +149,13 @@ export interface CreateProductDTO {
   barcode?: string;
   trackInventory?: boolean;
   stockQuantity?: number;
-  lowStockThreshold?: number;
   weight?: number;
   weightUnit?: string;
   categoryIds: string[];
   images?: string[];
   isActive?: boolean;
   isFeatured?: boolean;
+  isSponsored?: boolean;
   requiresPrescription?: boolean;
   isOTC?: boolean;
   manufacturer?: string;
@@ -151,7 +163,7 @@ export interface CreateProductDTO {
   metaDescription?: string;
 }
 
-export interface UpdateProductDTO extends Partial<CreateProductDTO> {}
+export interface UpdateProductDTO extends Partial<CreateProductDTO> { }
 
 export interface ProductFilters {
   categoryId?: string;
@@ -182,7 +194,7 @@ export interface CreateCategoryDTO {
   sortOrder?: number;
 }
 
-export interface UpdateCategoryDTO extends Partial<CreateCategoryDTO> {}
+export interface UpdateCategoryDTO extends Partial<CreateCategoryDTO> { }
 
 // ============================================
 // Cart Types
@@ -286,7 +298,7 @@ export interface CreateAddressDTO {
   isDefault?: boolean;
 }
 
-export interface UpdateAddressDTO extends Partial<CreateAddressDTO> {}
+export interface UpdateAddressDTO extends Partial<CreateAddressDTO> { }
 
 // ============================================
 // Dashboard Analytics Types
