@@ -12,7 +12,7 @@ export default function FormattedContent({ text }: FormattedContentProps) {
     // Check if line is mostly dashes, underscores, or similar characters
     // Support various separator characters: ━ (box drawing), ─ (em dash), - (hyphen), _ (underscore), = (equals)
     const specialChars = trimmed.match(/[━─\-_=]/g);
-    return specialChars && specialChars.length / trimmed.length > 0.6;
+    return !!(specialChars && specialChars.length / trimmed.length > 0.6);
   };
 
   // Helper to check if a line is a header (starts with #)

@@ -10,7 +10,7 @@ export default function FormattedContent({ text }: FormattedContentProps) {
     const trimmed = line.trim();
     if (trimmed.length < 3) return false;
     const specialChars = trimmed.match(/[━─\-_=]/g);
-    return specialChars && specialChars.length / trimmed.length > 0.6;
+    return !!(specialChars && specialChars.length / trimmed.length > 0.6);
   };
 
   // Helper to check if a line is a header (starts with #)
