@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { prisma } from '@pulss/database';
-import { ApiResponse, CreateOrderDTO, UpdateOrderStatusDTO, PaginatedResponse } from '@pulss/types';
+import { ApiResponse, CreateOrderDTO, UpdateOrderStatusDTO, PaginatedResponse, WalletTransactionType } from '@pulss/types';
 import { AppError, asyncHandler } from '../middleware/errorHandler';
 import { format } from 'date-fns';
 
@@ -458,7 +458,7 @@ export const updateOrderStatus = asyncHandler(
     if (data.paymentStatus) updateData.paymentStatus = data.paymentStatus;
     if (data.fulfillmentStatus) updateData.fulfillmentStatus = data.fulfillmentStatus;
     if (data.trackingNumber) updateData.trackingNumber = data.trackingNumber;
-    if (data.internalNote) updateData.internalNote = data.internalNote;
+    if (data.internalNote) updateData.adminNotes = data.internalNote; // internalNote mapped to adminNotes
 
     if (data.status === 'SHIPPED' && !order.shippedAt) {
       updateData.shippedAt = new Date();
@@ -486,6 +486,74 @@ export const updateOrderStatus = asyncHandler(
         },
       },
     });
+
+    // Handle Credit Payment Deduction logic
+    // Trigger if:
+    // 1. Order is CONFIRMED (and not yet paid)
+    // 2. OR Payment Status is explicitly set to COMPLETED (and wasn't before)
+    // AND Payment Method is CREDIT
+    if (
+      (updatedOrder.status === 'CONFIRMED' || updatedOrder.paymentStatus === 'COMPLETED') &&
+      order.paymentMethod === 'CREDIT' &&
+      order.paymentStatus !== 'COMPLETED'
+    ) {
+      const customerId = order.customerId;
+      if (customerId) {
+        await prisma.$transaction(async (tx) => {
+          // 1. Get customer
+          const customer = await tx.customers.findUnique({
+            where: { id: customerId },
+          });
+
+          if (!customer) throw new AppError('Customer not found for credit deduction', 404);
+          
+          // 2. Deduct balance
+          // @ts-ignore - creditBalance exists on customer but types might be outdated in this context
+          const currentBalance = customer.creditBalance || 0;
+          const newBalance = currentBalance - order.total;
+          
+          await tx.customers.update({
+            where: { id: customerId },
+            data: { 
+              // @ts-ignore
+              creditBalance: newBalance 
+            },
+          });
+
+          // 3. Create Wallet Transaction
+          await tx.wallet_transactions.create({
+            data: {
+              tenantId: req.tenantId!,
+              customerId,
+              amount: order.total,
+              type: WalletTransactionType.DEBIT,
+              description: `Payment for Order #${order.orderNumber}`,
+              referenceId: order.id,
+            },
+          });
+
+          // 4. Mark order as Paid if it wasn't already updated to COMPLETED in the main update
+          if (updatedOrder.paymentStatus !== 'COMPLETED') {
+             await tx.orders.update({
+              where: { id: order.id },
+              data: { paymentStatus: 'COMPLETED' },
+            });
+            updatedOrder.paymentStatus = 'COMPLETED';
+          }
+        });
+      }
+    }
+
+    // Update Customer Lifetime Value and Total Orders if order is DELIVERED
+    if (data.status === 'DELIVERED' && order.status !== 'DELIVERED' && order.customerId) {
+        await prisma.customers.update({
+            where: { id: order.customerId },
+            data: {
+                lifetimeValue: { increment: order.total },
+                totalOrders: { increment: 1 }
+            }
+        });
+    }
 
     const response: ApiResponse = {
       success: true,

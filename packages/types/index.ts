@@ -375,3 +375,33 @@ export interface UpdateTenantSettingsDTO {
   enablePrescriptionUpload?: boolean;
 }
 
+// ============================================
+// Wallet Types
+// ============================================
+
+export enum WalletTransactionType {
+  CREDIT = 'CREDIT',
+  DEBIT = 'DEBIT',
+  REFUND = 'REFUND',
+}
+
+export interface WalletTransaction {
+  id: string;
+  tenantId: string;
+  customerId: string;
+  amount: number;
+  type: WalletTransactionType;
+  description: string;
+  referenceId?: string;
+  metadata?: any;
+  createdAt: string;
+}
+
+export interface CreateWalletTransactionDTO {
+  amount: number; // Positive for CREDIT, Negative for DEBIT? Or always positive and type decides? Best to keep amount positive and type explicit.
+  type: WalletTransactionType;
+  description: string;
+  referenceId?: string;
+}
+
+

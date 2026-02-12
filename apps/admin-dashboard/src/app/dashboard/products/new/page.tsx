@@ -27,7 +27,7 @@ const productSchema = z.object({
   stockQuantity: z.number().min(0, 'Stock quantity must be 0 or greater').optional(),
   weight: z.number().min(0, 'Weight must be 0 or greater').optional(),
   weightUnit: z.string().optional(),
-  categoryIds: z.array(z.string()).min(1, 'At least one category is required'),
+  categoryIds: z.array(z.string()).optional(),
   images: z.array(z.string().url('Must be a valid URL')).optional(),
   isActive: z.boolean().default(true),
   isFeatured: z.boolean().default(false),
@@ -131,6 +131,7 @@ function NewProductPageContent() {
     formState: { errors },
     watch,
     setValue,
+    setError,
   } = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
     defaultValues: {
@@ -239,6 +240,10 @@ function NewProductPageContent() {
     if (isSuperAdminUser && !selectedTenantId) {
       toast.error('Please select an admin/store before creating a product');
       return;
+    }
+    if (categories && categories.length > 0 && (!data.categoryIds || data.categoryIds.length === 0)) {
+       setError('categoryIds', { type: 'manual', message: 'At least one category is required' });
+       return;
     }
     mutation.mutate(data);
   };

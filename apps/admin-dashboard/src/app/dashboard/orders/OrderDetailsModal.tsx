@@ -34,6 +34,7 @@ interface Order {
       email: string;
       phone: string;
     };
+    creditBalance: number;
   };
   order_items: Array<{
     id: string;
@@ -167,6 +168,12 @@ export default function OrderDetailsModal({ order, onClose, onUpdate }: OrderDet
                     <p className="font-medium text-gray-900 dark:text-gray-100">{order.customers.users.phone}</p>
                   </div>
                 )}
+                <div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Wallet Balance</p>
+                  <p className="font-medium text-green-600 dark:text-green-400">
+                    {formatCurrency(order.customers?.creditBalance || 0)}
+                  </p>
+                </div>
               </div>
             </div>
 
