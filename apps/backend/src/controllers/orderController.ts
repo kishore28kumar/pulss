@@ -508,14 +508,12 @@ export const updateOrderStatus = asyncHandler(
           if (!customer) throw new AppError('Customer not found for credit deduction', 404);
           
           // 2. Deduct balance
-          // @ts-ignore - creditBalance exists on customer but types might be outdated in this context
           const currentBalance = customer.creditBalance || 0;
           const newBalance = currentBalance - order.total;
           
           await tx.customers.update({
             where: { id: customerId },
             data: { 
-              // @ts-ignore
               creditBalance: newBalance 
             },
           });

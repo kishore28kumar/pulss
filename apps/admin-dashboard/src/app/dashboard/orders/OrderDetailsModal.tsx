@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { X, Package, User, MapPin, CreditCard, FileText, Truck, Loader2, Image as ImageIcon } from 'lucide-react';
+import { X, Package, User, MapPin, CreditCard, FileText, Truck, Loader2, Image as ImageIcon, CheckCircle } from 'lucide-react';
 import api from '@/lib/api';
 import { formatCurrency, formatDateTime } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -34,7 +34,7 @@ interface Order {
       email: string;
       phone: string;
     };
-    creditBalance: number;
+    creditBalance?: number | null;
   };
   order_items: Array<{
     id: string;
@@ -101,6 +101,29 @@ export default function OrderDetailsModal({ order, onClose, onUpdate }: OrderDet
       internalNote: internalNote || undefined,
     });
   };
+
+  // Credit Payment Logic
+  const currentBalance = order.customers?.creditBalance || 0;
+  const isCreditPayment = order.paymentMethod === 'CREDIT';
+  const isPaid = order.paymentStatus === 'COMPLETED';
+  const projectedBalance = currentBalance - order.total;
+  // Insufficient if it's a Credit Payment, NOT yet paid, and balance would go negative
+  const isInsufficient = isCreditPayment && !isPaid && projectedBalance < 0;
+
+  const handleApproveCredit = () => {
+    if (isInsufficient) return;
+    updateMutation.mutate({
+      status: 'CONFIRMED',
+      paymentStatus: 'COMPLETED', // Explicitly mark as completed
+    });
+  };
+
+  // Check if manual update should be disabled
+  const isManualUpdateDisabled = 
+    isCreditPayment && 
+    !isPaid && 
+    isInsufficient && 
+    (orderStatus === 'CONFIRMED' || paymentStatus === 'COMPLETED');
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
@@ -176,6 +199,51 @@ export default function OrderDetailsModal({ order, onClose, onUpdate }: OrderDet
                 </div>
               </div>
             </div>
+            {/* Credit Payment Analysis - ONLY for Credit Orders that are NOT fully paid/completed */}
+            {isCreditPayment && !isPaid && (
+              <div className={`rounded-lg p-4 border transition-colors ${
+                isInsufficient 
+                  ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' 
+                  : 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
+              }`}>
+                <div className="flex items-center space-x-2 mb-3">
+                  <CreditCard className={`w-5 h-5 ${
+                    isInsufficient ? 'text-red-600 dark:text-red-400' : 'text-blue-600 dark:text-blue-400'
+                  }`} />
+                  <h3 className={`font-semibold ${
+                    isInsufficient ? 'text-red-900 dark:text-red-100' : 'text-blue-900 dark:text-blue-100'
+                  }`}>Credit Payment Analysis</h3>
+                </div>
+                
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600 dark:text-gray-400">Current Wallet Balance:</span>
+                    <span className="font-medium text-gray-900 dark:text-gray-100">{formatCurrency(currentBalance)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600 dark:text-gray-400">Order Total:</span>
+                    <span className="font-medium text-gray-900 dark:text-gray-100">-{formatCurrency(order.total)}</span>
+                  </div>
+                  <div className={`flex justify-between pt-2 border-t ${
+                    isInsufficient ? 'border-red-200 dark:border-red-800' : 'border-blue-200 dark:border-blue-800'
+                  }`}>
+                    <span className={`font-medium ${
+                      isInsufficient ? 'text-red-800 dark:text-red-200' : 'text-blue-800 dark:text-blue-200'
+                    }`}>Projected Balance:</span>
+                    <span className={`font-bold ${
+                      projectedBalance < 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'
+                    }`}>{formatCurrency(projectedBalance)}</span>
+                  </div>
+                </div>
+
+                {isInsufficient && (
+                  <div className="mt-3 flex items-start space-x-2 text-xs text-red-700 dark:text-red-300 bg-white/50 dark:bg-black/20 p-2 rounded">
+                    <span className="font-bold">⚠️ Insufficient Funds:</span>
+                    <span>Customer needs to add funds to their wallet before this order can be approved via Credit.</span>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Addresses */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -427,7 +495,7 @@ export default function OrderDetailsModal({ order, onClose, onUpdate }: OrderDet
               </button>
               <button
                 onClick={handleUpdate}
-                disabled={updateMutation.isPending}
+                disabled={updateMutation.isPending || isManualUpdateDisabled}
                 className="px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center text-sm sm:text-base font-medium shadow-sm"
               >
                 {updateMutation.isPending ? (
@@ -439,6 +507,28 @@ export default function OrderDetailsModal({ order, onClose, onUpdate }: OrderDet
                   'Update Order'
                 )}
               </button>
+
+              {/* Special Approve Button for Credit Orders */}
+              {isCreditPayment && !isPaid && orderStatus !== 'CONFIRMED' && orderStatus !== 'DELIVERED' && orderStatus !== 'CANCELLED' && (
+                <button
+                  onClick={handleApproveCredit}
+                  disabled={updateMutation.isPending || isInsufficient}
+                  className={`px-4 py-2 text-white rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center text-sm sm:text-base font-medium shadow-sm ${
+                    isInsufficient 
+                      ? 'bg-gray-400 dark:bg-gray-600' 
+                      : 'bg-green-600 dark:bg-green-500 hover:bg-green-700 dark:hover:bg-green-600'
+                  }`}
+                >
+                  {updateMutation.isPending ? (
+                    'Processing...' 
+                  ) : (
+                    <>
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      Approve & Deduct Credit
+                    </>
+                  )}
+                </button>
+              )}
             </div>
           </div>
         </div>

@@ -12,7 +12,7 @@ export const getWalletHistory = asyncHandler(
     if (!tenantId) {
       throw new AppError('Tenant ID is required', 400);
     }
-
+    
     const history = await prisma.wallet_transactions.findMany({
       where: {
         customerId: id,
@@ -80,7 +80,9 @@ export const updateWalletBalance = asyncHandler(
       // Update customer balance
       await tx.customers.update({
         where: { id },
-        data: { creditBalance: newBalance },
+        data: { 
+          creditBalance: newBalance 
+        },
       });
 
       // Create transaction record
