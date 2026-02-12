@@ -8,7 +8,7 @@ const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'Pulss Admin Dashboard',
-  description: 'Multi-tenant e-commerce admin dashboard',
+  description: 'Admin dashboard',
   icons: {
     icon: '/favicon.png',
   },

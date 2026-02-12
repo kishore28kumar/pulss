@@ -7,6 +7,10 @@ import {
   getCustomerStats,
   exportCustomersCSV,
 } from '../controllers/customerController';
+import {
+  getWalletHistory,
+  updateWalletBalance,
+} from '../controllers/walletController';
 import { authenticateUser, requireAdminOrStaff } from '../middleware/authMiddleware';
 import { requireTenant, ensureTenantAccess } from '../middleware/tenantMiddleware';
 import { requirePermission, Permission } from '../middleware/permissionMiddleware';
@@ -26,6 +30,10 @@ router.get('/export/:tenantId', exportCustomersCSV); // SUPER_ADMIN only - check
 router.get('/:id', requirePermission(Permission.CUSTOMERS_VIEW), getCustomer);
 router.put('/:id', requirePermission(Permission.CUSTOMERS_EDIT), updateCustomer);
 router.patch('/:id/status', requirePermission(Permission.CUSTOMERS_EDIT), toggleCustomerStatus);
+
+// Wallet routes
+router.get('/:id/wallet', requirePermission(Permission.CUSTOMERS_VIEW), getWalletHistory);
+router.post('/:id/wallet/transaction', requirePermission(Permission.CUSTOMERS_EDIT), updateWalletBalance);
 
 export default router;
 

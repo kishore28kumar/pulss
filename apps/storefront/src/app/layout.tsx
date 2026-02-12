@@ -7,7 +7,7 @@ import { Toaster } from 'sonner';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Pulss - Multi-Tenant E-Commerce Platform',
+  title: 'Pulss',
   description: 'Shop quality products at great prices',
   icons: {
     icon: '/favicon.png',
